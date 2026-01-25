@@ -66,7 +66,7 @@ export const CONFIG = {
     AUTO_SAVE_INTERVAL: 30000, // 30 seconds
 };
 
-// Block Types
+// Block Types - Comprehensive Minecraft-style block system
 export const BLOCKS = {
     AIR: 0,
     STONE: 1,
@@ -91,48 +91,266 @@ export const BLOCKS = {
     FARMLAND: 20,
     WHEAT_CROP: 21,
     CACTUS: 22,
+    // New blocks for building
+    COBBLESTONE: 23,
+    PLANKS: 24,
+    BRICK: 25,
+    GLASS: 26,
+    TORCH: 27,
+    LADDER: 28,
+    FENCE: 29,
+    DOOR: 30,
+    MOSS_STONE: 31,
+    SANDSTONE: 32,
+    OBSIDIAN: 33,
+    CLAY_BRICK: 34,
+    BONE_BLOCK: 35,
+    HAY_BLOCK: 36,
+    THATCH: 37, // Prehistoric roof material
+    MUD_BRICK: 38,
+    CAMPFIRE: 39,
 };
 
-// Block Properties
+// Block Properties - Each block has unique characteristics
 export const BLOCK_DATA = {
-    [BLOCKS.AIR]: { name: 'Air', solid: false, transparent: true, hardness: 0, drops: null, color: 'transparent', emoji: '' },
-    [BLOCKS.STONE]: { name: 'Stone', solid: true, transparent: false, hardness: 3, drops: 'cobblestone', color: '#888888', emoji: '🪨' },
-    [BLOCKS.DIRT]: { name: 'Dirt', solid: true, transparent: false, hardness: 1, drops: 'dirt', color: '#8B4513', emoji: '🟫' },
-    [BLOCKS.GRASS]: { name: 'Grass', solid: true, transparent: false, hardness: 1, drops: 'dirt', color: '#228B22', emoji: '🌿' },
-    [BLOCKS.SAND]: { name: 'Sand', solid: true, transparent: false, hardness: 1, drops: 'sand', color: '#F4D03F', emoji: '🏖️' },
-    [BLOCKS.WATER]: { name: 'Water', solid: false, transparent: true, hardness: 0, drops: null, color: '#4169E1', emoji: '💧' },
-    [BLOCKS.WOOD]: { name: 'Wood', solid: true, transparent: false, hardness: 2, drops: 'wood', color: '#8B5A2B', emoji: '🪵' },
-    [BLOCKS.LEAVES]: { name: 'Leaves', solid: false, transparent: true, hardness: 0.5, drops: 'leaves', color: '#32CD32', emoji: '🍃' },
-    [BLOCKS.COAL_ORE]: { name: 'Coal Ore', solid: true, transparent: false, hardness: 4, drops: 'coal', color: '#333333', emoji: '�ite' },
-    [BLOCKS.IRON_ORE]: { name: 'Iron Ore', solid: true, transparent: false, hardness: 5, drops: 'raw_iron', color: '#CD853F', emoji: '🔶' },
-    [BLOCKS.GOLD_ORE]: { name: 'Gold Ore', solid: true, transparent: false, hardness: 5, drops: 'raw_gold', color: '#FFD700', emoji: '🟡' },
-    [BLOCKS.DIAMOND_ORE]: { name: 'Diamond Ore', solid: true, transparent: false, hardness: 6, drops: 'diamond', color: '#00FFFF', emoji: '💎' },
-    [BLOCKS.BEDROCK]: { name: 'Bedrock', solid: true, transparent: false, hardness: -1, drops: null, color: '#1a1a1a', emoji: '⬛' },
-    [BLOCKS.GRAVEL]: { name: 'Gravel', solid: true, transparent: false, hardness: 1, drops: 'flint', color: '#696969', emoji: '⚫' },
-    [BLOCKS.CLAY]: { name: 'Clay', solid: true, transparent: false, hardness: 1, drops: 'clay', color: '#A9A9A9', emoji: '🔘' },
-    [BLOCKS.SNOW]: { name: 'Snow', solid: true, transparent: false, hardness: 0.5, drops: 'snowball', color: '#FFFAFA', emoji: '❄️' },
-    [BLOCKS.ICE]: { name: 'Ice', solid: true, transparent: true, hardness: 1, drops: null, color: '#ADD8E6', emoji: '🧊' },
-    [BLOCKS.CRAFTING_TABLE]: { name: 'Crafting Table', solid: true, transparent: false, hardness: 2, drops: 'crafting_table', color: '#DEB887', emoji: '🔨' },
-    [BLOCKS.FURNACE]: { name: 'Furnace', solid: true, transparent: false, hardness: 3, drops: 'furnace', color: '#A0522D', emoji: '🔥' },
-    [BLOCKS.CHEST]: { name: 'Chest', solid: true, transparent: false, hardness: 2, drops: 'chest', color: '#D2691E', emoji: '📦' },
-    [BLOCKS.FARMLAND]: { name: 'Farmland', solid: true, transparent: false, hardness: 1, drops: 'dirt', color: '#5D4037', emoji: '🌱' },
-    [BLOCKS.WHEAT_CROP]: { name: 'Wild Grain', solid: false, transparent: true, hardness: 0, drops: 'wheat', color: '#D4A017', emoji: '🌾' },
-    [BLOCKS.CACTUS]: { name: 'Cactus', solid: false, transparent: true, hardness: 1, drops: 'cactus', color: '#2E8B57', emoji: '🌵' },
+    [BLOCKS.AIR]: { 
+        name: 'Air', solid: false, transparent: true, hardness: 0, 
+        drops: null, color: 'transparent', emoji: '',
+        flammable: false, lightLevel: 0
+    },
+    [BLOCKS.STONE]: { 
+        name: 'Stone', solid: true, transparent: false, hardness: 3, 
+        drops: 'cobblestone', color: '#888888', emoji: '🪨',
+        toolRequired: 'pickaxe', flammable: false, blastResistance: 6
+    },
+    [BLOCKS.DIRT]: { 
+        name: 'Dirt', solid: true, transparent: false, hardness: 1, 
+        drops: 'dirt', color: '#8B4513', emoji: '🟫',
+        flammable: false, canGrowGrass: true
+    },
+    [BLOCKS.GRASS]: { 
+        name: 'Grass', solid: true, transparent: false, hardness: 1, 
+        drops: 'dirt', color: '#228B22', emoji: '🌿',
+        flammable: false, spreadable: true
+    },
+    [BLOCKS.SAND]: { 
+        name: 'Sand', solid: true, transparent: false, hardness: 1, 
+        drops: 'sand', color: '#F4D03F', emoji: '🏖️',
+        gravity: true, flammable: false
+    },
+    [BLOCKS.WATER]: { 
+        name: 'Water', solid: false, transparent: true, hardness: 0, 
+        drops: null, color: '#4169E1', emoji: '💧',
+        fluid: true, flowSpeed: 4
+    },
+    [BLOCKS.WOOD]: { 
+        name: 'Wood Log', solid: true, transparent: false, hardness: 2, 
+        drops: 'wood', color: '#8B5A2B', emoji: '🪵',
+        toolPreferred: 'axe', flammable: true, burnTime: 300
+    },
+    [BLOCKS.LEAVES]: { 
+        name: 'Leaves', solid: false, transparent: true, hardness: 0.5, 
+        drops: 'leaves', color: '#32CD32', emoji: '🍃',
+        flammable: true, decayable: true, dropChance: { stick: 0.1, apple: 0.02 }
+    },
+    [BLOCKS.COAL_ORE]: { 
+        name: 'Coal Ore', solid: true, transparent: false, hardness: 4, 
+        drops: 'coal', color: '#333333', emoji: '⬛',
+        toolRequired: 'pickaxe', xpDrop: 1
+    },
+    [BLOCKS.IRON_ORE]: { 
+        name: 'Iron Ore', solid: true, transparent: false, hardness: 5, 
+        drops: 'raw_iron', color: '#CD853F', emoji: '🔶',
+        toolRequired: 'pickaxe', toolLevel: 1, xpDrop: 2
+    },
+    [BLOCKS.GOLD_ORE]: { 
+        name: 'Gold Ore', solid: true, transparent: false, hardness: 5, 
+        drops: 'raw_gold', color: '#FFD700', emoji: '🟡',
+        toolRequired: 'pickaxe', toolLevel: 2, xpDrop: 3
+    },
+    [BLOCKS.DIAMOND_ORE]: { 
+        name: 'Diamond Ore', solid: true, transparent: false, hardness: 6, 
+        drops: 'diamond', color: '#00FFFF', emoji: '💎',
+        toolRequired: 'pickaxe', toolLevel: 2, xpDrop: 5
+    },
+    [BLOCKS.BEDROCK]: { 
+        name: 'Bedrock', solid: true, transparent: false, hardness: -1, 
+        drops: null, color: '#1a1a1a', emoji: '⬛',
+        unbreakable: true, blastResistance: 999
+    },
+    [BLOCKS.GRAVEL]: { 
+        name: 'Gravel', solid: true, transparent: false, hardness: 1, 
+        drops: 'flint', color: '#696969', emoji: '⚫',
+        gravity: true, dropChance: { flint: 0.3, gravel: 0.7 }
+    },
+    [BLOCKS.CLAY]: { 
+        name: 'Clay', solid: true, transparent: false, hardness: 1, 
+        drops: 'clay', color: '#A9A9A9', emoji: '🔘',
+        dropCount: 4
+    },
+    [BLOCKS.SNOW]: { 
+        name: 'Snow', solid: true, transparent: false, hardness: 0.5, 
+        drops: 'snowball', color: '#FFFAFA', emoji: '❄️',
+        meltsNearFire: true
+    },
+    [BLOCKS.ICE]: { 
+        name: 'Ice', solid: true, transparent: true, hardness: 1, 
+        drops: null, color: '#ADD8E6', emoji: '🧊',
+        slippery: true, meltsNearFire: true
+    },
+    [BLOCKS.CRAFTING_TABLE]: { 
+        name: 'Crafting Table', solid: true, transparent: false, hardness: 2, 
+        drops: 'crafting_table', color: '#DEB887', emoji: '🔨',
+        interactive: true, craftingGrid: 3
+    },
+    [BLOCKS.FURNACE]: { 
+        name: 'Furnace', solid: true, transparent: false, hardness: 3, 
+        drops: 'furnace', color: '#A0522D', emoji: '🔥',
+        interactive: true, canSmelt: true
+    },
+    [BLOCKS.CHEST]: { 
+        name: 'Chest', solid: true, transparent: false, hardness: 2, 
+        drops: 'chest', color: '#D2691E', emoji: '📦',
+        interactive: true, storage: 27
+    },
+    [BLOCKS.FARMLAND]: { 
+        name: 'Farmland', solid: true, transparent: false, hardness: 1, 
+        drops: 'dirt', color: '#5D4037', emoji: '🌱',
+        canPlant: true, hydratable: true
+    },
+    [BLOCKS.WHEAT_CROP]: { 
+        name: 'Wild Grain', solid: false, transparent: true, hardness: 0, 
+        drops: 'wheat', color: '#D4A017', emoji: '🌾',
+        growable: true, growthStages: 7
+    },
+    [BLOCKS.CACTUS]: { 
+        name: 'Cactus', solid: false, transparent: true, hardness: 1, 
+        drops: 'cactus', color: '#2E8B57', emoji: '🌵',
+        damageOnTouch: 1, maxHeight: 3
+    },
+    // New building blocks
+    [BLOCKS.COBBLESTONE]: { 
+        name: 'Cobblestone', solid: true, transparent: false, hardness: 3, 
+        drops: 'cobblestone', color: '#696969', emoji: '🧱',
+        toolRequired: 'pickaxe', blastResistance: 6
+    },
+    [BLOCKS.PLANKS]: { 
+        name: 'Wood Planks', solid: true, transparent: false, hardness: 2, 
+        drops: 'plank', color: '#C19A6B', emoji: '🪵',
+        flammable: true, burnTime: 300
+    },
+    [BLOCKS.BRICK]: { 
+        name: 'Brick', solid: true, transparent: false, hardness: 4, 
+        drops: 'brick_block', color: '#8B4513', emoji: '🧱',
+        toolRequired: 'pickaxe', blastResistance: 6
+    },
+    [BLOCKS.GLASS]: { 
+        name: 'Glass', solid: true, transparent: true, hardness: 0.5, 
+        drops: null, color: '#E0FFFF', emoji: '🪟',
+        fragile: true
+    },
+    [BLOCKS.TORCH]: { 
+        name: 'Torch', solid: false, transparent: true, hardness: 0, 
+        drops: 'torch', color: '#FFA500', emoji: '🔦',
+        lightLevel: 14, attachable: true
+    },
+    [BLOCKS.LADDER]: { 
+        name: 'Ladder', solid: false, transparent: true, hardness: 0.5, 
+        drops: 'ladder', color: '#8B4513', emoji: '🪜',
+        climbable: true
+    },
+    [BLOCKS.FENCE]: { 
+        name: 'Fence', solid: true, transparent: true, hardness: 2, 
+        drops: 'fence', color: '#8B5A2B', emoji: '🚧',
+        connectsTo: ['fence', 'fence_gate'], collision: { height: 1.5 }
+    },
+    [BLOCKS.DOOR]: { 
+        name: 'Door', solid: true, transparent: true, hardness: 2, 
+        drops: 'door', color: '#8B4513', emoji: '🚪',
+        interactive: true, openable: true
+    },
+    [BLOCKS.MOSS_STONE]: { 
+        name: 'Mossy Stone', solid: true, transparent: false, hardness: 3, 
+        drops: 'moss_stone', color: '#4A7023', emoji: '🪨',
+        toolRequired: 'pickaxe'
+    },
+    [BLOCKS.SANDSTONE]: { 
+        name: 'Sandstone', solid: true, transparent: false, hardness: 2, 
+        drops: 'sandstone', color: '#D2B48C', emoji: '🟨',
+        toolRequired: 'pickaxe'
+    },
+    [BLOCKS.OBSIDIAN]: { 
+        name: 'Obsidian', solid: true, transparent: false, hardness: 10, 
+        drops: 'obsidian', color: '#1C1C1C', emoji: '⬛',
+        toolRequired: 'pickaxe', toolLevel: 3, blastResistance: 1200
+    },
+    [BLOCKS.CLAY_BRICK]: { 
+        name: 'Clay Brick', solid: true, transparent: false, hardness: 2, 
+        drops: 'clay_brick', color: '#BC8F8F', emoji: '🧱',
+        toolRequired: 'pickaxe'
+    },
+    [BLOCKS.BONE_BLOCK]: { 
+        name: 'Bone Block', solid: true, transparent: false, hardness: 2, 
+        drops: 'bone_block', color: '#F5F5DC', emoji: '🦴',
+        toolRequired: 'pickaxe'
+    },
+    [BLOCKS.HAY_BLOCK]: { 
+        name: 'Hay Block', solid: true, transparent: false, hardness: 1, 
+        drops: 'hay_block', color: '#DAA520', emoji: '🌾',
+        flammable: true, fallDamageReduction: 0.8
+    },
+    [BLOCKS.THATCH]: { 
+        name: 'Thatch Roof', solid: true, transparent: false, hardness: 1, 
+        drops: 'thatch', color: '#BDB76B', emoji: '🏠',
+        flammable: true
+    },
+    [BLOCKS.MUD_BRICK]: { 
+        name: 'Mud Brick', solid: true, transparent: false, hardness: 1.5, 
+        drops: 'mud_brick', color: '#6B4423', emoji: '🟫',
+    },
+    [BLOCKS.CAMPFIRE]: { 
+        name: 'Campfire', solid: false, transparent: true, hardness: 1, 
+        drops: 'coal', color: '#FF4500', emoji: '🔥',
+        lightLevel: 15, damageOnTouch: 1, canCook: true
+    },
 };
 
 // Item Types
 export const ITEMS = {
-    // Blocks as items
+    // Blocks as items - Natural
     dirt: { name: 'Dirt', emoji: '🟫', stackable: true, type: 'block', blockId: BLOCKS.DIRT },
-    cobblestone: { name: 'Cobblestone', emoji: '🪨', stackable: true, type: 'block', blockId: BLOCKS.STONE },
+    cobblestone: { name: 'Cobblestone', emoji: '🪨', stackable: true, type: 'block', blockId: BLOCKS.COBBLESTONE },
+    stone: { name: 'Stone', emoji: '🪨', stackable: true, type: 'block', blockId: BLOCKS.STONE },
     sand: { name: 'Sand', emoji: '🏖️', stackable: true, type: 'block', blockId: BLOCKS.SAND },
-    wood: { name: 'Wood', emoji: '🪵', stackable: true, type: 'block', blockId: BLOCKS.WOOD },
+    wood: { name: 'Wood Log', emoji: '🪵', stackable: true, type: 'block', blockId: BLOCKS.WOOD },
     leaves: { name: 'Leaves', emoji: '🍃', stackable: true, type: 'block', blockId: BLOCKS.LEAVES },
     gravel: { name: 'Gravel', emoji: '⚫', stackable: true, type: 'block', blockId: BLOCKS.GRAVEL },
     clay: { name: 'Clay', emoji: '🔘', stackable: true, type: 'block', blockId: BLOCKS.CLAY },
+    snow: { name: 'Snow', emoji: '❄️', stackable: true, type: 'block', blockId: BLOCKS.SNOW },
+    ice: { name: 'Ice', emoji: '🧊', stackable: true, type: 'block', blockId: BLOCKS.ICE },
+    
+    // Blocks as items - Building
+    plank: { name: 'Wood Planks', emoji: '🪵', stackable: true, type: 'block', blockId: BLOCKS.PLANKS },
+    brick_block: { name: 'Brick Block', emoji: '🧱', stackable: true, type: 'block', blockId: BLOCKS.BRICK },
+    glass: { name: 'Glass', emoji: '🪟', stackable: true, type: 'block', blockId: BLOCKS.GLASS },
+    sandstone: { name: 'Sandstone', emoji: '🟨', stackable: true, type: 'block', blockId: BLOCKS.SANDSTONE },
+    moss_stone: { name: 'Mossy Stone', emoji: '🪨', stackable: true, type: 'block', blockId: BLOCKS.MOSS_STONE },
+    obsidian: { name: 'Obsidian', emoji: '⬛', stackable: true, type: 'block', blockId: BLOCKS.OBSIDIAN },
+    
+    // Blocks as items - Prehistoric
+    thatch: { name: 'Thatch', emoji: '🏠', stackable: true, type: 'block', blockId: BLOCKS.THATCH },
+    mud_brick: { name: 'Mud Brick', emoji: '🟫', stackable: true, type: 'block', blockId: BLOCKS.MUD_BRICK },
+    bone_block: { name: 'Bone Block', emoji: '🦴', stackable: true, type: 'block', blockId: BLOCKS.BONE_BLOCK },
+    hay_block: { name: 'Hay Block', emoji: '🌾', stackable: true, type: 'block', blockId: BLOCKS.HAY_BLOCK },
+    
+    // Blocks as items - Functional
     crafting_table: { name: 'Crafting Table', emoji: '🔨', stackable: true, type: 'block', blockId: BLOCKS.CRAFTING_TABLE },
     furnace: { name: 'Furnace', emoji: '🔥', stackable: true, type: 'block', blockId: BLOCKS.FURNACE },
     chest: { name: 'Chest', emoji: '📦', stackable: true, type: 'block', blockId: BLOCKS.CHEST },
+    campfire: { name: 'Campfire', emoji: '🔥', stackable: true, type: 'block', blockId: BLOCKS.CAMPFIRE },
+    ladder: { name: 'Ladder', emoji: '🪜', stackable: true, type: 'block', blockId: BLOCKS.LADDER },
+    fence: { name: 'Fence', emoji: '🚧', stackable: true, type: 'block', blockId: BLOCKS.FENCE },
+    door: { name: 'Door', emoji: '🚪', stackable: true, type: 'block', blockId: BLOCKS.DOOR },
 
     // Raw materials
     coal: { name: 'Coal', emoji: '⚫', stackable: true, type: 'material' },
@@ -140,7 +358,6 @@ export const ITEMS = {
     raw_gold: { name: 'Raw Gold', emoji: '🟡', stackable: true, type: 'material' },
     diamond: { name: 'Diamond', emoji: '💎', stackable: true, type: 'material' },
     stick: { name: 'Stick', emoji: '🥢', stackable: true, type: 'material' },
-    plank: { name: 'Wooden Plank', emoji: '🪵', stackable: true, type: 'material' },
     iron_ingot: { name: 'Iron Ingot', emoji: '🔩', stackable: true, type: 'material' },
     gold_ingot: { name: 'Gold Ingot', emoji: '🪙', stackable: true, type: 'material' },
     flint: { name: 'Flint', emoji: '🔺', stackable: true, type: 'material' },
@@ -148,6 +365,8 @@ export const ITEMS = {
     bone: { name: 'Bone', emoji: '🦴', stackable: true, type: 'material' },
     string: { name: 'String', emoji: '🧵', stackable: true, type: 'material' },
     feather: { name: 'Feather', emoji: '🪶', stackable: true, type: 'material' },
+    clay_ball: { name: 'Clay Ball', emoji: '🔘', stackable: true, type: 'material' },
+    brick: { name: 'Brick', emoji: '🧱', stackable: true, type: 'material' },
 
     // Tools - Prehistoric themed
     wooden_pickaxe: { name: 'Stone Pick', emoji: '⛏️', stackable: false, type: 'tool', toolType: 'pickaxe', damage: 2, miningSpeed: 1.5, durability: 60 },
@@ -183,24 +402,45 @@ export const ITEMS = {
     bread: { name: 'Bread', emoji: '🍞', stackable: true, type: 'food', hunger: 6, health: 0 },
     steak: { name: 'Steak', emoji: '🥩', stackable: true, type: 'food', hunger: 10, health: 3 },
     wheat: { name: 'Wheat', emoji: '🌾', stackable: true, type: 'material' },
-    bread: { name: 'Bread', emoji: '🍞', stackable: true, type: 'food', hunger: 6, health: 1 },
     seeds: { name: 'Seeds', emoji: '🌰', stackable: true, type: 'placeable', blockId: BLOCKS.WHEAT_CROP },
     cactus: { name: 'Cactus', emoji: '🌵', stackable: true, type: 'placeable', blockId: BLOCKS.CACTUS },
+    snowball: { name: 'Snowball', emoji: '❄️', stackable: true, type: 'throwable' },
 
     // Special
-    torch: { name: 'Torch', emoji: '🔦', stackable: true, type: 'placeable', light: 10 },
+    torch: { name: 'Torch', emoji: '🔦', stackable: true, type: 'block', blockId: BLOCKS.TORCH, light: 14 },
     bed: { name: 'Bed', emoji: '🛏️', stackable: false, type: 'placeable' },
 };
 
 // Crafting Recipes - Prehistoric themed
 export const RECIPES = [
-    // Basic
+    // Basic wood processing
     { result: 'plank', count: 4, ingredients: [['wood', 1]], shape: null },
     { result: 'stick', count: 4, ingredients: [['plank', 2]], shape: null },
+    
+    // Functional blocks
     { result: 'crafting_table', count: 1, ingredients: [['plank', 4]], shape: null },
     { result: 'furnace', count: 1, ingredients: [['cobblestone', 8]], shape: null },
     { result: 'chest', count: 1, ingredients: [['plank', 8]], shape: null },
+    { result: 'campfire', count: 1, ingredients: [['stick', 3], ['coal', 1], ['wood', 3]], shape: null },
+    
+    // Light sources
     { result: 'torch', count: 4, ingredients: [['coal', 1], ['stick', 1]], shape: null },
+    
+    // Building blocks - Prehistoric
+    { result: 'thatch', count: 4, ingredients: [['wheat', 4], ['stick', 2]], shape: null },
+    { result: 'mud_brick', count: 4, ingredients: [['clay', 2], ['wheat', 1]], shape: null },
+    { result: 'bone_block', count: 1, ingredients: [['bone', 9]], shape: null },
+    { result: 'hay_block', count: 1, ingredients: [['wheat', 9]], shape: null },
+    
+    // Building blocks - Stone
+    { result: 'sandstone', count: 4, ingredients: [['sand', 4]], shape: null },
+    { result: 'brick_block', count: 1, ingredients: [['brick', 4]], shape: null },
+    { result: 'moss_stone', count: 1, ingredients: [['cobblestone', 1], ['leaves', 1]], shape: null },
+    
+    // Utility blocks
+    { result: 'ladder', count: 3, ingredients: [['stick', 7]], shape: null },
+    { result: 'fence', count: 3, ingredients: [['plank', 4], ['stick', 2]], shape: null },
+    { result: 'door', count: 3, ingredients: [['plank', 6]], shape: null },
 
     // Primitive weapons - easiest to craft
     { result: 'club', count: 1, ingredients: [['wood', 2]], shape: null },
@@ -242,6 +482,7 @@ export const SMELTING = {
     clay: 'brick',
     cobblestone: 'stone',
     wheat: 'bread',
+    wood: 'coal', // Charcoal from wood
 };
 
 
