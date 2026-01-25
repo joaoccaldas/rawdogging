@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Spear -->
+  <!-- Shaft -->
+  <line x1="4" y1="28" x2="28" y2="4" stroke="#8B4513" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Tip -->
+  <path d="M26 6 L 30 2 L 26 2 L 24 6 Z" fill="#708090"/>
+</svg>

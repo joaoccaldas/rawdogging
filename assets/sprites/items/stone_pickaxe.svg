@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Stone Pickaxe -->
+  <!-- Handle -->
+  <line x1="6" y1="26" x2="26" y2="6" stroke="#8B4513" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Head -->
+  <path d="M18 6 Q 26 6 30 14" stroke="#808080" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M18 6 Q 10 6 6 14" stroke="#808080" stroke-width="4" fill="none" stroke-linecap="round"/>
+  
+  <!-- Binding -->
+  <circle cx="18" cy="6" r="2" fill="#A0522D"/>
+</svg>

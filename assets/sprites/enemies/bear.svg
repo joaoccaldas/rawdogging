@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Bear Sprite -->
+  <ellipse cx="32" cy="58" rx="16" ry="5" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body -->
+  <ellipse cx="32" cy="40" rx="18" ry="14" fill="#5D4037"/>
+  
+  <!-- Head -->
+  <circle cx="50" cy="30" r="10" fill="#5D4037"/>
+  
+  <!-- Ears -->
+  <circle cx="44" cy="22" r="3" fill="#3E2723"/>
+  <circle cx="56" cy="22" r="3" fill="#3E2723"/>
+
+  <!-- Legs -->
+  <rect x="20" y="48" width="8" height="10" rx="2" fill="#3E2723"/>
+  <rect x="36" y="48" width="8" height="10" rx="2" fill="#3E2723"/>
+
+  <!-- Eye -->
+  <circle cx="52" cy="28" r="2" fill="black"/>
+  
+  <!-- Snout -->
+  <ellipse cx="56" cy="32" rx="4" ry="3" fill="#8D6E63"/>
+  <circle cx="58" cy="31" r="1" fill="black"/>
+</svg>

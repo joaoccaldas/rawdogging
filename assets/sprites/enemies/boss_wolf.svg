@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Boss Wolf Sprite (Black, Blue eyes) -->
+  <ellipse cx="32" cy="58" rx="16" ry="5" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body -->
+  <path d="M16 28 L48 28 L52 40 L48 52 L16 52 L12 40 Z" fill="#1A1A1A"/>
+  
+  <!-- Head -->
+  <path d="M48 24 L60 24 L62 34 L54 38 L48 34 Z" fill="#1A1A1A"/>
+  
+  <!-- Ears -->
+  <path d="M50 16 L52 24 L48 24 Z" fill="#000"/>
+  <path d="M56 16 L58 24 L54 24 Z" fill="#000"/>
+
+  <!-- Legs -->
+  <rect x="18" y="52" width="7" height="8" fill="#000"/>
+  <rect x="40" y="52" width="7" height="8" fill="#000"/>
+
+  <!-- Tail -->
+  <path d="M16 32 L4 28 L2 40 L16 40 Z" fill="#1A1A1A"/>
+
+  <!-- Eye (Blue Glow) -->
+  <circle cx="56" cy="26" r="2" fill="#00FFFF"/>
+
+  <!-- Scar -->
+  <path d="M54 22 L58 30" stroke="red" stroke-width="1"/>
+</svg>

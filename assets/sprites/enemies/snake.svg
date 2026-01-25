@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Snake Sprite -->
+  <ellipse cx="32" cy="58" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body Coils -->
+  <path d="M16 54 Q 32 40 48 54 Q 32 68 16 54" fill="#2E8B57" stroke="#006400" stroke-width="2"/>
+  <path d="M20 50 Q 30 30 40 50" fill="none" stroke="#2E8B57" stroke-width="8"/>
+  
+  <!-- Head -->
+  <ellipse cx="40" cy="30" rx="6" ry="8" fill="#2E8B57"/>
+  
+  <!-- Eyes -->
+  <circle cx="38" cy="28" r="2" fill="yellow"/>
+  <rect x="37.5" y="27" width="1" height="2" fill="black"/>
+  <circle cx="42" cy="28" r="2" fill="yellow"/>
+  
+  <!-- Tongue -->
+  <path d="M40 38 L40 44 L38 46 M40 44 L42 46" stroke="red" stroke-width="1" fill="none"/>
+</svg>

@@ -20,6 +20,17 @@ import { LightingSystem } from './core/lighting.js';
 import { SkillsManager } from './core/skills.js';
 import { TamingSystem } from './core/taming.js';
 
+// New Systems (10 Feature Update)
+import { WeatherSystem } from './core/weather.js';
+import { ArmorSystem } from './core/armor.js';
+import { Minimap } from './ui/minimap.js';
+import { Statistics } from './core/statistics.js';
+import { ThrowableSystem } from './core/throwables.js';
+import { TemperatureSystem } from './core/temperature.js';
+import { FoodBuffSystem } from './core/foodbuffs.js';
+import { HomeBeaconSystem } from './core/homebeacon.js';
+import { WildlifeSystem } from './entities/wildlife.js';
+
 class Game {
     constructor() {
         this.lastTime = 0;
@@ -72,6 +83,35 @@ class Game {
         
         // Taming System
         this.taming = new TamingSystem(this);
+        
+        // ====== NEW SYSTEMS (10 Feature Update) ======
+        
+        // Weather System - Dynamic weather effects
+        this.weather = new WeatherSystem(this);
+        
+        // Armor System - Damage reduction
+        this.armor = new ArmorSystem(this);
+        
+        // Minimap - Navigation aid
+        this.minimap = new Minimap(this);
+        
+        // Statistics - Track achievements
+        this.statistics = new Statistics(this);
+        
+        // Throwables - Ranged combat
+        this.throwables = new ThrowableSystem(this);
+        
+        // Temperature - Biome survival
+        this.temperature = new TemperatureSystem(this);
+        
+        // Food Buffs - Cooking benefits
+        this.foodBuffs = new FoodBuffSystem(this);
+        
+        // Home Beacons - Respawn points
+        this.homeBeacons = new HomeBeaconSystem(this);
+        
+        // Wildlife - Passive creatures
+        this.wildlife = new WildlifeSystem(this);
 
         this.entities = [];
         this.mining = { currentBlock: null, progress: 0, maxProgress: 0 };
@@ -202,6 +242,18 @@ class Game {
         if (this.taming) {
             this.taming.reset();
         }
+        
+        // Reset new systems
+        if (this.weather) this.weather.reset();
+        if (this.armor) this.armor.reset();
+        if (this.statistics) this.statistics.reset();
+        if (this.foodBuffs) this.foodBuffs.clearAllBuffs();
+        if (this.homeBeacons) {
+            this.homeBeacons.beacons = [];
+            this.homeBeacons.activeSpawnIndex = 0;
+            this.homeBeacons.lastDeathPosition = null;
+        }
+        if (this.wildlife) this.wildlife.clear();
 
         // Snap camera to new position
         this.camera.snapToTarget();
@@ -233,6 +285,43 @@ class Game {
         if (this.taming) {
             this.taming.update(deltaTime);
         }
+        
+        // ====== UPDATE NEW SYSTEMS ======
+        
+        // Weather effects
+        if (this.weather) {
+            this.weather.update(deltaTime);
+        }
+        
+        // Statistics tracking
+        if (this.statistics) {
+            this.statistics.update(deltaTime);
+        }
+        
+        // Temperature effects
+        if (this.temperature) {
+            this.temperature.update(deltaTime);
+        }
+        
+        // Food buffs
+        if (this.foodBuffs) {
+            this.foodBuffs.update(deltaTime);
+        }
+        
+        // Home beacon cooldowns
+        if (this.homeBeacons) {
+            this.homeBeacons.update(deltaTime);
+        }
+        
+        // Throwable projectiles
+        if (this.throwables) {
+            this.throwables.update(deltaTime);
+        }
+        
+        // Ambient wildlife
+        if (this.wildlife) {
+            this.wildlife.update(deltaTime);
+        }
 
         if (this.player) {
             this.player.update(deltaTime);
@@ -252,11 +341,27 @@ class Game {
         this.particles.update(deltaTime);
     }
     respawn() {
+        // Track death in statistics
+        if (this.statistics) {
+            this.statistics.onDeath();
+        }
+        
+        // Record death position for home beacon system
+        if (this.homeBeacons) {
+            this.homeBeacons.onPlayerDeath(this.player.x, this.player.y, this.player.z);
+        }
+        
         this.player.health = this.player.maxHealth;
         this.player.hunger = this.player.maxHunger;
         this.player.isDead = false;
 
-        if (this.player.spawnPoint) {
+        // Use home beacon spawn if available
+        if (this.homeBeacons && this.homeBeacons.beacons.length > 0) {
+            const spawn = this.homeBeacons.getSpawnPosition();
+            this.player.x = spawn.x;
+            this.player.y = spawn.y;
+            this.player.z = spawn.z;
+        } else if (this.player.spawnPoint) {
             this.player.x = this.player.spawnPoint.x;
             this.player.y = this.player.spawnPoint.y;
             this.player.z = this.player.spawnPoint.z;
@@ -269,6 +374,11 @@ class Game {
         this.player.vx = 0;
         this.player.vy = 0;
         this.player.vz = 0;
+
+        // Clear food buffs on death
+        if (this.foodBuffs) {
+            this.foodBuffs.clearAllBuffs();
+        }
 
         // Reset time? Maybe keep it.
         // Clear enemies nearby?

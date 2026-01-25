@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Giant Sloth Sprite -->
+  <ellipse cx="32" cy="58" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body (Hunched) -->
+  <path d="M20 50 Q 32 10 50 40 L 46 54 L 24 54 Z" fill="#8B4513"/>
+  
+  <!-- Head -->
+  <ellipse cx="50" cy="36" rx="6" ry="5" fill="#C4A484"/>
+  
+  <!-- Arms/Claws -->
+  <path d="M40 40 L 30 54 L 26 52" stroke="#6B4423" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M26 52 L 22 56" stroke="#F5F5DC" stroke-width="3"/>
+
+  <!-- Legs -->
+  <rect x="24" y="50" width="8" height="6" fill="#6B4423"/>
+  
+  <!-- Eye -->
+  <circle cx="52" cy="34" r="1.5" fill="black"/>
+</svg>

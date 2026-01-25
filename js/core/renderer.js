@@ -111,8 +111,29 @@ export class Renderer {
             // Get visible chunks and sort blocks for rendering
             this.renderWorld();
             this.renderEntities();
+            
+            // Render wildlife (ambient creatures)
+            if (this.game.wildlife) {
+                this.game.wildlife.render(this.ctx, camera);
+            }
+            
+            // Render throwable projectiles
+            if (this.game.throwables) {
+                this.game.throwables.render(this.ctx, camera);
+            }
+            
+            // Render home beacon markers
+            if (this.game.homeBeacons) {
+                this.game.homeBeacons.render(this.ctx, camera);
+            }
+            
             // Particles
             this.renderParticles();
+            
+            // Render weather effects (rain, snow, etc.)
+            if (this.game.weather) {
+                this.game.weather.render(this.ctx, this.width, this.height);
+            }
 
             // Highlight Block
             this.renderHighlight();
@@ -122,6 +143,11 @@ export class Renderer {
             
             // Cursor
             this.renderCursor();
+            
+            // Render minimap (UI overlay)
+            if (this.game.minimap) {
+                this.game.minimap.render(this.ctx);
+            }
 
             this.ctx.restore();
         } catch (e) {

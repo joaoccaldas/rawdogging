@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Wolf Sprite -->
+  <ellipse cx="32" cy="58" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body -->
+  <path d="M20 30 L44 30 L48 40 L44 50 L20 50 L16 40 Z" fill="#708090"/>
+  
+  <!-- Head -->
+  <path d="M44 26 L56 26 L58 34 L50 38 L44 34 Z" fill="#708090"/>
+  
+  <!-- Ears -->
+  <path d="M46 20 L48 26 L44 26 Z" fill="#506070"/>
+  <path d="M52 20 L54 26 L50 26 Z" fill="#506070"/>
+
+  <!-- Legs -->
+  <rect x="22" y="50" width="6" height="8" fill="#708090"/>
+  <rect x="38" y="50" width="6" height="8" fill="#708090"/>
+
+  <!-- Tail -->
+  <path d="M20 34 L10 30 L8 40 L20 40 Z" fill="#506070"/>
+
+  <!-- Eye -->
+  <circle cx="52" cy="28" r="2" fill="white"/>
+  <circle cx="53" cy="28" r="1" fill="black"/>
+
+  <!-- Snout -->
+  <rect x="56" y="30" width="4" height="4" fill="#2F4F4F"/>
+</svg>

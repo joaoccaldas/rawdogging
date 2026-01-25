@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Rhino Sprite -->
+  <ellipse cx="32" cy="58" rx="16" ry="5" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body -->
+  <rect x="16" y="34" width="32" height="18" rx="4" fill="#708090"/>
+  
+  <!-- Head -->
+  <path d="M48 34 L60 40 L56 50 L48 52 Z" fill="#708090"/>
+  
+  <!-- Horn -->
+  <path d="M58 38 L62 30 L60 38 Z" fill="#F5F5DC"/>
+  <path d="M54 36 L56 32 L56 36 Z" fill="#F5F5DC"/>
+
+  <!-- Legs -->
+  <rect x="18" y="52" width="8" height="6" fill="#506070"/>
+  <rect x="38" y="52" width="8" height="6" fill="#506070"/>
+
+  <!-- Eye -->
+  <circle cx="52" cy="40" r="1.5" fill="black"/>
+</svg>

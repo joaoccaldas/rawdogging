@@ -20,7 +20,7 @@ export class SaveManager {
 
     save() {
         const data = {
-            version: 2, // Increment when save format changes
+            version: 3, // Increment when save format changes
             player: {
                 x: this.game.player.x,
                 y: this.game.player.y,
@@ -45,6 +45,13 @@ export class SaveManager {
             quests: this.game.questManager ? this.game.questManager.serialize() : null,
             // Taming system
             taming: this.game.taming ? this.game.taming.serialize() : null,
+            // ====== NEW SYSTEMS ======
+            weather: this.game.weather ? this.game.weather.serialize() : null,
+            armor: this.game.armor ? this.game.armor.serialize() : null,
+            statistics: this.game.statistics ? this.game.statistics.serialize() : null,
+            temperature: this.game.temperature ? this.game.temperature.serialize() : null,
+            foodBuffs: this.game.foodBuffs ? this.game.foodBuffs.serialize() : null,
+            homeBeacons: this.game.homeBeacons ? this.game.homeBeacons.serialize() : null,
         };
 
         try {
@@ -109,6 +116,38 @@ export class SaveManager {
             // Restore Taming/Pets
             if (data.taming && this.game.taming) {
                 this.game.taming.deserialize(data.taming);
+            }
+            
+            // ====== RESTORE NEW SYSTEMS ======
+            
+            // Restore Weather
+            if (data.weather && this.game.weather) {
+                this.game.weather.deserialize(data.weather);
+            }
+            
+            // Restore Armor
+            if (data.armor && this.game.armor) {
+                this.game.armor.deserialize(data.armor);
+            }
+            
+            // Restore Statistics
+            if (data.statistics && this.game.statistics) {
+                this.game.statistics.deserialize(data.statistics);
+            }
+            
+            // Restore Temperature
+            if (data.temperature && this.game.temperature) {
+                this.game.temperature.deserialize(data.temperature);
+            }
+            
+            // Restore Food Buffs
+            if (data.foodBuffs && this.game.foodBuffs) {
+                this.game.foodBuffs.deserialize(data.foodBuffs);
+            }
+            
+            // Restore Home Beacons
+            if (data.homeBeacons && this.game.homeBeacons) {
+                this.game.homeBeacons.deserialize(data.homeBeacons);
             }
 
             console.log('Game Loaded');

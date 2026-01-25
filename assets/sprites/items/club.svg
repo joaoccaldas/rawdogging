@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Club -->
+  <path d="M6 26 L 14 18 L 26 6 Q 30 2 26 2 Q 22 2 18 6 L 6 26 Z" fill="#8B4513"/>
+  <circle cx="24" cy="8" r="1.5" fill="#5D4037"/> <!-- Knots -->
+  <circle cx="22" cy="10" r="1" fill="#5D4037"/>
+</svg>

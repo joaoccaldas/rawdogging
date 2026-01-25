@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Mammoth Sprite -->
+  <ellipse cx="32" cy="58" rx="16" ry="5" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body -->
+  <ellipse cx="32" cy="40" rx="20" ry="16" fill="#4B3621"/>
+  <ellipse cx="32" cy="30" rx="14" ry="10" fill="#3D2B1F"/> <!-- Hump -->
+  
+  <!-- Head -->
+  <circle cx="50" cy="30" r="12" fill="#4B3621"/>
+  <circle cx="50" cy="20" r="6" fill="#3D2B1F"/> <!-- Hair -->
+  
+  <!-- Trunk -->
+  <path d="M58 36 Q 64 48 56 50" stroke="#4B3621" stroke-width="6" fill="none" stroke-linecap="round"/>
+  
+  <!-- Tusks -->
+  <path d="M54 38 Q 64 42 60 28" stroke="#F5F5DC" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- Legs -->
+  <rect x="18" y="50" width="8" height="10" rx="2" fill="#3D2B1F"/>
+  <rect x="38" y="50" width="8" height="10" rx="2" fill="#3D2B1F"/>
+  
+  <!-- Eye -->
+  <circle cx="52" cy="28" r="2" fill="white"/>
+  <circle cx="53" cy="28" r="1" fill="black"/>
+</svg>

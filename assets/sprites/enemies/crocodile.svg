@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Crocodile Sprite -->
+  <ellipse cx="32" cy="58" rx="20" ry="4" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body (Low) -->
+  <rect x="16" y="46" width="32" height="8" fill="#228B22"/>
+  <path d="M16 46 L 6 50 L 16 54 Z" fill="#228B22"/> <!-- Tail -->
+
+  <!-- Head -->
+  <path d="M48 46 L62 48 L62 52 L48 54 Z" fill="#228B22"/>
+  
+  <!-- Teeth -->
+  <path d="M50 52 L51 51 L52 52 M54 52 L55 51 L56 52" stroke="white" stroke-width="1" fill="none"/>
+
+  <!-- Legs -->
+  <rect x="20" y="54" width="4" height="4" fill="#006400"/>
+  <rect x="40" y="54" width="4" height="4" fill="#006400"/>
+  
+  <!-- Eye -->
+  <circle cx="50" cy="45" r="2" fill="#006400"/>
+  <circle cx="50" cy="46" r="1" fill="yellow"/>
+</svg>

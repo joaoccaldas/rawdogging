@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Boss Bear Sprite (White/Polar, Spikes) -->
+  <ellipse cx="32" cy="58" rx="18" ry="6" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body -->
+  <ellipse cx="32" cy="40" rx="20" ry="16" fill="#F0F8FF"/>
+  
+  <!-- Spikes -->
+  <path d="M30 24 L34 14 L38 24" fill="#B0C4DE"/>
+  <path d="M20 28 L24 18 L28 28" fill="#B0C4DE"/>
+  
+  <!-- Head -->
+  <circle cx="52" cy="30" r="12" fill="#F0F8FF"/>
+  
+  <!-- Ears -->
+  <circle cx="44" cy="20" r="3" fill="#E6E6FA"/>
+  <circle cx="60" cy="20" r="3" fill="#E6E6FA"/>
+
+  <!-- Legs -->
+  <rect x="18" y="50" width="10" height="10" rx="2" fill="#E6E6FA"/>
+  <rect x="36" y="50" width="10" height="10" rx="2" fill="#E6E6FA"/>
+
+  <!-- Eye (Purple Glow) -->
+  <circle cx="54" cy="28" r="3" fill="#8A2BE2"/>
+  
+  <!-- Snout -->
+  <ellipse cx="60" cy="34" rx="4" ry="3" fill="#B0C4DE"/>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Sabertooth Sprite -->
+  <ellipse cx="32" cy="58" rx="16" ry="5" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Body -->
+  <path d="M16 34 L48 34 L52 46 L48 54 L16 54 L12 46 Z" fill="#DAA520"/>
+  
+  <!-- Head -->
+  <path d="M48 30 L58 30 L60 40 L54 44 L48 40 Z" fill="#DAA520"/>
+  
+  <!-- Fangs -->
+  <path d="M58 40 L58 50 L56 50 Z" fill="white"/>
+  <path d="M54 40 L54 48 L52 48 Z" fill="white"/>
+
+  <!-- Legs -->
+  <rect x="18" y="54" width="6" height="6" fill="#B8860B"/>
+  <rect x="42" y="54" width="6" height="6" fill="#B8860B"/>
+
+  <!-- Tail -->
+  <path d="M16 38 L4 34" stroke="#DAA520" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Eye -->
+  <circle cx="54" cy="34" r="2" fill="yellow"/>
+  <rect x="53.5" y="33" width="1" height="2" fill="black"/>
+</svg>

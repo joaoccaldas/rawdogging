@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Spider Sprite -->
+  <ellipse cx="32" cy="58" rx="12" ry="4" fill="rgba(0,0,0,0.3)"/>
+  
+  <!-- Legs -->
+  <path d="M32 40 L 16 30 M32 40 L 16 40 M32 40 L 16 50 M32 40 L 20 60" stroke="#1A1A1A" stroke-width="2"/>
+  <path d="M32 40 L 48 30 M32 40 L 48 40 M32 40 L 48 50 M32 40 L 44 60" stroke="#1A1A1A" stroke-width="2"/>
+
+  <!-- Abdomen -->
+  <circle cx="32" cy="40" r="8" fill="#2F4F4F"/>
+  <circle cx="32" cy="38" r="2" fill="red"/> <!-- Hourglass/Spot -->
+  
+  <!-- Head -->
+  <circle cx="32" cy="48" r="5" fill="#1A1A1A"/>
+  
+  <!-- Eyes -->
+  <circle cx="30" cy="48" r="1" fill="red"/>
+  <circle cx="34" cy="48" r="1" fill="red"/>
+</svg>
