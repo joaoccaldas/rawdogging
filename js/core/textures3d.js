@@ -475,21 +475,25 @@ export class TextureManager3D {
         ctx.globalCompositeOperation = 'source-over';
     }
 
-    addOrePattern(ctx, blockId, baseColor, random) {
+    addOrePattern(ctx, blockId, baseColor, random, colors) {
         const size = this.tileSize;
         
         // Add stone texture first
         this.addStoneNoise(ctx, baseColor, random);
         
-        // Ore colors
-        const oreColors = {
-            [BLOCKS.COAL_ORE]: '#1A1A1A',
-            [BLOCKS.IRON_ORE]: '#C8A882',
-            [BLOCKS.GOLD_ORE]: '#FFD700',
-            [BLOCKS.DIAMOND_ORE]: '#5EE8D0',
-        };
-        
-        const oreColor = oreColors[blockId] || '#FF00FF';
+        // Get ore color from blockColors if available, otherwise use defaults
+        let oreColor = colors?.oreColor;
+        if (!oreColor) {
+            const oreColors = {
+                [BLOCKS.COAL_ORE]: '#1A1A1A',
+                [BLOCKS.IRON_ORE]: '#C8A882',
+                [BLOCKS.GOLD_ORE]: '#FFD700',
+                [BLOCKS.DIAMOND_ORE]: '#5EE8D0',
+                [BLOCKS.COPPER_ORE]: '#B87333',
+                [BLOCKS.TIN_ORE]: '#C0C0C0',
+            };
+            oreColor = oreColors[blockId] || '#FF00FF';
+        }
         
         // Add ore spots
         const spots = 3 + Math.floor(random() * 4);
