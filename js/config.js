@@ -108,7 +108,7 @@ export const BLOCK_DATA = {
     [BLOCKS.GOLD_ORE]: { name: 'Gold Ore', solid: true, transparent: false, hardness: 5, drops: 'raw_gold', color: '#FFD700', emoji: '🟡' },
     [BLOCKS.DIAMOND_ORE]: { name: 'Diamond Ore', solid: true, transparent: false, hardness: 6, drops: 'diamond', color: '#00FFFF', emoji: '💎' },
     [BLOCKS.BEDROCK]: { name: 'Bedrock', solid: true, transparent: false, hardness: -1, drops: null, color: '#1a1a1a', emoji: '⬛' },
-    [BLOCKS.GRAVEL]: { name: 'Gravel', solid: true, transparent: false, hardness: 1, drops: 'gravel', color: '#696969', emoji: '⚫' },
+    [BLOCKS.GRAVEL]: { name: 'Gravel', solid: true, transparent: false, hardness: 1, drops: 'flint', color: '#696969', emoji: '⚫' },
     [BLOCKS.CLAY]: { name: 'Clay', solid: true, transparent: false, hardness: 1, drops: 'clay', color: '#A9A9A9', emoji: '🔘' },
     [BLOCKS.SNOW]: { name: 'Snow', solid: true, transparent: false, hardness: 0.5, drops: 'snowball', color: '#FFFAFA', emoji: '❄️' },
     [BLOCKS.ICE]: { name: 'Ice', solid: true, transparent: true, hardness: 1, drops: null, color: '#ADD8E6', emoji: '🧊' },

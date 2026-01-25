@@ -145,12 +145,15 @@ class Game {
         this.player.hunger = CONFIG.PLAYER_MAX_HUNGER;
         this.player.inventory.fill(null);
         this.player.hotbar.fill(null);
-        // Give starter items
-        this.player.addItem('wooden_pickaxe');
-        this.player.addItem('torch');
-        this.player.addItem('cooked_meat');
-        this.player.hotbar[2].count = 5;
-        this.player.hotbar[1].count = 10;
+        this.player.xp = 0;
+        this.player.level = 1;
+        this.player.nextLevelXp = 100;
+        
+        // Give Stone Age starter items
+        this.player.addItem('club', 1);
+        this.player.addItem('cobblestone', 5);
+        this.player.addItem('stick', 8);
+        this.player.addItem('raw_meat', 3);
 
         // 3. Find Spawn at chunk center
         this.world.generateChunk(0, 0); // Ensure origin chunk exists

@@ -45,9 +45,10 @@ export class Player extends Entity {
         this.hotbar = new Array(CONFIG.HOTBAR_SIZE).fill(null);
         this.selectedSlot = 0;
 
-        // Initial items
-        this.hotbar[0] = { ...ITEMS.wooden_pickaxe, count: 1 };
-        this.hotbar[1] = { ...ITEMS.torch, count: 10 };
+        // Initial items - Stone Age starter kit
+        this.hotbar[0] = { ...ITEMS.club, count: 1 };
+        this.hotbar[1] = { ...ITEMS.cobblestone, count: 5 };
+        this.hotbar[2] = { ...ITEMS.stick, count: 8 };
         this.hotbar[2] = { ...ITEMS.cooked_meat, count: 5 };
 
         // Interaction
