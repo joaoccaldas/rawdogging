@@ -32,12 +32,22 @@ export class SaveManager {
                 inventory: this.game.player.inventory,
                 hotbar: this.game.player.hotbar,
                 spawnPoint: this.game.player.spawnPoint,
+                firstSteps: this.game.firstSteps,
+                introCinematic: this.game.introCinematic
             },
             world: {
-                seed: this.game.world.noise.seed,
+                seeds: {
+                    noise: this.game.world.noise.seed,
+                    biome: this.game.world.biomeNoise.seed,
+                    humidity: this.game.world.humidityNoise.seed,
+                    temperature: this.game.world.temperatureNoise.seed
+                },
                 timeOfDay: this.game.world.timeOfDay,
                 dayCount: this.game.world.dayCount || 0,
-                chunks: Array.from(this.game.world.chunks.entries())
+                // Only save chunks that have been modified
+                chunks: Array.from(this.game.world.chunks.values())
+                    .filter(c => c.isModified)
+                    .map(c => c.serialize())
             },
             // Skills system
             skills: this.game.skills ? this.game.skills.serialize() : null,
@@ -74,7 +84,6 @@ export class SaveManager {
             // ====== 20 ADDITIONAL FEATURE SYSTEMS ======
             toolDurability: this.game.toolDurability?.serialize() || null,
             difficulty: this.game.difficulty?.serialize() || null,
-            tutorial: this.game.tutorial?.serialize() || null,
             bestiary: this.game.bestiary?.serialize() || null,
             mapCraft: this.game.mapCraft?.serialize() || null,
             fishing: this.game.fishing?.serialize() || null,
@@ -86,11 +95,21 @@ export class SaveManager {
         };
 
         try {
+            // Backup existing save if present - try but don't fail if backup exceeds quota
+            try {
+                const existing = localStorage.getItem(this.currentSlot);
+                if (existing) {
+                    localStorage.setItem(this.currentSlot + '_backup', existing);
+                }
+            } catch (backupError) {
+                console.warn('Backup failed, likely quota limit but proceeding with primary save', backupError);
+            }
+
             // LocalStorage has 5MB limit. Full chunks might blow it.
             const saveString = JSON.stringify(data);
             localStorage.setItem(this.currentSlot, saveString);
             console.log(`Game Saved to ${this.currentSlot} (${(saveString.length / 1024).toFixed(1)} KB)`);
-            this.showNotification('Game Saved');
+            this.showNotification('Game Saved (Backup Created)');
         } catch (e) {
             console.error('Save failed', e);
             if (e.name === 'QuotaExceededError') {
@@ -119,68 +138,80 @@ export class SaveManager {
             if (data.player.spawnPoint) {
                 this.game.player.spawnPoint = data.player.spawnPoint;
             }
+            this.game.firstSteps = data.player.firstSteps || false;
+            this.game.introCinematic = data.player.introCinematic || false;
             this.game.player.updateUI();
 
-            // Restore World
-            this.game.world.timeOfDay = data.world.timeOfDay;
-            this.game.world.dayCount = data.world.dayCount || 0;
+            // Restore World Seeds for deterministic generation
+            if (data.world.seeds) {
+                this.game.world.noise.seed = data.world.seeds.noise;
+                this.game.world.biomeNoise.seed = data.world.seeds.biome;
+                this.game.world.humidityNoise.seed = data.world.seeds.humidity;
+                this.game.world.temperatureNoise.seed = data.world.seeds.temperature;
 
-            // Restore Chunks
-            if (data.world.chunks) {
-                data.world.chunks.forEach(([key, chunkData]) => {
-                    const chunk = this.game.world.getChunk(chunkData.x, chunkData.y) || this.game.world.generateChunk(chunkData.x, chunkData.y);
-                    chunk.blocks = chunkData.blocks;
-                    this.game.world.chunks.set(key, chunk);
+                // Re-initialize noise objects with restored seeds
+                this.game.world.noise = new (this.game.world.noise.constructor)(data.world.seeds.noise);
+                this.game.world.biomeNoise = new (this.game.world.biomeNoise.constructor)(data.world.seeds.biome);
+                this.game.world.humidityNoise = new (this.game.world.humidityNoise.constructor)(data.world.seeds.humidity);
+                this.game.world.temperatureNoise = new (this.game.world.temperatureNoise.constructor)(data.world.seeds.temperature);
+            }
+
+            // Restore Chunks (Modified ones only)
+            if (data.world.chunks && this.game.world.loadSerializedChunks) {
+                this.game.world.loadSerializedChunks(data.world.chunks);
+                // Mark loaded chunks as modified so they persist on next save
+                this.game.world.chunks.forEach(chunk => {
+                    chunk.isModified = true;
                 });
             }
-            
+
             // Restore Skills
             if (data.skills && this.game.skills) {
                 this.game.skills.deserialize(data.skills);
             }
-            
+
             // Restore Quests
             if (data.quests && this.game.questManager) {
                 this.game.questManager.deserialize(data.quests);
             }
-            
+
             // Restore Taming/Pets
             if (data.taming && this.game.taming) {
                 this.game.taming.deserialize(data.taming);
             }
-            
+
             // ====== RESTORE NEW SYSTEMS ======
-            
+
             // Restore Weather
             if (data.weather && this.game.weather) {
                 this.game.weather.deserialize(data.weather);
             }
-            
+
             // Restore Armor
             if (data.armor && this.game.armor) {
                 this.game.armor.deserialize(data.armor);
             }
-            
+
             // Restore Statistics
             if (data.statistics && this.game.statistics) {
                 this.game.statistics.deserialize(data.statistics);
             }
-            
+
             // Restore Temperature
             if (data.temperature && this.game.temperature) {
                 this.game.temperature.deserialize(data.temperature);
             }
-            
+
             // Restore Food Buffs
             if (data.foodBuffs && this.game.foodBuffs) {
                 this.game.foodBuffs.deserialize(data.foodBuffs);
             }
-            
+
             // Restore Home Beacons
             if (data.homeBeacons && this.game.homeBeacons) {
                 this.game.homeBeacons.deserialize(data.homeBeacons);
             }
-            
+
             // ====== RESTORE 20 NEW SYSTEMS ======
             if (data.stamina && this.game.stamina) this.game.stamina.deserialize(data.stamina);
             if (data.statusEffects && this.game.statusEffects) this.game.statusEffects.deserialize(data.statusEffects);
@@ -200,11 +231,10 @@ export class SaveManager {
             if (data.buildingSnapGrid && this.game.buildingSnapGrid) this.game.buildingSnapGrid.deserialize(data.buildingSnapGrid);
             if (data.torchLighting && this.game.torchLighting) this.game.torchLighting.deserialize(data.torchLighting);
             if (data.damageNumbers && this.game.damageNumbers) this.game.damageNumbers.deserialize(data.damageNumbers);
-            
+
             // ====== RESTORE 20 ADDITIONAL FEATURE SYSTEMS ======
             if (data.toolDurability && this.game.toolDurability) this.game.toolDurability.deserialize(data.toolDurability);
             if (data.difficulty && this.game.difficulty) this.game.difficulty.deserialize(data.difficulty);
-            if (data.tutorial && this.game.tutorial) this.game.tutorial.deserialize(data.tutorial);
             if (data.bestiary && this.game.bestiary) this.game.bestiary.deserialize(data.bestiary);
             if (data.mapCraft && this.game.mapCraft) this.game.mapCraft.deserialize(data.mapCraft);
             if (data.fishing && this.game.fishing) this.game.fishing.deserialize(data.fishing);
@@ -221,25 +251,25 @@ export class SaveManager {
             return false;
         }
     }
-    
+
     // Delete a save slot
     deleteSave(slot = null) {
         const slotToDelete = slot || this.currentSlot;
         localStorage.removeItem(slotToDelete);
         console.log(`Deleted save: ${slotToDelete}`);
     }
-    
+
     // Check if save exists
     hasSave(slot = null) {
         const slotToCheck = slot || this.currentSlot;
         return localStorage.getItem(slotToCheck) !== null;
     }
-    
+
     // Get save info for slot selection
     getSaveInfo(slot) {
         const json = localStorage.getItem(slot);
         if (!json) return null;
-        
+
         try {
             const data = JSON.parse(json);
             return {

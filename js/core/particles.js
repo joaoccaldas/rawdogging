@@ -23,17 +23,28 @@ export class ParticleSystem {
         }
     }
 
-    emitText(x, y, z, text, color = '#fff') {
+    emitText(x, y, z, text, color = '#fff', size = 20) {
         const p = new Particle(x, y, z, color);
         p.text = text;
-        p.vx = (Math.random() - 0.5) * 1;
-        p.vy = (Math.random() - 0.5) * 1;
-        p.vz = 2; // Fly up
-        p.decay = 1.0; // Slower fade
-        p.size = 20; // Text size
+        p.vx = (Math.random() - 0.5) * 1.5;
+        p.vy = (Math.random() - 0.5) * 1.5;
+        p.vz = 3; // Float up faster
+        p.decay = 0.8; // Duration
+        p.size = size;
         this.particles.push(p);
     }
-    
+
+    emitItemPickup(x, y, z, emoji, name, count = 1) {
+        const p = new Particle(x, y, z, '#ffffff');
+        p.text = `${emoji} +${count} ${name}`;
+        p.vx = 0;
+        p.vy = 0;
+        p.vz = 2.5;
+        p.decay = 1.0;
+        p.size = 22;
+        this.particles.push(p);
+    }
+
     // Spawn predefined particle effects
     spawn(effectType, x, y, z, count = 5) {
         switch (effectType) {
@@ -49,7 +60,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'fire':
                 // Fire sparks (for torches, campfires)
                 for (let i = 0; i < count; i++) {
@@ -62,7 +73,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'smoke':
                 // Smoke particles
                 for (let i = 0; i < count; i++) {
@@ -76,7 +87,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'water':
                 // Water splash
                 for (let i = 0; i < count; i++) {
@@ -89,7 +100,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'blood':
                 // Blood splatter (for combat)
                 for (let i = 0; i < count; i++) {
@@ -102,7 +113,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'heart':
                 // Hearts (for taming, healing)
                 for (let i = 0; i < count; i++) {
@@ -116,7 +127,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'star':
                 // Stars (for level up, achievements)
                 for (let i = 0; i < count; i++) {
@@ -130,7 +141,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'xp':
                 // XP orbs
                 for (let i = 0; i < count; i++) {
@@ -143,7 +154,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'block_break':
                 // Block breaking particles - use block color
                 const colors = ['#8b4513', '#666666', '#228b22', '#d2b48c'];
@@ -157,7 +168,7 @@ export class ParticleSystem {
                     this.particles.push(p);
                 }
                 break;
-                
+
             case 'critical':
                 // Critical hit indicator
                 const p = new Particle(x, y, z, '#ffff00');
@@ -167,17 +178,17 @@ export class ParticleSystem {
                 p.decay = 1.5;
                 this.particles.push(p);
                 break;
-                
+
             default:
                 this.emit(x, y, z, '#ffffff', count);
         }
     }
-    
+
     // Emit block-specific particles when mining
     emitBlockParticles(x, y, z, blockId, count = 8) {
         const blockData = BLOCK_DATA[blockId];
         let color = '#666666';
-        
+
         // Determine color based on block type
         if (blockId === BLOCKS.GRASS) color = '#228b22';
         else if (blockId === BLOCKS.DIRT) color = '#8b4513';
@@ -189,7 +200,7 @@ export class ParticleSystem {
         else if (blockId === BLOCKS.IRON_ORE) color = '#d4a574';
         else if (blockId === BLOCKS.GOLD_ORE) color = '#ffd700';
         else if (blockId === BLOCKS.DIAMOND_ORE) color = '#00ffff';
-        
+
         for (let i = 0; i < count; i++) {
             const p = new Particle(x + 0.5, y + 0.5, z + 0.5, color);
             p.size = 2 + Math.random() * 3;

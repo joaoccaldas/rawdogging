@@ -22,13 +22,15 @@
         <!-- Start Screen (shown first) -->
         <div id="start-screen" class="menu-screen">
             <div class="menu-logo">
-                <img src="assets/sprites/player/playercave.png" alt="Player" class="menu-character" width="128" height="128" />
+                <img src="assets/sprites/player/playercave.png" alt="Player" class="menu-character" width="128"
+                    height="128" />
             </div>
             <h1>🦣 Stone Age</h1>
             <p class="tagline">Survive 300,000 BC</p>
             <div class="name-input-container">
                 <label for="player-name">Enter Your Name</label>
-                <input type="text" id="player-name" class="name-input" placeholder="Survivor" maxlength="20" autocomplete="off" />
+                <input type="text" id="player-name" class="name-input" placeholder="Survivor" maxlength="20"
+                    autocomplete="off" />
             </div>
             <div class="menu-buttons">
                 <button id="btn-new-game" class="menu-btn">Start Journey</button>
@@ -49,6 +51,16 @@
                     <button id="btn-resume" class="menu-btn">Resume</button>
                     <button id="btn-save" class="menu-btn">Save Game</button>
                     <button id="btn-quit" class="menu-btn">Quit to Title</button>
+                </div>
+
+                <!-- New: Quest Info in Pause Menu -->
+                <div id="pause-quest-info"
+                    style="margin-top: 20px; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid #8B4513;">
+                    <h3
+                        style="color: #ffd700; border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 10px;">
+                        📜 Current Objectives</h3>
+                    <div id="pause-main-quest">No active main quest</div>
+                    <div id="pause-side-quests" style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;"></div>
                 </div>
             </div>
         </div>
@@ -80,19 +92,17 @@
                 <div id="hunger-fill"></div>
                 <span id="hunger-text">100/100</span>
             </div>
-            
+
             <!-- New: Temperature Bar -->
             <div id="temperature-bar" title="Body Temperature">
                 <div id="temperature-fill"></div>
                 <span id="temperature-text">🌡️ 50°</span>
             </div>
-            
+
             <!-- New: Armor Display -->
             <div id="armor-display" title="Defense">
                 <span id="armor-text">🛡️ 0</span>
             </div>
-            
-            <div id="hotbar"></div>
 
             <div id="level-display">
                 <span id="level-text">Lvl 1</span>
@@ -108,12 +118,12 @@
                 <!-- New: Weather Display -->
                 <span id="weather-text">☀️ Clear</span>
             </div>
-            
+
             <!-- New: Active Buffs Display -->
             <div id="buffs-display"></div>
-            
+
             <!-- Quest Panel -->
-            <div id="quest-panel">
+            <div id="quest-panel" class="hidden">
                 <div class="quest-header">
                     <span class="quest-icon">🔥</span>
                     <span class="quest-name">Loading...</span>
@@ -121,12 +131,14 @@
                 <div class="quest-description">Complete objectives to progress</div>
                 <div class="quest-objectives"></div>
             </div>
-            
+
             <!-- Side Quest Panel -->
-            <div id="side-quest-panel">
+            <div id="side-quest-panel" class="hidden">
                 <div class="no-quests">No active side quests</div>
             </div>
         </div>
+
+        <div id="hotbar"></div>
 
         <!-- Inventory Screen -->
         <div id="inventory-screen" class="modal hidden">

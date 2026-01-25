@@ -109,6 +109,14 @@ export const BLOCKS = {
     THATCH: 37, // Prehistoric roof material
     MUD_BRICK: 38,
     CAMPFIRE: 39,
+    // Stone Age Building Extensions
+    THATCH_STAIRS_N: 400, THATCH_STAIRS_S: 401, THATCH_STAIRS_E: 402, THATCH_STAIRS_W: 403,
+    THATCH_SLAB: 404,
+    MUD_BRICK_STAIRS_N: 410, MUD_BRICK_STAIRS_S: 411, MUD_BRICK_STAIRS_E: 412, MUD_BRICK_STAIRS_W: 413,
+    MUD_BRICK_SLAB: 414,
+    COBBLE_STAIRS_N: 420, COBBLE_STAIRS_S: 421, COBBLE_STAIRS_E: 422, COBBLE_STAIRS_W: 423,
+    COBBLE_SLAB: 424,
+    WALL_COBBLE: 425,
     // New blocks for progression
     STONE_BRICKS: 40,
     VINES: 41,
@@ -158,414 +166,435 @@ export const BLOCKS = {
 
 // Block Properties - Each block has unique characteristics
 export const BLOCK_DATA = {
-    [BLOCKS.AIR]: { 
-        name: 'Air', solid: false, transparent: true, hardness: 0, 
+    [BLOCKS.AIR]: {
+        name: 'Air', solid: false, transparent: true, hardness: 0,
         drops: null, color: 'transparent', emoji: '',
         flammable: false, lightLevel: 0
     },
-    [BLOCKS.STONE]: { 
-        name: 'Stone', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.STONE]: {
+        name: 'Stone', solid: true, transparent: false, hardness: 3,
         drops: 'cobblestone', color: '#888888', emoji: '🪨',
         toolRequired: 'pickaxe', flammable: false, blastResistance: 6
     },
-    [BLOCKS.DIRT]: { 
-        name: 'Dirt', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.DIRT]: {
+        name: 'Dirt', solid: true, transparent: false, hardness: 1,
         drops: 'dirt', color: '#8B4513', emoji: '🟫',
         flammable: false, canGrowGrass: true
     },
-    [BLOCKS.GRASS]: { 
-        name: 'Grass', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.GRASS]: {
+        name: 'Grass', solid: true, transparent: false, hardness: 1,
         drops: 'dirt', color: '#228B22', emoji: '🌿',
         flammable: false, spreadable: true
     },
-    [BLOCKS.SAND]: { 
-        name: 'Sand', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.SAND]: {
+        name: 'Sand', solid: true, transparent: false, hardness: 1,
         drops: 'sand', color: '#F4D03F', emoji: '🏖️',
         gravity: true, flammable: false
     },
-    [BLOCKS.WATER]: { 
-        name: 'Water', solid: false, transparent: true, hardness: 0, 
+    [BLOCKS.WATER]: {
+        name: 'Water', solid: false, transparent: true, hardness: 0,
         drops: null, color: '#4169E1', emoji: '💧',
         fluid: true, flowSpeed: 4
     },
-    [BLOCKS.WOOD]: { 
-        name: 'Wood Log', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.WOOD]: {
+        name: 'Wood Log', solid: true, transparent: false, hardness: 2,
         drops: 'wood', color: '#8B5A2B', emoji: '🪵',
         toolPreferred: 'axe', flammable: true, burnTime: 300
     },
-    [BLOCKS.LEAVES]: { 
-        name: 'Leaves', solid: false, transparent: true, hardness: 0.5, 
+    [BLOCKS.LEAVES]: {
+        name: 'Leaves', solid: false, transparent: true, hardness: 0.5,
         drops: 'leaves', color: '#32CD32', emoji: '🍃',
         flammable: true, decayable: true, dropChance: { stick: 0.1, apple: 0.02 }
     },
-    [BLOCKS.COAL_ORE]: { 
-        name: 'Coal Ore', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.COAL_ORE]: {
+        name: 'Coal Ore', solid: true, transparent: false, hardness: 4,
         drops: 'coal', color: '#333333', emoji: '⬛',
         toolRequired: 'pickaxe', xpDrop: 1
     },
-    [BLOCKS.IRON_ORE]: { 
-        name: 'Iron Ore', solid: true, transparent: false, hardness: 5, 
+    [BLOCKS.IRON_ORE]: {
+        name: 'Iron Ore', solid: true, transparent: false, hardness: 5,
         drops: 'raw_iron', color: '#CD853F', emoji: '🔶',
         toolRequired: 'pickaxe', toolLevel: 1, xpDrop: 2
     },
-    [BLOCKS.GOLD_ORE]: { 
-        name: 'Gold Ore', solid: true, transparent: false, hardness: 5, 
+    [BLOCKS.GOLD_ORE]: {
+        name: 'Gold Ore', solid: true, transparent: false, hardness: 5,
         drops: 'raw_gold', color: '#FFD700', emoji: '🟡',
         toolRequired: 'pickaxe', toolLevel: 2, xpDrop: 3
     },
-    [BLOCKS.DIAMOND_ORE]: { 
-        name: 'Diamond Ore', solid: true, transparent: false, hardness: 6, 
+    [BLOCKS.DIAMOND_ORE]: {
+        name: 'Diamond Ore', solid: true, transparent: false, hardness: 6,
         drops: 'diamond', color: '#00FFFF', emoji: '💎',
         toolRequired: 'pickaxe', toolLevel: 2, xpDrop: 5
     },
-    [BLOCKS.BEDROCK]: { 
-        name: 'Bedrock', solid: true, transparent: false, hardness: -1, 
+    [BLOCKS.BEDROCK]: {
+        name: 'Bedrock', solid: true, transparent: false, hardness: -1,
         drops: null, color: '#1a1a1a', emoji: '⬛',
         unbreakable: true, blastResistance: 999
     },
-    [BLOCKS.GRAVEL]: { 
-        name: 'Gravel', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.GRAVEL]: {
+        name: 'Gravel', solid: true, transparent: false, hardness: 1,
         drops: 'flint', color: '#696969', emoji: '⚫',
         gravity: true, dropChance: { flint: 0.3, gravel: 0.7 }
     },
-    [BLOCKS.CLAY]: { 
-        name: 'Clay', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.CLAY]: {
+        name: 'Clay', solid: true, transparent: false, hardness: 1,
         drops: 'clay', color: '#A9A9A9', emoji: '🔘',
         dropCount: 4
     },
-    [BLOCKS.SNOW]: { 
-        name: 'Snow', solid: true, transparent: false, hardness: 0.5, 
+    [BLOCKS.SNOW]: {
+        name: 'Snow', solid: true, transparent: false, hardness: 0.5,
         drops: 'snowball', color: '#FFFAFA', emoji: '❄️',
         meltsNearFire: true
     },
-    [BLOCKS.ICE]: { 
-        name: 'Ice', solid: true, transparent: true, hardness: 1, 
+    [BLOCKS.ICE]: {
+        name: 'Ice', solid: true, transparent: true, hardness: 1,
         drops: null, color: '#ADD8E6', emoji: '🧊',
         slippery: true, meltsNearFire: true
     },
-    [BLOCKS.CRAFTING_TABLE]: { 
-        name: 'Crafting Table', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.CRAFTING_TABLE]: {
+        name: 'Crafting Table', solid: true, transparent: false, hardness: 2,
         drops: 'crafting_table', color: '#DEB887', emoji: '🔨',
         interactive: true, craftingGrid: 3
     },
-    [BLOCKS.FURNACE]: { 
-        name: 'Furnace', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.FURNACE]: {
+        name: 'Furnace', solid: true, transparent: false, hardness: 3,
         drops: 'furnace', color: '#A0522D', emoji: '🔥',
         interactive: true, canSmelt: true
     },
-    [BLOCKS.CHEST]: { 
-        name: 'Chest', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.CHEST]: {
+        name: 'Chest', solid: true, transparent: false, hardness: 2,
         drops: 'chest', color: '#D2691E', emoji: '📦',
         interactive: true, storage: 27
     },
-    [BLOCKS.FARMLAND]: { 
-        name: 'Farmland', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.FARMLAND]: {
+        name: 'Farmland', solid: true, transparent: false, hardness: 1,
         drops: 'dirt', color: '#5D4037', emoji: '🌱',
         canPlant: true, hydratable: true
     },
-    [BLOCKS.WHEAT_CROP]: { 
-        name: 'Wild Grain', solid: false, transparent: true, hardness: 0, 
+    [BLOCKS.WHEAT_CROP]: {
+        name: 'Wild Grain', solid: false, transparent: true, hardness: 0,
         drops: 'wheat', color: '#D4A017', emoji: '🌾',
         growable: true, growthStages: 7
     },
-    [BLOCKS.CACTUS]: { 
-        name: 'Cactus', solid: false, transparent: true, hardness: 1, 
+    [BLOCKS.CACTUS]: {
+        name: 'Cactus', solid: false, transparent: true, hardness: 1,
         drops: 'cactus', color: '#2E8B57', emoji: '🌵',
         damageOnTouch: 1, maxHeight: 3
     },
     // New building blocks
-    [BLOCKS.COBBLESTONE]: { 
-        name: 'Cobblestone', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.COBBLESTONE]: {
+        name: 'Cobblestone', solid: true, transparent: false, hardness: 3,
         drops: 'cobblestone', color: '#696969', emoji: '🧱',
         toolRequired: 'pickaxe', blastResistance: 6
     },
-    [BLOCKS.PLANKS]: { 
-        name: 'Wood Planks', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.PLANKS]: {
+        name: 'Wood Planks', solid: true, transparent: false, hardness: 2,
         drops: 'plank', color: '#C19A6B', emoji: '🪵',
         flammable: true, burnTime: 300
     },
-    [BLOCKS.BRICK]: { 
-        name: 'Brick', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.BRICK]: {
+        name: 'Brick', solid: true, transparent: false, hardness: 4,
         drops: 'brick_block', color: '#8B4513', emoji: '🧱',
         toolRequired: 'pickaxe', blastResistance: 6
     },
-    [BLOCKS.GLASS]: { 
-        name: 'Glass', solid: true, transparent: true, hardness: 0.5, 
+    [BLOCKS.GLASS]: {
+        name: 'Glass', solid: true, transparent: true, hardness: 0.5,
         drops: null, color: '#E0FFFF', emoji: '🪟',
         fragile: true
     },
-    [BLOCKS.TORCH]: { 
-        name: 'Torch', solid: false, transparent: true, hardness: 0, 
+    [BLOCKS.TORCH]: {
+        name: 'Torch', solid: false, transparent: true, hardness: 0,
         drops: 'torch', color: '#FFA500', emoji: '🔦',
         lightLevel: 14, attachable: true
     },
-    [BLOCKS.LADDER]: { 
-        name: 'Ladder', solid: false, transparent: true, hardness: 0.5, 
+    [BLOCKS.LADDER]: {
+        name: 'Ladder', solid: false, transparent: true, hardness: 0.5,
         drops: 'ladder', color: '#8B4513', emoji: '🪜',
         climbable: true
     },
-    [BLOCKS.FENCE]: { 
-        name: 'Fence', solid: true, transparent: true, hardness: 2, 
+    [BLOCKS.FENCE]: {
+        name: 'Fence', solid: true, transparent: true, hardness: 2,
         drops: 'fence', color: '#8B5A2B', emoji: '🚧',
         connectsTo: ['fence', 'fence_gate'], collision: { height: 1.5 }
     },
-    [BLOCKS.DOOR]: { 
-        name: 'Door', solid: true, transparent: true, hardness: 2, 
+    [BLOCKS.DOOR]: {
+        name: 'Door', solid: true, transparent: true, hardness: 2,
         drops: 'door', color: '#8B4513', emoji: '🚪',
         interactive: true, openable: true
     },
-    [BLOCKS.MOSS_STONE]: { 
-        name: 'Mossy Stone', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.MOSS_STONE]: {
+        name: 'Mossy Stone', solid: true, transparent: false, hardness: 3,
         drops: 'moss_stone', color: '#4A7023', emoji: '🪨',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.SANDSTONE]: { 
-        name: 'Sandstone', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.SANDSTONE]: {
+        name: 'Sandstone', solid: true, transparent: false, hardness: 2,
         drops: 'sandstone', color: '#D2B48C', emoji: '🟨',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.OBSIDIAN]: { 
-        name: 'Obsidian', solid: true, transparent: false, hardness: 10, 
+    [BLOCKS.OBSIDIAN]: {
+        name: 'Obsidian', solid: true, transparent: false, hardness: 10,
         drops: 'obsidian', color: '#1C1C1C', emoji: '⬛',
         toolRequired: 'pickaxe', toolLevel: 3, blastResistance: 1200
     },
-    [BLOCKS.CLAY_BRICK]: { 
-        name: 'Clay Brick', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.CLAY_BRICK]: {
+        name: 'Clay Brick', solid: true, transparent: false, hardness: 2,
         drops: 'clay_brick', color: '#BC8F8F', emoji: '🧱',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.BONE_BLOCK]: { 
-        name: 'Bone Block', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.BONE_BLOCK]: {
+        name: 'Bone Block', solid: true, transparent: false, hardness: 2,
         drops: 'bone_block', color: '#F5F5DC', emoji: '🦴',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.HAY_BLOCK]: { 
-        name: 'Hay Block', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.HAY_BLOCK]: {
+        name: 'Hay Block', solid: true, transparent: false, hardness: 1,
         drops: 'hay_block', color: '#DAA520', emoji: '🌾',
         flammable: true, fallDamageReduction: 0.8
     },
-    [BLOCKS.THATCH]: { 
-        name: 'Thatch Roof', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.THATCH]: {
+        name: 'Thatch Roof', solid: true, transparent: false, hardness: 1,
         drops: 'thatch', color: '#BDB76B', emoji: '🏠',
         flammable: true
     },
-    [BLOCKS.MUD_BRICK]: { 
-        name: 'Mud Brick', solid: true, transparent: false, hardness: 1.5, 
+    [BLOCKS.MUD_BRICK]: {
+        name: 'Mud Brick', solid: true, transparent: false, hardness: 1.5,
         drops: 'mud_brick', color: '#6B4423', emoji: '🟫',
     },
-    [BLOCKS.CAMPFIRE]: { 
-        name: 'Campfire', solid: false, transparent: true, hardness: 1, 
+    // THATCH VARIANTS
+    [BLOCKS.THATCH_STAIRS_N]: { name: 'Thatch Stairs', solid: true, transparent: true, hardness: 1, drops: 'thatch_stairs', color: '#BDB76B', shape: 'stairs', dir: 'N' },
+    [BLOCKS.THATCH_STAIRS_S]: { name: 'Thatch Stairs', solid: true, transparent: true, hardness: 1, drops: 'thatch_stairs', color: '#BDB76B', shape: 'stairs', dir: 'S' },
+    [BLOCKS.THATCH_STAIRS_E]: { name: 'Thatch Stairs', solid: true, transparent: true, hardness: 1, drops: 'thatch_stairs', color: '#BDB76B', shape: 'stairs', dir: 'E' },
+    [BLOCKS.THATCH_STAIRS_W]: { name: 'Thatch Stairs', solid: true, transparent: true, hardness: 1, drops: 'thatch_stairs', color: '#BDB76B', shape: 'stairs', dir: 'W' },
+    [BLOCKS.THATCH_SLAB]: { name: 'Thatch Slab', solid: true, transparent: true, hardness: 1, drops: 'thatch_slab', color: '#BDB76B', shape: 'slab' },
+
+    // MUD BRICK VARIANTS
+    [BLOCKS.MUD_BRICK_STAIRS_N]: { name: 'Mud Brick Stairs', solid: true, transparent: true, hardness: 1.5, drops: 'mud_brick_stairs', color: '#6B4423', shape: 'stairs', dir: 'N' },
+    [BLOCKS.MUD_BRICK_STAIRS_S]: { name: 'Mud Brick Stairs', solid: true, transparent: true, hardness: 1.5, drops: 'mud_brick_stairs', color: '#6B4423', shape: 'stairs', dir: 'S' },
+    [BLOCKS.MUD_BRICK_STAIRS_E]: { name: 'Mud Brick Stairs', solid: true, transparent: true, hardness: 1.5, drops: 'mud_brick_stairs', color: '#6B4423', shape: 'stairs', dir: 'E' },
+    [BLOCKS.MUD_BRICK_STAIRS_W]: { name: 'Mud Brick Stairs', solid: true, transparent: true, hardness: 1.5, drops: 'mud_brick_stairs', color: '#6B4423', shape: 'stairs', dir: 'W' },
+    [BLOCKS.MUD_BRICK_SLAB]: { name: 'Mud Brick Slab', solid: true, transparent: true, hardness: 1.5, drops: 'mud_brick_slab', color: '#6B4423', shape: 'slab' },
+
+    // COBBLE VARIANTS
+    [BLOCKS.COBBLE_STAIRS_N]: { name: 'Cobble Stairs', solid: true, transparent: true, hardness: 3, drops: 'cobble_stairs', color: '#696969', shape: 'stairs', dir: 'N' },
+    [BLOCKS.COBBLE_STAIRS_S]: { name: 'Cobble Stairs', solid: true, transparent: true, hardness: 3, drops: 'cobble_stairs', color: '#696969', shape: 'stairs', dir: 'S' },
+    [BLOCKS.COBBLE_STAIRS_E]: { name: 'Cobble Stairs', solid: true, transparent: true, hardness: 3, drops: 'cobble_stairs', color: '#696969', shape: 'stairs', dir: 'E' },
+    [BLOCKS.COBBLE_STAIRS_W]: { name: 'Cobble Stairs', solid: true, transparent: true, hardness: 3, drops: 'cobble_stairs', color: '#696969', shape: 'stairs', dir: 'W' },
+    [BLOCKS.COBBLE_SLAB]: { name: 'Cobble Slab', solid: true, transparent: true, hardness: 3, drops: 'cobble_slab', color: '#696969', shape: 'slab' },
+    [BLOCKS.WALL_COBBLE]: { name: 'Cobble Wall', solid: true, transparent: true, hardness: 3, drops: 'wall_cobble', color: '#696969', shape: 'wall' },
+    [BLOCKS.CAMPFIRE]: {
+        name: 'Campfire', solid: false, transparent: true, hardness: 1,
         drops: 'coal', color: '#FF4500', emoji: '🔥',
         lightLevel: 15, damageOnTouch: 1, canCook: true
     },
-    [BLOCKS.STONE_BRICKS]: { 
-        name: 'Stone Bricks', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.STONE_BRICKS]: {
+        name: 'Stone Bricks', solid: true, transparent: false, hardness: 3,
         drops: 'stone_bricks', color: '#808080', emoji: '🧱',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.VINES]: { 
-        name: 'Vines', solid: false, transparent: true, hardness: 0.5, 
+    [BLOCKS.VINES]: {
+        name: 'Vines', solid: false, transparent: true, hardness: 0.5,
         drops: 'vines', color: '#228B22', emoji: '🌿',
         climbable: true
     },
-    [BLOCKS.BED]: { 
-        name: 'Bed', solid: true, transparent: false, hardness: 1, 
+    [BLOCKS.BED]: {
+        name: 'Bed', solid: true, transparent: false, hardness: 1,
         drops: 'bed', color: '#8B0000', emoji: '🛏️',
         setSpawn: true
     },
-    [BLOCKS.COPPER_ORE]: { 
-        name: 'Copper Ore', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.COPPER_ORE]: {
+        name: 'Copper Ore', solid: true, transparent: false, hardness: 4,
         drops: 'raw_copper', color: '#B87333', emoji: '🟠',
         toolRequired: 'pickaxe', toolLevel: 1, xpDrop: 2
     },
-    [BLOCKS.TIN_ORE]: { 
-        name: 'Tin Ore', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.TIN_ORE]: {
+        name: 'Tin Ore', solid: true, transparent: false, hardness: 4,
         drops: 'raw_tin', color: '#D3D3D3', emoji: '⚪',
         toolRequired: 'pickaxe', toolLevel: 1, xpDrop: 2
     },
-    [BLOCKS.FORGE]: { 
-        name: 'Forge', solid: true, transparent: false, hardness: 5, 
+    [BLOCKS.FORGE]: {
+        name: 'Forge', solid: true, transparent: false, hardness: 5,
         drops: 'forge', color: '#8B4513', emoji: '🔥',
         toolRequired: 'pickaxe', craftingStation: true
     },
-    [BLOCKS.ANVIL]: { 
-        name: 'Anvil', solid: true, transparent: false, hardness: 6, 
+    [BLOCKS.ANVIL]: {
+        name: 'Anvil', solid: true, transparent: false, hardness: 6,
         drops: 'anvil', color: '#4A4A4A', emoji: '🔨',
         toolRequired: 'pickaxe', craftingStation: true
     },
-    [BLOCKS.TANNING_RACK]: { 
-        name: 'Tanning Rack', solid: true, transparent: true, hardness: 2, 
+    [BLOCKS.TANNING_RACK]: {
+        name: 'Tanning Rack', solid: true, transparent: true, hardness: 2,
         drops: 'tanning_rack', color: '#8B4513', emoji: '🦌',
         craftingStation: true
     },
-    
+
     // Medieval Age Blocks
-    [BLOCKS.WOOD_BEAM]: { 
-        name: 'Wood Beam', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.WOOD_BEAM]: {
+        name: 'Wood Beam', solid: true, transparent: false, hardness: 3,
         drops: 'wood_beam', color: '#8B4513', emoji: '🪵',
         toolRequired: 'axe'
     },
-    [BLOCKS.COBBLESTONE_WALL]: { 
-        name: 'Cobblestone Wall', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.COBBLESTONE_WALL]: {
+        name: 'Cobblestone Wall', solid: true, transparent: false, hardness: 4,
         drops: 'cobblestone_wall', color: '#696969', emoji: '🧱',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.IRON_BARS]: { 
-        name: 'Iron Bars', solid: true, transparent: true, hardness: 5, 
+    [BLOCKS.IRON_BARS]: {
+        name: 'Iron Bars', solid: true, transparent: true, hardness: 5,
         drops: 'iron_bars', color: '#808080', emoji: '⬜',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.GATE]: { 
-        name: 'Gate', solid: true, transparent: true, hardness: 3, 
+    [BLOCKS.GATE]: {
+        name: 'Gate', solid: true, transparent: true, hardness: 3,
         drops: 'gate', color: '#8B4513', emoji: '🚪',
         toolRequired: 'axe', interactable: true
     },
-    [BLOCKS.PORTCULLIS]: { 
-        name: 'Portcullis', solid: true, transparent: true, hardness: 6, 
+    [BLOCKS.PORTCULLIS]: {
+        name: 'Portcullis', solid: true, transparent: true, hardness: 6,
         drops: 'portcullis', color: '#4A4A4A', emoji: '🚧',
         toolRequired: 'pickaxe', interactable: true
     },
-    [BLOCKS.IRRIGATION]: { 
-        name: 'Irrigation Channel', solid: false, transparent: true, hardness: 1, 
+    [BLOCKS.IRRIGATION]: {
+        name: 'Irrigation Channel', solid: false, transparent: true, hardness: 1,
         drops: 'irrigation', color: '#4169E1', emoji: '💧',
         waterSource: true
     },
-    [BLOCKS.BARLEY_CROP]: { 
-        name: 'Barley', solid: false, transparent: true, hardness: 0.5, 
+    [BLOCKS.BARLEY_CROP]: {
+        name: 'Barley', solid: false, transparent: true, hardness: 0.5,
         drops: 'barley', color: '#DAA520', emoji: '🌾',
         growthStages: 4, cropType: true
     },
-    [BLOCKS.FLAX_CROP]: { 
-        name: 'Flax', solid: false, transparent: true, hardness: 0.5, 
+    [BLOCKS.FLAX_CROP]: {
+        name: 'Flax', solid: false, transparent: true, hardness: 0.5,
         drops: 'flax', color: '#6495ED', emoji: '🌿',
         growthStages: 4, cropType: true
     },
-    [BLOCKS.LOOM]: { 
-        name: 'Loom', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.LOOM]: {
+        name: 'Loom', solid: true, transparent: false, hardness: 2,
         drops: 'loom', color: '#DEB887', emoji: '🧵',
         craftingStation: true
     },
-    [BLOCKS.STABLE]: { 
-        name: 'Stable', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.STABLE]: {
+        name: 'Stable', solid: true, transparent: false, hardness: 3,
         drops: 'stable', color: '#8B4513', emoji: '🏠',
         animalHousing: true
     },
-    [BLOCKS.MARKET_STALL]: { 
-        name: 'Market Stall', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.MARKET_STALL]: {
+        name: 'Market Stall', solid: true, transparent: false, hardness: 2,
         drops: 'market_stall', color: '#F4A460', emoji: '🏪',
         tradingStation: true
     },
-    [BLOCKS.WELL]: { 
-        name: 'Well', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.WELL]: {
+        name: 'Well', solid: true, transparent: false, hardness: 4,
         drops: 'well', color: '#696969', emoji: '🪣',
         waterSource: true, infiniteWater: true
     },
-    
+
     // Industrial Age Blocks
-    [BLOCKS.STEEL_BLOCK]: { 
-        name: 'Steel Block', solid: true, transparent: false, hardness: 8, 
+    [BLOCKS.STEEL_BLOCK]: {
+        name: 'Steel Block', solid: true, transparent: false, hardness: 8,
         drops: 'steel_block', color: '#708090', emoji: '⬜',
         toolRequired: 'pickaxe', toolLevel: 3
     },
-    [BLOCKS.STEAM_ENGINE]: { 
-        name: 'Steam Engine', solid: true, transparent: false, hardness: 6, 
+    [BLOCKS.STEAM_ENGINE]: {
+        name: 'Steam Engine', solid: true, transparent: false, hardness: 6,
         drops: 'steam_engine', color: '#4A4A4A', emoji: '⚙️',
         toolRequired: 'pickaxe', powerSource: true, powerOutput: 50
     },
-    [BLOCKS.BOILER]: { 
-        name: 'Boiler', solid: true, transparent: false, hardness: 6, 
+    [BLOCKS.BOILER]: {
+        name: 'Boiler', solid: true, transparent: false, hardness: 6,
         drops: 'boiler', color: '#B22222', emoji: '🔥',
         toolRequired: 'pickaxe', fuelConsumer: true
     },
-    [BLOCKS.CONVEYOR_BELT]: { 
-        name: 'Conveyor Belt', solid: false, transparent: true, hardness: 3, 
+    [BLOCKS.CONVEYOR_BELT]: {
+        name: 'Conveyor Belt', solid: false, transparent: true, hardness: 3,
         drops: 'conveyor_belt', color: '#2F4F4F', emoji: '➡️',
         moveItems: true, powerConsumer: true
     },
-    [BLOCKS.ASSEMBLER]: { 
-        name: 'Assembler', solid: true, transparent: false, hardness: 5, 
+    [BLOCKS.ASSEMBLER]: {
+        name: 'Assembler', solid: true, transparent: false, hardness: 5,
         drops: 'assembler', color: '#4682B4', emoji: '🏭',
         toolRequired: 'pickaxe', craftingStation: true, autoCraft: true
     },
-    [BLOCKS.CRUSHER]: { 
-        name: 'Crusher', solid: true, transparent: false, hardness: 6, 
+    [BLOCKS.CRUSHER]: {
+        name: 'Crusher', solid: true, transparent: false, hardness: 6,
         drops: 'crusher', color: '#696969', emoji: '⚒️',
         toolRequired: 'pickaxe', processingStation: true
     },
-    [BLOCKS.METAL_PIPE]: { 
-        name: 'Metal Pipe', solid: true, transparent: true, hardness: 4, 
+    [BLOCKS.METAL_PIPE]: {
+        name: 'Metal Pipe', solid: true, transparent: true, hardness: 4,
         drops: 'metal_pipe', color: '#808080', emoji: '🔧',
         toolRequired: 'pickaxe', fluidTransport: true
     },
-    [BLOCKS.GEAR_BLOCK]: { 
-        name: 'Gear Block', solid: true, transparent: false, hardness: 5, 
+    [BLOCKS.GEAR_BLOCK]: {
+        name: 'Gear Block', solid: true, transparent: false, hardness: 5,
         drops: 'gear_block', color: '#B8860B', emoji: '⚙️',
         toolRequired: 'pickaxe', powerTransfer: true
     },
-    [BLOCKS.CHIMNEY]: { 
-        name: 'Chimney', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.CHIMNEY]: {
+        name: 'Chimney', solid: true, transparent: false, hardness: 4,
         drops: 'chimney', color: '#8B0000', emoji: '🏭',
         toolRequired: 'pickaxe', pollutionOutput: true
     },
-    [BLOCKS.RAIL]: { 
-        name: 'Rail', solid: false, transparent: true, hardness: 3, 
+    [BLOCKS.RAIL]: {
+        name: 'Rail', solid: false, transparent: true, hardness: 3,
         drops: 'rail', color: '#4A4A4A', emoji: '🛤️',
         toolRequired: 'pickaxe', vehicleTrack: true
     },
-    [BLOCKS.OIL_DEPOSIT]: { 
-        name: 'Oil Deposit', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.OIL_DEPOSIT]: {
+        name: 'Oil Deposit', solid: true, transparent: false, hardness: 2,
         drops: 'crude_oil', color: '#1C1C1C', emoji: '🛢️',
         toolRequired: 'pickaxe', liquidSource: true
     },
-    [BLOCKS.ASPHALT]: { 
-        name: 'Asphalt', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.ASPHALT]: {
+        name: 'Asphalt', solid: true, transparent: false, hardness: 4,
         drops: 'asphalt', color: '#2F2F2F', emoji: '⬛',
         toolRequired: 'pickaxe', speedBoost: 1.3
     },
-    
+
     // Modern Age Blocks
-    [BLOCKS.CONCRETE]: { 
-        name: 'Concrete', solid: true, transparent: false, hardness: 6, 
+    [BLOCKS.CONCRETE]: {
+        name: 'Concrete', solid: true, transparent: false, hardness: 6,
         drops: 'concrete', color: '#A9A9A9', emoji: '🧱',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.GLASS_PANEL]: { 
-        name: 'Glass Panel', solid: true, transparent: true, hardness: 2, 
+    [BLOCKS.GLASS_PANEL]: {
+        name: 'Glass Panel', solid: true, transparent: true, hardness: 2,
         drops: 'glass_panel', color: '#87CEEB', emoji: '🪟',
         toolRequired: 'pickaxe'
     },
-    [BLOCKS.STEEL_FRAME]: { 
-        name: 'Steel Frame', solid: true, transparent: true, hardness: 7, 
+    [BLOCKS.STEEL_FRAME]: {
+        name: 'Steel Frame', solid: true, transparent: true, hardness: 7,
         drops: 'steel_frame', color: '#708090', emoji: '🏗️',
         toolRequired: 'pickaxe', toolLevel: 3
     },
-    [BLOCKS.SOLAR_PANEL]: { 
-        name: 'Solar Panel', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.SOLAR_PANEL]: {
+        name: 'Solar Panel', solid: true, transparent: false, hardness: 3,
         drops: 'solar_panel', color: '#4169E1', emoji: '☀️',
         powerSource: true, powerOutput: 30, requiresDaylight: true
     },
-    [BLOCKS.WIND_TURBINE]: { 
-        name: 'Wind Turbine', solid: true, transparent: true, hardness: 4, 
+    [BLOCKS.WIND_TURBINE]: {
+        name: 'Wind Turbine', solid: true, transparent: true, hardness: 4,
         drops: 'wind_turbine', color: '#F5F5F5', emoji: '🌬️',
         powerSource: true, powerOutput: 40, heightBonus: true
     },
-    [BLOCKS.BATTERY]: { 
-        name: 'Battery', solid: true, transparent: false, hardness: 4, 
+    [BLOCKS.BATTERY]: {
+        name: 'Battery', solid: true, transparent: false, hardness: 4,
         drops: 'battery', color: '#32CD32', emoji: '🔋',
         powerStorage: true, capacity: 1000
     },
-    [BLOCKS.COMPUTER]: { 
-        name: 'Computer', solid: true, transparent: false, hardness: 3, 
+    [BLOCKS.COMPUTER]: {
+        name: 'Computer', solid: true, transparent: false, hardness: 3,
         drops: 'computer', color: '#1C1C1C', emoji: '💻',
         craftingStation: true, programmable: true
     },
-    [BLOCKS.WIRE]: { 
-        name: 'Wire', solid: false, transparent: true, hardness: 1, 
+    [BLOCKS.WIRE]: {
+        name: 'Wire', solid: false, transparent: true, hardness: 1,
         drops: 'wire', color: '#FFD700', emoji: '〰️',
         powerTransfer: true, maxPower: 100
     },
-    [BLOCKS.CIRCUIT_BOARD]: { 
-        name: 'Circuit Board', solid: true, transparent: false, hardness: 2, 
+    [BLOCKS.CIRCUIT_BOARD]: {
+        name: 'Circuit Board', solid: true, transparent: false, hardness: 2,
         drops: 'circuit_board', color: '#228B22', emoji: '🔌',
         logicComponent: true
     },
@@ -584,7 +613,7 @@ export const ITEMS = {
     clay: { name: 'Clay', emoji: '🔘', stackable: true, type: 'block', blockId: BLOCKS.CLAY },
     snow: { name: 'Snow', emoji: '❄️', stackable: true, type: 'block', blockId: BLOCKS.SNOW },
     ice: { name: 'Ice', emoji: '🧊', stackable: true, type: 'block', blockId: BLOCKS.ICE },
-    
+
     // Blocks as items - Building
     plank: { name: 'Wood Planks', emoji: '🪵', stackable: true, type: 'block', blockId: BLOCKS.PLANKS },
     brick_block: { name: 'Brick Block', emoji: '🧱', stackable: true, type: 'block', blockId: BLOCKS.BRICK },
@@ -592,13 +621,22 @@ export const ITEMS = {
     sandstone: { name: 'Sandstone', emoji: '🟨', stackable: true, type: 'block', blockId: BLOCKS.SANDSTONE },
     moss_stone: { name: 'Mossy Stone', emoji: '🪨', stackable: true, type: 'block', blockId: BLOCKS.MOSS_STONE },
     obsidian: { name: 'Obsidian', emoji: '⬛', stackable: true, type: 'block', blockId: BLOCKS.OBSIDIAN },
-    
+
     // Blocks as items - Prehistoric
     thatch: { name: 'Thatch', emoji: '🏠', stackable: true, type: 'block', blockId: BLOCKS.THATCH },
     mud_brick: { name: 'Mud Brick', emoji: '🟫', stackable: true, type: 'block', blockId: BLOCKS.MUD_BRICK },
     bone_block: { name: 'Bone Block', emoji: '🦴', stackable: true, type: 'block', blockId: BLOCKS.BONE_BLOCK },
     hay_block: { name: 'Hay Block', emoji: '🌾', stackable: true, type: 'block', blockId: BLOCKS.HAY_BLOCK },
-    
+
+    // Building Variants Items
+    thatch_stairs: { name: 'Thatch Stairs', emoji: '🪜', stackable: true, type: 'block', blockId: BLOCKS.THATCH_STAIRS_N, placeFunc: 'stairs', baseId: 'THATCH_STAIRS_' },
+    thatch_slab: { name: 'Thatch Slab', emoji: '🟫', stackable: true, type: 'block', blockId: BLOCKS.THATCH_SLAB },
+    mud_brick_stairs: { name: 'Mud Brick Stairs', emoji: '🪜', stackable: true, type: 'block', blockId: BLOCKS.MUD_BRICK_STAIRS_N, placeFunc: 'stairs', baseId: 'MUD_BRICK_STAIRS_' },
+    mud_brick_slab: { name: 'Mud Brick Slab', emoji: '🟫', stackable: true, type: 'block', blockId: BLOCKS.MUD_BRICK_SLAB },
+    cobble_stairs: { name: 'Cobble Stairs', emoji: '🪜', stackable: true, type: 'block', blockId: BLOCKS.COBBLE_STAIRS_N, placeFunc: 'stairs', baseId: 'COBBLE_STAIRS_' },
+    cobble_slab: { name: 'Cobble Slab', emoji: '🟫', stackable: true, type: 'block', blockId: BLOCKS.COBBLE_SLAB },
+    wall_cobble: { name: 'Cobble Wall', emoji: '🚧', stackable: true, type: 'block', blockId: BLOCKS.WALL_COBBLE },
+
     // Blocks as items - Functional
     crafting_table: { name: 'Crafting Table', emoji: '🔨', stackable: true, type: 'block', blockId: BLOCKS.CRAFTING_TABLE },
     furnace: { name: 'Furnace', emoji: '🔥', stackable: true, type: 'block', blockId: BLOCKS.FURNACE },
@@ -634,6 +672,9 @@ export const ITEMS = {
     arrow: { name: 'Arrow', emoji: '🏹', stackable: true, type: 'ammo', damage: 5 },
     water_bucket: { name: 'Water Bucket', emoji: '🪣', stackable: false, type: 'tool' },
     dragon_scale: { name: 'Dragon Scale', emoji: '🐉', stackable: true, type: 'material', rare: true },
+    relic_flint: { name: 'Primal Flint', emoji: '✨', stackable: false, type: 'material', rare: true, description: 'One of the three relics needed to master fire.' },
+    relic_tinder: { name: 'Sacred Tinder', emoji: '🌿', stackable: false, type: 'material', rare: true, description: 'One of the three relics needed to master fire.' },
+    relic_stone: { name: 'Ancient Hearthstone', emoji: '🌑', stackable: false, type: 'material', rare: true, description: 'One of the three relics needed to master fire.' },
 
     // Tools - Prehistoric themed
     wooden_pickaxe: { name: 'Stone Pick', emoji: '⛏️', stackable: false, type: 'tool', toolType: 'pickaxe', damage: 2, miningSpeed: 1.5, durability: 60 },
@@ -672,12 +713,12 @@ export const ITEMS = {
     leather_boots: { name: 'Leather Boots', emoji: '👢', stackable: false, type: 'armor', slot: 'feet', defense: 1, durability: 65 },
     leather_helmet: { name: 'Leather Cap', emoji: '🎓', stackable: false, type: 'armor', slot: 'head', defense: 1, durability: 55 },
     fur_coat: { name: 'Fur Coat', emoji: '🧥', stackable: false, type: 'armor', slot: 'chest', defense: 2, durability: 60, coldResist: 0.3 },
-    
+
     // Armor - Bronze Age
     bronze_armor: { name: 'Bronze Armor', emoji: '🛡️', stackable: false, type: 'armor', slot: 'chest', defense: 5, durability: 165 },
     bronze_helmet: { name: 'Bronze Helmet', emoji: '⛑️', stackable: false, type: 'armor', slot: 'head', defense: 2, durability: 165 },
     bronze_boots: { name: 'Bronze Boots', emoji: '👢', stackable: false, type: 'armor', slot: 'feet', defense: 2, durability: 195 },
-    
+
     // Armor - Iron Age
     iron_armor: { name: 'Iron Armor', emoji: '🛡️', stackable: false, type: 'armor', slot: 'chest', defense: 6, durability: 240 },
     iron_helmet: { name: 'Iron Helmet', emoji: '⛑️', stackable: false, type: 'armor', slot: 'head', defense: 3, durability: 165 },
@@ -707,7 +748,7 @@ export const ITEMS = {
     // Special
     torch: { name: 'Torch', emoji: '🔦', stackable: true, type: 'block', blockId: BLOCKS.TORCH, light: 14 },
     bed: { name: 'Bed', emoji: '🛏️', stackable: false, type: 'placeable' },
-    
+
     // Medieval Age Items - Blocks
     wood_beam: { name: 'Wood Beam', emoji: '🪵', stackable: true, type: 'block', blockId: BLOCKS.WOOD_BEAM },
     cobblestone_wall: { name: 'Cobblestone Wall', emoji: '🧱', stackable: true, type: 'block', blockId: BLOCKS.COBBLESTONE_WALL },
@@ -719,7 +760,7 @@ export const ITEMS = {
     stable: { name: 'Stable', emoji: '🏠', stackable: true, type: 'block', blockId: BLOCKS.STABLE },
     market_stall: { name: 'Market Stall', emoji: '🏪', stackable: true, type: 'block', blockId: BLOCKS.MARKET_STALL },
     well: { name: 'Well', emoji: '🪣', stackable: true, type: 'block', blockId: BLOCKS.WELL },
-    
+
     // Medieval Age Items - Resources
     barley: { name: 'Barley', emoji: '🌾', stackable: true, type: 'material' },
     barley_seeds: { name: 'Barley Seeds', emoji: '🌰', stackable: true, type: 'placeable', blockId: BLOCKS.BARLEY_CROP },
@@ -730,7 +771,7 @@ export const ITEMS = {
     silver_coin: { name: 'Silver Coin', emoji: '🪙', stackable: true, type: 'currency', value: 1 },
     gold_coin: { name: 'Gold Coin', emoji: '💰', stackable: true, type: 'currency', value: 10 },
     steel_ingot: { name: 'Steel Ingot', emoji: '⬜', stackable: true, type: 'material' },
-    
+
     // Medieval Age Items - Weapons
     crossbow: { name: 'Crossbow', emoji: '🏹', stackable: false, type: 'weapon', damage: 12, durability: 300, ranged: true, ammo: 'bolt' },
     longbow: { name: 'Longbow', emoji: '🏹', stackable: false, type: 'weapon', damage: 10, durability: 250, ranged: true, ammo: 'arrow' },
@@ -738,7 +779,7 @@ export const ITEMS = {
     steel_sword: { name: 'Steel Sword', emoji: '⚔️', stackable: false, type: 'weapon', damage: 12, durability: 500 },
     halberd: { name: 'Halberd', emoji: '🔱', stackable: false, type: 'weapon', damage: 14, durability: 400, reach: 2 },
     mace: { name: 'Mace', emoji: '🔨', stackable: false, type: 'weapon', damage: 11, durability: 350, armorPiercing: true },
-    
+
     // Medieval Age Items - Armor
     chainmail_helmet: { name: 'Chainmail Helmet', emoji: '⛑️', stackable: false, type: 'armor', slot: 'head', defense: 3, durability: 200 },
     chainmail_chestplate: { name: 'Chainmail Chestplate', emoji: '🦺', stackable: false, type: 'armor', slot: 'chest', defense: 6, durability: 280 },
@@ -748,12 +789,12 @@ export const ITEMS = {
     plate_chestplate: { name: 'Plate Chestplate', emoji: '🦺', stackable: false, type: 'armor', slot: 'chest', defense: 8, durability: 400 },
     plate_leggings: { name: 'Plate Leggings', emoji: '👖', stackable: false, type: 'armor', slot: 'legs', defense: 7, durability: 380 },
     plate_boots: { name: 'Plate Boots', emoji: '👢', stackable: false, type: 'armor', slot: 'feet', defense: 4, durability: 340 },
-    
+
     // Medieval Age Items - Tools
     plough: { name: 'Plough', emoji: '🔧', stackable: false, type: 'tool', toolType: 'hoe', tier: 4, durability: 400, efficiency: 3 },
     steel_pickaxe: { name: 'Steel Pickaxe', emoji: '⛏️', stackable: false, type: 'tool', toolType: 'pickaxe', tier: 4, damage: 6, durability: 600, efficiency: 3 },
     steel_axe: { name: 'Steel Axe', emoji: '🪓', stackable: false, type: 'tool', toolType: 'axe', tier: 4, damage: 8, durability: 600, efficiency: 3 },
-    
+
     // Industrial Age Items - Blocks
     steel_block: { name: 'Steel Block', emoji: '⬜', stackable: true, type: 'block', blockId: BLOCKS.STEEL_BLOCK },
     steam_engine: { name: 'Steam Engine', emoji: '⚙️', stackable: true, type: 'block', blockId: BLOCKS.STEAM_ENGINE },
@@ -766,7 +807,7 @@ export const ITEMS = {
     chimney: { name: 'Chimney', emoji: '🏭', stackable: true, type: 'block', blockId: BLOCKS.CHIMNEY },
     rail: { name: 'Rail', emoji: '🛤️', stackable: true, type: 'block', blockId: BLOCKS.RAIL },
     asphalt: { name: 'Asphalt', emoji: '⬛', stackable: true, type: 'block', blockId: BLOCKS.ASPHALT },
-    
+
     // Industrial Age Items - Resources
     crude_oil: { name: 'Crude Oil', emoji: '🛢️', stackable: true, type: 'material' },
     refined_oil: { name: 'Refined Oil', emoji: '🛢️', stackable: true, type: 'fuel', burnTime: 200 },
@@ -775,13 +816,13 @@ export const ITEMS = {
     gunpowder: { name: 'Gunpowder', emoji: '💥', stackable: true, type: 'material' },
     gear: { name: 'Gear', emoji: '⚙️', stackable: true, type: 'material' },
     spring: { name: 'Spring', emoji: '🔩', stackable: true, type: 'material' },
-    
+
     // Industrial Age Items - Weapons
     musket: { name: 'Musket', emoji: '🔫', stackable: false, type: 'weapon', damage: 20, durability: 200, ranged: true, ammo: 'bullet', reloadTime: 3 },
     rifle: { name: 'Rifle', emoji: '🔫', stackable: false, type: 'weapon', damage: 25, durability: 300, ranged: true, ammo: 'bullet', reloadTime: 1.5 },
     bullet: { name: 'Bullet', emoji: '🔘', stackable: true, type: 'ammo', damage: 15 },
     dynamite: { name: 'Dynamite', emoji: '🧨', stackable: true, type: 'throwable', damage: 30, explosionRadius: 3 },
-    
+
     // Modern Age Items - Blocks
     concrete: { name: 'Concrete', emoji: '🧱', stackable: true, type: 'block', blockId: BLOCKS.CONCRETE },
     glass_panel: { name: 'Glass Panel', emoji: '🪟', stackable: true, type: 'block', blockId: BLOCKS.GLASS_PANEL },
@@ -792,43 +833,43 @@ export const ITEMS = {
     computer: { name: 'Computer', emoji: '💻', stackable: true, type: 'block', blockId: BLOCKS.COMPUTER },
     wire: { name: 'Wire', emoji: '〰️', stackable: true, type: 'block', blockId: BLOCKS.WIRE },
     circuit_board: { name: 'Circuit Board', emoji: '🔌', stackable: true, type: 'block', blockId: BLOCKS.CIRCUIT_BOARD },
-    
+
     // Modern Age Items - Resources
     silicon: { name: 'Silicon', emoji: '💎', stackable: true, type: 'material' },
     copper_wire: { name: 'Copper Wire', emoji: '〰️', stackable: true, type: 'material' },
     microchip: { name: 'Microchip', emoji: '🔲', stackable: true, type: 'material' },
     battery_cell: { name: 'Battery Cell', emoji: '🔋', stackable: true, type: 'material' },
     electric_motor: { name: 'Electric Motor', emoji: '⚡', stackable: true, type: 'material' },
-    
+
     // Modern Age Items - Weapons
     laser_rifle: { name: 'Laser Rifle', emoji: '🔫', stackable: false, type: 'weapon', damage: 30, durability: 500, ranged: true, ammo: 'energy_cell', instantHit: true },
     energy_cell: { name: 'Energy Cell', emoji: '⚡', stackable: true, type: 'ammo', damage: 25 },
     plasma_sword: { name: 'Plasma Sword', emoji: '⚔️', stackable: false, type: 'weapon', damage: 25, durability: 800, lightSaber: true },
     drone: { name: 'Combat Drone', emoji: '🛸', stackable: false, type: 'tool', deployable: true, attackDamage: 10, health: 50 },
-    
+
     // Modern Age Items - Armor
     kevlar_vest: { name: 'Kevlar Vest', emoji: '🦺', stackable: false, type: 'armor', slot: 'chest', defense: 10, durability: 500, bulletResistance: 0.5 },
     tactical_helmet: { name: 'Tactical Helmet', emoji: '⛑️', stackable: false, type: 'armor', slot: 'head', defense: 6, durability: 400, nightVision: true },
     exo_suit: { name: 'Exo-Suit', emoji: '🤖', stackable: false, type: 'armor', slot: 'chest', defense: 15, durability: 1000, strengthBoost: 2, speedBoost: 1.5 },
-    
+
     // ====== EVENT-SPECIFIC ITEMS ======
-    
+
     // Meteor Shower Drops
     meteor_fragment: { name: 'Meteor Fragment', emoji: '☄️', stackable: true, type: 'material', rare: true, value: 50 },
     star_dust: { name: 'Star Dust', emoji: '✨', stackable: true, type: 'material', rare: true, value: 100, enchantPower: 2 },
     ancient_ore: { name: 'Ancient Ore', emoji: '🌟', stackable: true, type: 'material', rare: true, value: 200 },
-    
+
     // Dungeon Loot
     dungeon_key: { name: 'Dungeon Key', emoji: '🗝️', stackable: true, type: 'key', unlocks: 'dungeon' },
     boss_trophy: { name: 'Boss Trophy', emoji: '🏆', stackable: true, type: 'material', rare: true },
     ancient_tablet: { name: 'Ancient Tablet', emoji: '📜', stackable: true, type: 'lore', givesRecipe: true },
     cursed_relic: { name: 'Cursed Relic', emoji: '💀', stackable: false, type: 'equipment', curse: true, power: 15 },
-    
+
     // Portal Items
     portal_stone: { name: 'Portal Stone', emoji: '🔮', stackable: true, type: 'consumable', opensPortal: true },
     void_shard: { name: 'Void Shard', emoji: '🌑', stackable: true, type: 'material', rare: true },
     rift_essence: { name: 'Rift Essence', emoji: '💜', stackable: true, type: 'material', rare: true },
-    
+
     // Fishing Items
     fishing_rod: { name: 'Fishing Rod', emoji: '🎣', stackable: false, type: 'tool', toolType: 'fishing_rod', durability: 65 },
     fishing_rod_upgraded: { name: 'Pro Fishing Rod', emoji: '🎣', stackable: false, type: 'tool', toolType: 'fishing_rod', durability: 200, luck: 1.5 },
@@ -836,7 +877,7 @@ export const ITEMS = {
     golden_bait: { name: 'Golden Bait', emoji: '✨', stackable: true, type: 'consumable', baitPower: 3 },
     legendary_fish: { name: 'Legendary Fish', emoji: '🐠', stackable: true, type: 'food', hunger: 15, health: 10, rare: true },
     treasure_chest: { name: 'Treasure Chest', emoji: '💰', stackable: true, type: 'lootbox', rare: true },
-    
+
     // Potion Items
     empty_bottle: { name: 'Empty Bottle', emoji: '🫙', stackable: true, type: 'material' },
     healing_potion: { name: 'Healing Potion', emoji: '❤️', stackable: true, type: 'consumable', effect: 'heal', power: 30 },
@@ -846,7 +887,7 @@ export const ITEMS = {
     fire_resist_potion: { name: 'Fire Resist Potion', emoji: '🔥', stackable: true, type: 'consumable', effect: 'fire_resist', duration: 120 },
     night_vision_potion: { name: 'Night Vision Potion', emoji: '👁️', stackable: true, type: 'consumable', effect: 'night_vision', duration: 180 },
     water_breathing_potion: { name: 'Water Breathing', emoji: '🫧', stackable: true, type: 'consumable', effect: 'water_breathing', duration: 180 },
-    
+
     // Potion Ingredients
     herb_red: { name: 'Red Herb', emoji: '🌺', stackable: true, type: 'material', potionIngredient: true },
     herb_blue: { name: 'Blue Herb', emoji: '💠', stackable: true, type: 'material', potionIngredient: true },
@@ -854,23 +895,23 @@ export const ITEMS = {
     glowshroom: { name: 'Glowshroom', emoji: '🍄', stackable: true, type: 'material', potionIngredient: true },
     spider_eye: { name: 'Spider Eye', emoji: '👁️', stackable: true, type: 'material', potionIngredient: true },
     magma_cream: { name: 'Magma Cream', emoji: '🔶', stackable: true, type: 'material', potionIngredient: true },
-    
+
     // Grappling Hook
     grappling_hook: { name: 'Grappling Hook', emoji: '🪝', stackable: false, type: 'tool', toolType: 'grapple', range: 15, durability: 100 },
     rope_ladder: { name: 'Rope Ladder', emoji: '🪜', stackable: true, type: 'block', placeable: true },
-    
+
     // Pet Items
     pet_food: { name: 'Pet Food', emoji: '🦴', stackable: true, type: 'consumable', petFood: true, xp: 10 },
     pet_treat: { name: 'Pet Treat', emoji: '🍖', stackable: true, type: 'consumable', petFood: true, xp: 50, evolveChance: 0.1 },
     pet_armor: { name: 'Pet Armor', emoji: '🛡️', stackable: false, type: 'equipment', petEquipment: true, defense: 5 },
     pet_collar: { name: 'Magic Collar', emoji: '📿', stackable: false, type: 'equipment', petEquipment: true, healthBoost: 20 },
-    
+
     // Blueprint Items
     blueprint_house: { name: 'House Blueprint', emoji: '📋', stackable: true, type: 'blueprint', structure: 'simple_house' },
     blueprint_tower: { name: 'Tower Blueprint', emoji: '📋', stackable: true, type: 'blueprint', structure: 'watchtower' },
     blueprint_farm: { name: 'Farm Blueprint', emoji: '📋', stackable: true, type: 'blueprint', structure: 'farm_plot' },
     blueprint_workshop: { name: 'Workshop Blueprint', emoji: '📋', stackable: true, type: 'blueprint', structure: 'workshop' },
-    
+
     // Achievement Rewards
     explorer_compass: { name: 'Explorer Compass', emoji: '🧭', stackable: false, type: 'tool', revealsMap: true, showsStructures: true },
     lucky_charm: { name: 'Lucky Charm', emoji: '🍀', stackable: false, type: 'equipment', luckBoost: 0.25 },
@@ -885,16 +926,16 @@ export const RECIPES = [
     // Basic wood processing
     { result: 'plank', count: 4, ingredients: [['wood', 1]], shape: null, age: 0, category: 'materials' },
     { result: 'stick', count: 4, ingredients: [['plank', 2]], shape: null, age: 0, category: 'materials' },
-    
+
     // Functional blocks
     { result: 'crafting_table', count: 1, ingredients: [['plank', 4]], shape: null, age: 0, category: 'stations' },
     { result: 'furnace', count: 1, ingredients: [['cobblestone', 8]], shape: null, age: 0, category: 'stations' },
     { result: 'chest', count: 1, ingredients: [['plank', 8]], shape: null, age: 0, category: 'storage' },
-    { result: 'campfire', count: 1, ingredients: [['stick', 3], ['coal', 1], ['wood', 3]], shape: null, age: 0, category: 'stations' },
-    
+    { result: 'campfire', count: 1, ingredients: [['relic_flint', 1], ['relic_tinder', 1], ['relic_stone', 1]], shape: null, age: 0, category: 'stations' },
+
     // Light sources
     { result: 'torch', count: 4, ingredients: [['coal', 1], ['stick', 1]], shape: null, age: 0, category: 'light' },
-    
+
     // Primitive weapons - easiest to craft
     { result: 'club', count: 1, ingredients: [['wood', 2]], shape: null, age: 0, category: 'weapons' },
     { result: 'wooden_sword', count: 1, ingredients: [['stick', 2], ['flint', 1]], shape: null, age: 0, category: 'weapons' },
@@ -904,7 +945,7 @@ export const RECIPES = [
     { result: 'wooden_pickaxe', count: 1, ingredients: [['cobblestone', 2], ['stick', 2]], shape: null, age: 0, category: 'tools' },
     { result: 'wooden_axe', count: 1, ingredients: [['cobblestone', 2], ['stick', 2]], shape: null, age: 0, category: 'tools' },
     { result: 'wooden_hoe', count: 1, ingredients: [['stick', 2], ['flint', 1]], shape: null, age: 0, category: 'tools' },
-    
+
     // Building blocks - Stone Age
     { result: 'sandstone', count: 4, ingredients: [['sand', 4]], shape: null, age: 0, category: 'building' },
     { result: 'ladder', count: 3, ingredients: [['stick', 7]], shape: null, age: 0, category: 'building' },
@@ -918,20 +959,20 @@ export const RECIPES = [
     { result: 'bone_block', count: 1, ingredients: [['bone', 9]], shape: null, age: 1, category: 'building' },
     { result: 'hay_block', count: 1, ingredients: [['wheat', 9]], shape: null, age: 1, category: 'building' },
     { result: 'moss_stone', count: 1, ingredients: [['cobblestone', 1], ['leaves', 1]], shape: null, age: 1, category: 'building' },
-    
+
     // Tribal weapons
     { result: 'bone_club', count: 1, ingredients: [['bone', 3], ['leather', 1]], shape: null, age: 1, category: 'weapons' },
     { result: 'bone_knife', count: 1, ingredients: [['bone', 2], ['flint', 1]], shape: null, age: 1, category: 'weapons' },
-    
+
     // Better stone tools
     { result: 'stone_pickaxe', count: 1, ingredients: [['flint', 3], ['stick', 2], ['leather', 1]], shape: null, age: 1, category: 'tools' },
     { result: 'stone_axe', count: 1, ingredients: [['flint', 3], ['stick', 2], ['leather', 1]], shape: null, age: 1, category: 'tools' },
     { result: 'stone_sword', count: 1, ingredients: [['flint', 2], ['stick', 1], ['leather', 1]], shape: null, age: 1, category: 'weapons' },
-    
+
     // Bone tools
     { result: 'bone_pickaxe', count: 1, ingredients: [['bone', 3], ['stick', 2]], shape: null, age: 1, category: 'tools' },
     { result: 'bone_tools', count: 1, ingredients: [['bone', 5], ['leather', 2], ['stick', 2]], shape: null, age: 1, category: 'tools' },
-    
+
     // Crafting stations
     { result: 'tanning_rack', count: 1, ingredients: [['wood', 4], ['leather', 2], ['stick', 4]], shape: null, age: 1, category: 'stations' },
 
@@ -940,7 +981,7 @@ export const RECIPES = [
     { result: 'leather_boots', count: 1, ingredients: [['leather', 4]], shape: null, age: 1, category: 'armor' },
     { result: 'leather_helmet', count: 1, ingredients: [['leather', 5]], shape: null, age: 1, category: 'armor' },
     { result: 'fur_coat', count: 1, ingredients: [['leather', 6], ['string', 2]], shape: null, age: 1, category: 'armor' },
-    
+
     // Survival items
     { result: 'bed', count: 1, ingredients: [['plank', 3], ['leather', 3]], shape: null, age: 1, category: 'building' },
     { result: 'leather', count: 1, ingredients: [['raw_meat', 1]], shape: null, age: 1, category: 'materials' },
@@ -949,12 +990,12 @@ export const RECIPES = [
     { result: 'forge', count: 1, ingredients: [['cobblestone', 8], ['iron_ingot', 4], ['coal', 8]], shape: null, age: 2, category: 'stations' },
     { result: 'brick_block', count: 1, ingredients: [['brick', 4]], shape: null, age: 2, category: 'building' },
     { result: 'stone_bricks', count: 4, ingredients: [['stone', 4]], shape: null, age: 2, category: 'building' },
-    
+
     // Bronze tools
     { result: 'bronze_pickaxe', count: 1, ingredients: [['bronze_ingot', 3], ['stick', 2]], shape: null, age: 2, category: 'tools' },
     { result: 'bronze_axe', count: 1, ingredients: [['bronze_ingot', 3], ['stick', 2]], shape: null, age: 2, category: 'tools' },
     { result: 'bronze_sword', count: 1, ingredients: [['bronze_ingot', 2], ['stick', 1]], shape: null, age: 2, category: 'weapons' },
-    
+
     // Armor - Bronze Age
     { result: 'bronze_armor', count: 1, ingredients: [['bronze_ingot', 8]], shape: null, age: 2, category: 'armor' },
     { result: 'bronze_helmet', count: 1, ingredients: [['bronze_ingot', 5]], shape: null, age: 2, category: 'armor' },
@@ -962,16 +1003,16 @@ export const RECIPES = [
 
     // ========== IRON AGE (age: 3) - Advanced Metalworking ==========
     { result: 'anvil', count: 1, ingredients: [['iron_ingot', 10], ['cobblestone', 4]], shape: null, age: 3, category: 'stations' },
-    
+
     // Iron tools
     { result: 'iron_pickaxe', count: 1, ingredients: [['iron_ingot', 3], ['stick', 2]], shape: null, age: 3, category: 'tools' },
     { result: 'iron_axe', count: 1, ingredients: [['iron_ingot', 3], ['stick', 2]], shape: null, age: 3, category: 'tools' },
     { result: 'iron_sword', count: 1, ingredients: [['iron_ingot', 2], ['stick', 1]], shape: null, age: 3, category: 'weapons' },
-    
+
     // Rare obsidian tools
     { result: 'diamond_pickaxe', count: 1, ingredients: [['diamond', 3], ['stick', 2]], shape: null, age: 3, category: 'tools' },
     { result: 'diamond_sword', count: 1, ingredients: [['diamond', 2], ['stick', 1]], shape: null, age: 3, category: 'weapons' },
-    
+
     // Armor - Iron Age
     { result: 'iron_armor', count: 1, ingredients: [['iron_ingot', 8]], shape: null, age: 3, category: 'armor' },
     { result: 'iron_helmet', count: 1, ingredients: [['iron_ingot', 5]], shape: null, age: 3, category: 'armor' },
@@ -986,19 +1027,19 @@ export const RECIPES = [
     { result: 'portcullis', count: 1, ingredients: [['iron_bars', 6], ['gear', 2]], shape: null, age: 4, category: 'building' },
     { result: 'irrigation', count: 4, ingredients: [['cobblestone', 4], ['plank', 2]], shape: null, age: 4, category: 'building' },
     { result: 'well', count: 1, ingredients: [['cobblestone', 16], ['iron_ingot', 4], ['rope', 2]], shape: null, age: 4, category: 'building' },
-    
+
     // Crafting stations
     { result: 'loom', count: 1, ingredients: [['plank', 6], ['stick', 4], ['string', 4]], shape: null, age: 4, category: 'stations' },
     { result: 'stable', count: 1, ingredients: [['wood_beam', 8], ['plank', 12], ['hay_block', 4]], shape: null, age: 4, category: 'stations' },
     { result: 'market_stall', count: 1, ingredients: [['plank', 8], ['cloth', 4], ['wood_beam', 4]], shape: null, age: 4, category: 'stations' },
-    
+
     // Materials
     { result: 'linen', count: 2, ingredients: [['flax', 4]], shape: null, age: 4, category: 'materials' },
     { result: 'cloth', count: 1, ingredients: [['linen', 2]], shape: null, station: 'loom', age: 4, category: 'materials' },
     { result: 'steel_ingot', count: 1, ingredients: [['iron_ingot', 2], ['coal', 4]], shape: null, station: 'forge', age: 4, category: 'materials' },
     { result: 'rope', count: 2, ingredients: [['string', 4]], shape: null, age: 4, category: 'materials' },
     { result: 'gear', count: 2, ingredients: [['iron_ingot', 2]], shape: null, station: 'anvil', age: 4, category: 'materials' },
-    
+
     // Medieval weapons
     { result: 'crossbow', count: 1, ingredients: [['plank', 3], ['iron_ingot', 2], ['string', 2], ['gear', 1]], shape: null, age: 4, category: 'weapons' },
     { result: 'longbow', count: 1, ingredients: [['wood', 3], ['string', 3]], shape: null, age: 4, category: 'weapons' },
@@ -1007,31 +1048,31 @@ export const RECIPES = [
     { result: 'steel_sword', count: 1, ingredients: [['steel_ingot', 3], ['leather', 1]], shape: null, station: 'anvil', age: 4, category: 'weapons' },
     { result: 'halberd', count: 1, ingredients: [['steel_ingot', 2], ['wood_beam', 2]], shape: null, station: 'anvil', age: 4, category: 'weapons' },
     { result: 'mace', count: 1, ingredients: [['steel_ingot', 4], ['leather', 1]], shape: null, station: 'anvil', age: 4, category: 'weapons' },
-    
+
     // Medieval armor (chainmail)
     { result: 'chainmail_helmet', count: 1, ingredients: [['iron_ingot', 5], ['leather', 1]], shape: null, station: 'anvil', age: 4, category: 'armor' },
     { result: 'chainmail_chestplate', count: 1, ingredients: [['iron_ingot', 8], ['leather', 2]], shape: null, station: 'anvil', age: 4, category: 'armor' },
     { result: 'chainmail_leggings', count: 1, ingredients: [['iron_ingot', 7], ['leather', 2]], shape: null, station: 'anvil', age: 4, category: 'armor' },
     { result: 'chainmail_boots', count: 1, ingredients: [['iron_ingot', 4], ['leather', 1]], shape: null, station: 'anvil', age: 4, category: 'armor' },
-    
+
     // Medieval armor (plate)
     { result: 'plate_helmet', count: 1, ingredients: [['steel_ingot', 5], ['leather', 1]], shape: null, station: 'anvil', age: 4, category: 'armor' },
     { result: 'plate_chestplate', count: 1, ingredients: [['steel_ingot', 8], ['cloth', 2]], shape: null, station: 'anvil', age: 4, category: 'armor' },
     { result: 'plate_leggings', count: 1, ingredients: [['steel_ingot', 7], ['cloth', 2]], shape: null, station: 'anvil', age: 4, category: 'armor' },
     { result: 'plate_boots', count: 1, ingredients: [['steel_ingot', 4], ['leather', 1]], shape: null, station: 'anvil', age: 4, category: 'armor' },
-    
+
     // Medieval tools
     { result: 'plough', count: 1, ingredients: [['steel_ingot', 3], ['wood_beam', 2]], shape: null, station: 'anvil', age: 4, category: 'tools' },
     { result: 'steel_pickaxe', count: 1, ingredients: [['steel_ingot', 3], ['wood_beam', 2]], shape: null, station: 'anvil', age: 4, category: 'tools' },
     { result: 'steel_axe', count: 1, ingredients: [['steel_ingot', 3], ['wood_beam', 2]], shape: null, station: 'anvil', age: 4, category: 'tools' },
-    
+
     // ========== INDUSTRIAL AGE (age: 5) ==========
     // Building blocks
     { result: 'steel_block', count: 1, ingredients: [['steel_ingot', 9]], shape: null, age: 5, category: 'building' },
     { result: 'chimney', count: 1, ingredients: [['brick_block', 8], ['steel_ingot', 2]], shape: null, age: 5, category: 'building' },
     { result: 'rail', count: 16, ingredients: [['steel_ingot', 6], ['wood_beam', 2]], shape: null, age: 5, category: 'building' },
     { result: 'asphalt', count: 4, ingredients: [['gravel', 4], ['crude_oil', 2]], shape: null, age: 5, category: 'building' },
-    
+
     // Machines
     { result: 'steam_engine', count: 1, ingredients: [['steel_block', 2], ['gear', 6], ['metal_pipe', 4], ['boiler', 1]], shape: null, age: 5, category: 'stations' },
     { result: 'boiler', count: 1, ingredients: [['steel_ingot', 8], ['metal_pipe', 4]], shape: null, age: 5, category: 'stations' },
@@ -1040,26 +1081,26 @@ export const RECIPES = [
     { result: 'crusher', count: 1, ingredients: [['steel_block', 4], ['gear', 6], ['steel_ingot', 8]], shape: null, age: 5, category: 'stations' },
     { result: 'metal_pipe', count: 4, ingredients: [['steel_ingot', 4]], shape: null, age: 5, category: 'materials' },
     { result: 'gear_block', count: 1, ingredients: [['gear', 4], ['steel_ingot', 4]], shape: null, age: 5, category: 'building' },
-    
+
     // Industrial materials
     { result: 'gunpowder', count: 2, ingredients: [['coal', 2], ['sand', 1]], shape: null, age: 5, category: 'materials' },
     { result: 'spring', count: 2, ingredients: [['steel_ingot', 1]], shape: null, age: 5, category: 'materials' },
     { result: 'rubber', count: 2, ingredients: [['crude_oil', 2]], shape: null, station: 'boiler', age: 5, category: 'materials' },
     { result: 'plastic', count: 2, ingredients: [['crude_oil', 3]], shape: null, station: 'assembler', age: 5, category: 'materials' },
     { result: 'refined_oil', count: 2, ingredients: [['crude_oil', 4]], shape: null, station: 'boiler', age: 5, category: 'materials' },
-    
+
     // Industrial weapons
     { result: 'musket', count: 1, ingredients: [['steel_ingot', 6], ['wood_beam', 2], ['gear', 2]], shape: null, station: 'assembler', age: 5, category: 'weapons' },
     { result: 'rifle', count: 1, ingredients: [['steel_ingot', 8], ['wood_beam', 2], ['gear', 4], ['spring', 2]], shape: null, station: 'assembler', age: 5, category: 'weapons' },
     { result: 'bullet', count: 8, ingredients: [['steel_ingot', 1], ['gunpowder', 2]], shape: null, age: 5, category: 'ammo' },
     { result: 'dynamite', count: 2, ingredients: [['gunpowder', 4], ['cloth', 1], ['string', 1]], shape: null, age: 5, category: 'weapons' },
-    
+
     // ========== MODERN AGE (age: 6) ==========
     // Building blocks
     { result: 'concrete', count: 4, ingredients: [['gravel', 4], ['sand', 4], ['water_bucket', 1]], shape: null, age: 6, category: 'building' },
     { result: 'glass_panel', count: 4, ingredients: [['glass', 4], ['steel_frame', 1]], shape: null, age: 6, category: 'building' },
     { result: 'steel_frame', count: 4, ingredients: [['steel_ingot', 6]], shape: null, age: 6, category: 'building' },
-    
+
     // Electronics
     { result: 'wire', count: 8, ingredients: [['copper_wire', 2], ['plastic', 1]], shape: null, age: 6, category: 'materials' },
     { result: 'copper_wire', count: 4, ingredients: [['copper_ingot', 1]], shape: null, age: 6, category: 'materials' },
@@ -1068,19 +1109,19 @@ export const RECIPES = [
     { result: 'circuit_board', count: 1, ingredients: [['plastic', 2], ['copper_wire', 4], ['microchip', 2]], shape: null, station: 'assembler', age: 6, category: 'materials' },
     { result: 'battery_cell', count: 1, ingredients: [['steel_ingot', 2], ['copper_wire', 2], ['refined_oil', 1]], shape: null, age: 6, category: 'materials' },
     { result: 'electric_motor', count: 1, ingredients: [['copper_wire', 8], ['steel_ingot', 4], ['gear', 2]], shape: null, station: 'assembler', age: 6, category: 'materials' },
-    
+
     // Power systems
     { result: 'solar_panel', count: 1, ingredients: [['glass_panel', 4], ['silicon', 4], ['wire', 8], ['steel_frame', 2]], shape: null, age: 6, category: 'stations' },
     { result: 'wind_turbine', count: 1, ingredients: [['steel_frame', 8], ['gear', 6], ['electric_motor', 1], ['wire', 8]], shape: null, age: 6, category: 'stations' },
     { result: 'battery_block', count: 1, ingredients: [['battery_cell', 8], ['steel_frame', 1], ['wire', 4]], shape: null, age: 6, category: 'stations' },
     { result: 'computer', count: 1, ingredients: [['circuit_board', 4], ['microchip', 4], ['glass_panel', 1], ['steel_frame', 2]], shape: null, age: 6, category: 'stations' },
-    
+
     // Modern weapons
     { result: 'laser_rifle', count: 1, ingredients: [['steel_frame', 2], ['circuit_board', 2], ['battery_cell', 4], ['glass', 2]], shape: null, station: 'computer', age: 6, category: 'weapons' },
     { result: 'energy_cell', count: 4, ingredients: [['battery_cell', 2], ['microchip', 1]], shape: null, age: 6, category: 'ammo' },
     { result: 'plasma_sword', count: 1, ingredients: [['steel_ingot', 4], ['circuit_board', 2], ['battery_cell', 4], ['glass', 1]], shape: null, station: 'computer', age: 6, category: 'weapons' },
     { result: 'drone', count: 1, ingredients: [['steel_frame', 2], ['electric_motor', 4], ['circuit_board', 2], ['microchip', 2], ['battery_cell', 4]], shape: null, station: 'computer', age: 6, category: 'tools' },
-    
+
     // Modern armor
     { result: 'kevlar_vest', count: 1, ingredients: [['plastic', 8], ['cloth', 4], ['steel_ingot', 4]], shape: null, station: 'assembler', age: 6, category: 'armor' },
     { result: 'tactical_helmet', count: 1, ingredients: [['plastic', 4], ['glass_panel', 1], ['circuit_board', 1], ['steel_frame', 2]], shape: null, station: 'assembler', age: 6, category: 'armor' },
@@ -1266,7 +1307,7 @@ export const ENEMIES = {
         drops: [['string', 2, 4], ['leather', 1, 2]],
         caveOnly: true,
     },
-    
+
     // ========== MEDIEVAL AGE ENEMIES ==========
     BANDIT: {
         name: 'Bandit',
@@ -1305,7 +1346,7 @@ export const ENEMIES = {
         age: 'medieval',
         rangedAttack: true,
     },
-    
+
     // ========== INDUSTRIAL AGE ENEMIES ==========
     STEAM_GOLEM: {
         name: 'Steam Golem',
@@ -1345,7 +1386,7 @@ export const ENEMIES = {
         rangedAttack: true,
         canUseWeapons: true,
     },
-    
+
     // ========== MODERN AGE ENEMIES ==========
     HACKER_DRONE: {
         name: 'Hacker Drone',
@@ -1426,7 +1467,7 @@ export const BOSSES = {
         abilities: ['roar', 'swipe'],
         spawnCondition: 'cave_depth_10',
     },
-    
+
     // ========== MEDIEVAL AGE BOSSES ==========
     WARLORD: {
         name: 'The Warlord',
@@ -1456,7 +1497,7 @@ export const BOSSES = {
         age: 'medieval',
         flying: true,
     },
-    
+
     // ========== INDUSTRIAL AGE BOSSES ==========
     IRON_TITAN: {
         name: 'Iron Titan',
@@ -1487,7 +1528,7 @@ export const BOSSES = {
         armor: 15,
         onRailsOnly: true,
     },
-    
+
     // ========== MODERN AGE BOSSES ==========
     AI_CORE: {
         name: 'Rogue AI Core',
@@ -1721,7 +1762,7 @@ export const QUESTS = {
         rewards: { xp: 400, items: [['iron_ingot', 10]] },
         unlocks: [],
     },
-    
+
     // ========== MEDIEVAL AGE QUESTS ==========
     FORGE_STEEL: {
         id: 'forge_steel',
@@ -1799,7 +1840,7 @@ export const QUESTS = {
         unlocks: ['BUILD_FACTORY'],
         age: 'MEDIEVAL_AGE',
     },
-    
+
     // ========== INDUSTRIAL AGE QUESTS ==========
     BUILD_FACTORY: {
         id: 'build_factory',
@@ -1852,7 +1893,7 @@ export const QUESTS = {
         unlocks: ['POWER_GRID'],
         age: 'INDUSTRIAL_AGE',
     },
-    
+
     // ========== MODERN AGE QUESTS ==========
     POWER_GRID: {
         id: 'power_grid',

@@ -7,7 +7,7 @@ export class Enemy extends Entity {
         super(game, x, y, z);
         this.typeKey = typeKey;
         this.isBoss = isBoss;
-        
+
         // Get stats from appropriate source
         this.stats = isBoss ? BOSSES[typeKey] : ENEMIES[typeKey];
         if (!this.stats) {
@@ -16,7 +16,7 @@ export class Enemy extends Entity {
         }
 
         this.emoji = this.stats.emoji;
-        
+
         // Use size from stats if defined (for large enemies like SABER_CAT)
         const sizeMultiplier = this.stats.size || 1;
         this.width = (isBoss ? 1.5 : 0.8) * sizeMultiplier;
@@ -35,7 +35,7 @@ export class Enemy extends Entity {
         this.target = null;
         this.lastAttackTime = 0;
         this.attackCooldown = isBoss ? 800 : 1000;
-        
+
         // Boss-specific
         this.abilities = this.stats.abilities || [];
         this.lastAbilityTime = 0;
@@ -43,7 +43,15 @@ export class Enemy extends Entity {
         this.enraged = false; // Bosses enrage at low health
 
         // Physics overrides
+        // Physics overrides
         this.jumpForce = 6;
+
+        // AI - Patrol & Leash
+        this.spawnX = x;
+        this.spawnY = y;
+        this.patrolRadius = 10;
+        this.leashRadius = 40; // Max distance from spawn before giving up
+        this.patrolTarget = null;
     }
 
     update(deltaTime) {
@@ -63,7 +71,7 @@ export class Enemy extends Entity {
         if (!player) return;
 
         const distToPlayer = Math.hypot(player.x - this.x, player.y - this.y, player.z - this.z);
-        
+
         // Boss enrage mechanic
         if (this.isBoss && this.health < this.maxHealth * 0.3 && !this.enraged) {
             this.enraged = true;
@@ -75,7 +83,7 @@ export class Enemy extends Entity {
             }
             this.game.particles.emit(this.x, this.y, this.z + 1, '#ff4444', 30);
         }
-        
+
         // Boss abilities
         if (this.isBoss && this.abilities.length > 0) {
             const now = Date.now();
@@ -85,16 +93,31 @@ export class Enemy extends Entity {
             }
         }
 
+        // Leashing Check
+        const distFromSpawn = Math.hypot(this.x - this.spawnX, this.y - this.spawnY);
+        if (distFromSpawn > this.leashRadius) {
+            this.state = 'RETURNING';
+            // Simple regen while returning?
+            this.health = Math.min(this.health + deltaTime * 5, this.maxHealth);
+        }
+
         // State Transitions
         const aggroRange = this.isBoss ? 20 : 10;
-        if (this.stats.aggressive && distToPlayer < aggroRange) {
+
+        if (this.state === 'RETURNING') {
+            if (distFromSpawn < 2) {
+                this.state = 'IDLE';
+                this.stateTimer = 2; // Rest
+            }
+        } else if (this.stats.aggressive && distToPlayer < aggroRange) {
             if (distToPlayer < CONFIG.ATTACK_RANGE * (this.isBoss ? 1.5 : 1)) {
                 this.state = 'ATTACK';
             } else {
                 this.state = 'CHASE';
             }
         } else if (this.state === 'CHASE' && distToPlayer > (this.isBoss ? 30 : 15)) {
-            this.state = 'IDLE';
+            // Give up chase
+            this.state = 'PATROL'; // Instead of IDLE, patrol
         }
 
         // Actions
@@ -104,28 +127,59 @@ export class Enemy extends Entity {
                 this.vy = 0;
                 this.stateTimer -= deltaTime;
                 if (this.stateTimer <= 0) {
-                    this.state = 'WANDER';
-                    this.stateTimer = 2 + Math.random() * 3;
-                    const angle = Math.random() * Math.PI * 2;
-                    this.wanderDir = { x: Math.cos(angle), y: Math.sin(angle) };
+                    this.state = 'PATROL';
                 }
                 break;
 
-            case 'WANDER':
-                if (this.wanderDir) {
-                    this.vx = this.wanderDir.x * (this.speed * 0.5);
-                    this.vy = this.wanderDir.y * (this.speed * 0.5);
+            case 'PATROL':
+                if (!this.patrolTarget) {
+                    // Pick random point near spawn
+                    const angle = Math.random() * Math.PI * 2;
+                    const r = Math.random() * this.patrolRadius;
+                    this.patrolTarget = {
+                        x: this.spawnX + Math.cos(angle) * r,
+                        y: this.spawnY + Math.sin(angle) * r
+                    };
                 }
 
-                // Jump if blocked
-                if (this.vx === 0 && this.vy === 0 && this.grounded) {
-                    this.vz = this.jumpForce;
-                }
+                // Move towards patrol target
+                const pdx = this.patrolTarget.x - this.x;
+                const pdy = this.patrolTarget.y - this.y;
+                const pdist = Math.hypot(pdx, pdy);
 
-                this.stateTimer -= deltaTime;
-                if (this.stateTimer <= 0) {
+                if (pdist < 1) {
+                    // Reached target
+                    this.patrolTarget = null;
                     this.state = 'IDLE';
-                    this.stateTimer = 1 + Math.random() * 2;
+                    this.stateTimer = 2 + Math.random() * 3;
+                } else {
+                    this.vx = (pdx / pdist) * (this.speed * 0.5);
+                    this.vy = (pdy / pdist) * (this.speed * 0.5);
+
+                    // Jump if stuck
+                    if (Math.abs(this.vx) + Math.abs(this.vy) > 0.1) {
+                        const nextX = this.x + this.vx * 0.2;
+                        const nextY = this.y + this.vy * 0.2;
+                        if (this.checkCollision(nextX, nextY, this.z) && this.grounded) {
+                            this.vz = this.jumpForce;
+                        }
+                    }
+                }
+                break;
+
+            case 'WANDER': // Legacy state fallback
+            case 'RETURNING':
+                // Return to spawn
+                const rdx = this.spawnX - this.x;
+                const rdy = this.spawnY - this.y;
+                const rdist = Math.hypot(rdx, rdy);
+
+                if (rdist > 0.5) {
+                    this.vx = (rdx / rdist) * this.speed; // Full speed return
+                    this.vy = (rdy / rdist) * this.speed;
+                    if (this.checkCollision(this.x + this.vx * 0.2, this.y + this.vy * 0.2, this.z) && this.grounded) {
+                        this.vz = this.jumpForce;
+                    }
                 }
                 break;
 
@@ -160,11 +214,11 @@ export class Enemy extends Entity {
                 if (this.game.player) {
                     const attackRange = CONFIG.ATTACK_RANGE * (this.isBoss ? 1.5 : 1);
                     const attackDist = Math.hypot(
-                        this.game.player.x - this.x, 
-                        this.game.player.y - this.y, 
+                        this.game.player.x - this.x,
+                        this.game.player.y - this.y,
                         this.game.player.z - this.z
                     );
-                    
+
                     // Only attack if actually within attack range
                     if (attackDist <= attackRange) {
                         const now = Date.now();
@@ -172,21 +226,21 @@ export class Enemy extends Entity {
                             this.lastAttackTime = now;
                             this.game.player.takeDamage(this.damage, this);
                             this.game.audio.play('hit');
-                            
+
                             // Attack particles at player
                             this.game.particles.emit(
-                                this.game.player.x, 
-                                this.game.player.y, 
-                                this.game.player.z + 1, 
+                                this.game.player.x,
+                                this.game.player.y,
+                                this.game.player.z + 1,
                                 '#ff4444', 6
                             );
-                            
+
                             // Damage number popup
                             this.game.particles.emitText(
-                                this.game.player.x, 
-                                this.game.player.y, 
-                                this.game.player.z + 2, 
-                                `-${this.damage}`, 
+                                this.game.player.x,
+                                this.game.player.y,
+                                this.game.player.z + 3,
+                                `-${this.damage}`,
                                 '#ff4444'
                             );
                         }
@@ -260,18 +314,19 @@ export class Enemy extends Entity {
         if (this.invincibleTime > 0) return;
 
         this.health -= amount;
-        
+
         // Damage number with color based on health remaining
         const healthPercent = this.health / this.maxHealth;
         const dmgColor = healthPercent < 0.3 ? '#ff6b6b' : '#ffffff';
-        this.game.particles.emitText(this.x, this.y, this.z + 1.5, `-${amount}`, dmgColor);
-        
+        const fontSize = this.isBoss ? 28 : 20;
+        this.game.particles.emitText(this.x, this.y, this.z + 3, `-${amount}`, dmgColor, fontSize);
+
         // Hit particles (blood/impact)
-        this.game.particles.emit(this.x, this.y, this.z + 1, '#cc3333', 5);
-        
+        this.game.particles.emit(this.x, this.y, this.z + 2.5, '#cc3333', 5);
+
         // Play hurt sound
         this.game.audio.play('hit');
-        
+
         this.invincibleTime = 200;
 
         // Knockback
@@ -294,32 +349,33 @@ export class Enemy extends Entity {
 
     die() {
         this.isDead = true;
-        
+
         // Death particles
         this.game.particles.emit(this.x, this.y, this.z + 0.5, '#ff0000', this.isBoss ? 50 : 15);
         this.game.audio.play(this.isBoss ? 'boss_death' : 'hit');
-        
+
         // Give player XP and notify quest system
         const xpReward = this.stats.xp || 10;
         if (this.game.player && !this.game.player.isDead) {
             this.game.player.gainXP(xpReward);
-            this.game.particles.emitText(this.x, this.y, this.z + 1.5, `+${xpReward} XP`, '#ffd700');
-            
+            // XP particle already handled by gainXP, but we can add a special 'DEFEATED' tag
+            this.game.particles.emitText(this.x, this.y, this.z + 2.5, "DEFEATED!", '#ffffff', 18);
+
             // Boss kill message
             if (this.isBoss && this.game.ui) {
                 this.game.ui.showMessage(`🏆 ${this.stats.name} DEFEATED! +${xpReward} XP`, 5000);
             }
-            
+
             // Notify quest system about the kill
             if (this.game.questManager) {
                 this.game.questManager.onEnemyKilled(this.typeKey);
             }
-            
+
             // Notify side quest system about the kill
             if (this.game.sideQuests) {
                 this.game.sideQuests.onEnemyKilled(this.typeKey);
             }
-            
+
             // Notify skills system for combat XP
             if (this.game.skills) {
                 this.game.skills.addSkillXp('COMBAT', this.isBoss ? 100 : 20);
@@ -345,14 +401,14 @@ export class Enemy extends Entity {
             });
         }
     }
-    
+
     // Boss ability system
     useAbility() {
         if (this.abilities.length === 0) return;
-        
+
         const ability = this.abilities[Math.floor(Math.random() * this.abilities.length)];
         const player = this.game.player;
-        
+
         switch (ability) {
             case 'charge':
                 // Rush toward player
@@ -367,7 +423,7 @@ export class Enemy extends Entity {
                     this.game.particles.emit(this.x, this.y, this.z + 0.5, '#ffaa00', 20);
                 }
                 break;
-                
+
             case 'stomp':
                 // Area damage around boss
                 if (player) {
@@ -379,7 +435,7 @@ export class Enemy extends Entity {
                     this.game.particles.emit(this.x, this.y, this.z, '#8b4513', 30);
                 }
                 break;
-                
+
             case 'summon_pack':
                 // Spawn helper wolves
                 for (let i = 0; i < 3; i++) {
@@ -391,7 +447,7 @@ export class Enemy extends Entity {
                 }
                 this.game.audio.play('growl');
                 break;
-                
+
             case 'howl':
                 // Buff self and terrify player (slow them)
                 this.speed *= 1.2;
@@ -399,7 +455,7 @@ export class Enemy extends Entity {
                 this.game.particles.emit(this.x, this.y, this.z + 1.5, '#aaaaff', 25);
                 this.game.audio.play('growl');
                 break;
-                
+
             case 'roar':
                 // Stun/knockback player
                 if (player) {
@@ -415,7 +471,7 @@ export class Enemy extends Entity {
                 this.game.particles.emit(this.x, this.y, this.z + 1, '#ffff00', 30);
                 this.game.audio.play('growl');
                 break;
-                
+
             case 'swipe':
                 // Wide attack arc
                 if (player) {

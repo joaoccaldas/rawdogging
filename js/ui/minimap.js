@@ -1,368 +1,199 @@
-// Minimap System - Shows terrain, entities, and markers
-import { CONFIG, BLOCKS, BLOCK_DATA, BIOMES } from '../config.js';
+import { CONFIG, BLOCKS, BLOCK_DATA } from '../config.js';
 
 export class Minimap {
     constructor(game) {
         this.game = game;
-        
-        // Minimap settings
-        this.size = 150; // Pixels
-        this.mapRadius = 40; // World units shown
-        this.zoom = 1;
-        this.visible = true;
-        
-        // Create canvas
+        this.container = null;
+        this.canvas = null;
+        this.ctx = null;
+
+        this.size = 150; // Size in pixels
+        this.zoom = 4; // Pixels per block
+        this.updateTimer = 0;
+
+        this.init();
+    }
+
+    init() {
+        // Create DOM elements
+        this.container = document.createElement('div');
+        this.container.id = 'minimap-container';
+
         this.canvas = document.createElement('canvas');
-        this.canvas.id = 'minimap-canvas';
         this.canvas.width = this.size;
         this.canvas.height = this.size;
-        this.canvas.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            width: ${this.size}px;
-            height: ${this.size}px;
-            border: 3px solid rgba(139, 69, 19, 0.8);
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 100;
-            pointer-events: none;
-        `;
-        
         this.ctx = this.canvas.getContext('2d');
-        
-        // Markers (home, death, etc.)
-        this.markers = [];
-        
-        // Home marker
-        this.homePosition = null;
-        
-        // Terrain cache
-        this.terrainCache = new Map();
-        this.cacheRadius = 50;
-        this.lastCacheUpdate = 0;
-        
-        // Add to DOM
-        document.body.appendChild(this.canvas);
-        
-        // Biome colors
-        this.biomeColors = {
-            PLAINS: '#4a7c23',
-            DESERT: '#d4a574',
-            SNOW: '#e8e8e8',
-            JUNGLE: '#228b22',
-            SWAMP: '#556b2f',
-            SAVANNA: '#9acd32',
-            CAVE: '#404040',
-        };
-        
-        // Block colors for surface
-        this.blockColors = {
-            [BLOCKS.GRASS]: '#4a7c23',
-            [BLOCKS.DIRT]: '#8b4513',
-            [BLOCKS.STONE]: '#808080',
-            [BLOCKS.SAND]: '#f4d03f',
-            [BLOCKS.WATER]: '#4488ff',
-            [BLOCKS.SNOW]: '#ffffff',
-            [BLOCKS.ICE]: '#aaddff',
-            [BLOCKS.GRAVEL]: '#666666',
-            [BLOCKS.CLAY]: '#9090a0',
-        };
+
+        // Add Compass decoration (N/S/E/W) - handled via CSS layered mostly
+
+        this.container.appendChild(this.canvas);
+        document.getElementById('hud')?.appendChild(this.container) || document.body.appendChild(this.container);
+
+        // Initial render
+        this.update(0);
     }
-    
+
     update(deltaTime) {
-        if (!this.visible || !this.game.player) return;
-        
-        // Update terrain cache periodically
-        const now = Date.now();
-        if (now - this.lastCacheUpdate > 500) {
-            this.updateTerrainCache();
-            this.lastCacheUpdate = now;
-        }
+        if (!this.game.player) return;
+
+        // Update at 10fps to save performance
+        this.updateTimer += deltaTime;
+        if (this.updateTimer < 0.1) return;
+        this.updateTimer = 0;
+
+        this.render();
     }
-    
-    updateTerrainCache() {
-        const player = this.game.player;
-        const world = this.game.world;
-        if (!player || !world) return;
-        
-        const px = Math.floor(player.x);
-        const py = Math.floor(player.y);
-        
-        // Clear old cache entries
-        for (const [key, _] of this.terrainCache) {
-            const [x, y] = key.split(',').map(Number);
-            if (Math.abs(x - px) > this.cacheRadius || Math.abs(y - py) > this.cacheRadius) {
-                this.terrainCache.delete(key);
-            }
-        }
-        
-        // Add new entries
-        for (let dx = -this.mapRadius; dx <= this.mapRadius; dx += 2) {
-            for (let dy = -this.mapRadius; dy <= this.mapRadius; dy += 2) {
-                const x = px + dx;
-                const y = py + dy;
-                const key = `${x},${y}`;
-                
-                if (!this.terrainCache.has(key)) {
-                    const height = world.getHeight(x, y);
-                    const block = world.getBlock(x, y, height);
-                    this.terrainCache.set(key, { height, block });
-                }
-            }
-        }
-    }
-    
+
     render() {
-        if (!this.visible || !this.game.player) {
-            this.canvas.style.display = 'none';
-            return;
-        }
-        
-        this.canvas.style.display = 'block';
-        
         const ctx = this.ctx;
         const player = this.game.player;
-        const px = player.x;
-        const py = player.y;
-        
-        // Clear
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.beginPath();
-        ctx.arc(this.size / 2, this.size / 2, this.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Draw terrain
-        this.renderTerrain(ctx, px, py);
-        
-        // Draw markers
-        this.renderMarkers(ctx, px, py);
-        
-        // Draw entities (enemies, pets)
-        this.renderEntities(ctx, px, py);
-        
-        // Draw player (center)
-        ctx.fillStyle = '#00ff00';
-        ctx.beginPath();
-        ctx.arc(this.size / 2, this.size / 2, 4, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Player direction indicator
-        const angle = Math.atan2(player.facingY || 0, player.facingX || 1);
-        ctx.strokeStyle = '#00ff00';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(this.size / 2, this.size / 2);
-        ctx.lineTo(
-            this.size / 2 + Math.cos(angle) * 8,
-            this.size / 2 + Math.sin(angle) * 8
-        );
-        ctx.stroke();
-        
-        // Draw circular border
-        ctx.strokeStyle = 'rgba(139, 69, 19, 0.8)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(this.size / 2, this.size / 2, this.size / 2 - 1, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        // Compass directions
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 10px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('N', this.size / 2, 12);
-        ctx.fillText('S', this.size / 2, this.size - 4);
-        ctx.fillText('E', this.size - 6, this.size / 2 + 3);
-        ctx.fillText('W', 8, this.size / 2 + 3);
-    }
-    
-    renderTerrain(ctx, px, py) {
         const world = this.game.world;
-        if (!world) return;
-        
-        const scale = this.size / (this.mapRadius * 2);
-        const centerX = this.size / 2;
-        const centerY = this.size / 2;
-        
-        // Draw cached terrain
-        for (const [key, data] of this.terrainCache) {
-            const [wx, wy] = key.split(',').map(Number);
-            const dx = wx - px;
-            const dy = wy - py;
-            
-            // Skip if outside map radius
-            if (Math.abs(dx) > this.mapRadius || Math.abs(dy) > this.mapRadius) continue;
-            
-            // Calculate screen position
-            const sx = centerX + dx * scale;
-            const sy = centerY + dy * scale;
-            
-            // Check if in circle
-            const distFromCenter = Math.sqrt((sx - centerX) ** 2 + (sy - centerY) ** 2);
-            if (distFromCenter > this.size / 2 - 5) continue;
-            
-            // Get color from block
-            let color = this.blockColors[data.block] || '#555555';
-            
-            // Height shading
-            const heightFactor = Math.min(1, data.height / 25);
-            color = this.adjustBrightness(color, 0.7 + heightFactor * 0.3);
-            
-            ctx.fillStyle = color;
-            ctx.fillRect(sx - 1, sy - 1, 3, 3);
-        }
-    }
-    
-    renderMarkers(ctx, px, py) {
-        const scale = this.size / (this.mapRadius * 2);
-        const centerX = this.size / 2;
-        const centerY = this.size / 2;
-        
-        // Home marker
-        if (this.homePosition) {
-            const dx = this.homePosition.x - px;
-            const dy = this.homePosition.y - py;
-            
-            // If in range, show on map
-            if (Math.abs(dx) <= this.mapRadius && Math.abs(dy) <= this.mapRadius) {
-                const sx = centerX + dx * scale;
-                const sy = centerY + dy * scale;
-                
-                ctx.fillStyle = '#ffff00';
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('🏠', sx, sy + 5);
-            } else {
-                // Show at edge pointing toward home
-                const angle = Math.atan2(dy, dx);
-                const edgeX = centerX + Math.cos(angle) * (this.size / 2 - 15);
-                const edgeY = centerY + Math.sin(angle) * (this.size / 2 - 15);
-                
-                ctx.fillStyle = '#ffff00';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('🏠', edgeX, edgeY + 4);
+
+        // Clear
+        ctx.fillStyle = '#111'; // Void color
+        ctx.fillRect(0, 0, this.size, this.size);
+
+        // Calculate range
+        // Canvas center is player.
+        // Screen width covers (size / zoom) blocks.
+        const range = Math.ceil((this.size / this.zoom) / 2);
+
+        const cx = Math.floor(player.x);
+        const cy = Math.floor(player.y);
+
+        // Lock rotation? Or rotate map?
+        // Simple minimap: Top is North (+Y? No, usually -Y or +Y depending on coord sys).
+        // Our Input: W moves (0, -1) -> North is -Y.
+        // Let's keep Top = -Y (North).
+
+        // Iterate blocks in range
+        for (let dy = -range; dy <= range; dy++) {
+            for (let dx = -range; dx <= range; dx++) {
+                const wx = cx + dx;
+                const wy = cy + dy;
+
+                // Get top visible block
+                const h = world.getHeight(wx, wy);
+                // We could get specific block color, but let's approximate by Height/Biome
+                // Or simplified: Get block at height.
+                const blockId = world.getBlock(wx, wy, h);
+                const blockData = BLOCK_DATA[blockId];
+
+                // Color mapping
+                let color = '#333';
+                if (blockData) {
+                    if (blockId === BLOCKS.GRASS) color = '#4ade80';
+                    else if (blockId === BLOCKS.DIRT) color = '#8B4513';
+                    else if (blockId === BLOCKS.STONE || blockId === BLOCKS.COBBLESTONE) color = '#888';
+                    else if (blockId === BLOCKS.WATER) color = '#3b82f6';
+                    else if (blockId === BLOCKS.SAND) color = '#fcd34d';
+                    else if (blockId === BLOCKS.SNOW) color = '#fff';
+                    else if (blockId === BLOCKS.WOOD || blockId === BLOCKS.LEAVES) color = '#22543d';
+                    else if (blockId === BLOCKS.STONE_BRICKS) color = '#555';
+
+                    // Shading by height
+                    const hDiff = h - 20; // Around ground level
+                    if (hDiff > 5) {
+                        // Lighter
+                        color = this.adjustColor(color, 20);
+                    } else if (hDiff < -5) {
+                        // Darker
+                        color = this.adjustColor(color, -20);
+                    }
+                }
+
+                // Draw pixel
+                // Map center (size/2) corresponds to (cx, cy)
+                const sx = (this.size / 2) + (dx * this.zoom);
+                const sy = (this.size / 2) + (dy * this.zoom);
+
+                ctx.fillStyle = color;
+                ctx.fillRect(Math.floor(sx), Math.floor(sy), this.zoom, this.zoom);
             }
         }
-        
-        // Death marker
-        for (const marker of this.markers) {
-            const dx = marker.x - px;
-            const dy = marker.y - py;
-            
-            if (Math.abs(dx) <= this.mapRadius && Math.abs(dy) <= this.mapRadius) {
-                const sx = centerX + dx * scale;
-                const sy = centerY + dy * scale;
-                
-                ctx.fillStyle = marker.color || '#ff0000';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(marker.emoji || '📍', sx, sy + 4);
+
+        // Draw Primal Relics Markers (Blinking)
+        if (world.relicPositions) {
+            const blink = Math.sin(Date.now() / 200) > 0;
+
+            world.relicPositions.forEach(relic => {
+                const rsx = (this.size / 2) + ((relic.x - cx) * this.zoom);
+                const rsy = (this.size / 2) + ((relic.y - cy) * this.zoom);
+
+                // If on screen and blinking is currently "on"
+                if (blink && rsx >= 0 && rsx <= this.size && rsy >= 0 && rsy <= this.size) {
+                    ctx.fillStyle = '#ff00ff'; // Magenta for relics
+                    ctx.beginPath();
+                    ctx.arc(rsx, rsy, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Optional label
+                    ctx.font = '10px Arial';
+                    ctx.fillText('✨', rsx - 5, rsy - 6);
+                }
+            });
+        }
+
+        // Draw Ancient Cave Marker
+        if (world.ancientCavePos) {
+            const caveX = world.ancientCavePos.x;
+            const caveY = world.ancientCavePos.y;
+
+            const dsx = (this.size / 2) + ((caveX - cx) * this.zoom);
+            const dsy = (this.size / 2) + ((caveY - cy) * this.zoom);
+
+            // If on screen
+            if (dsx >= 0 && dsx <= this.size && dsy >= 0 && dsy <= this.size) {
+                ctx.fillStyle = '#ffd700'; // Gold
+                ctx.beginPath();
+                ctx.arc(dsx, dsy, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Emoji or label
+                ctx.font = '10px Arial';
+                ctx.fillText('🏰', dsx - 5, dsy - 7);
             }
         }
-    }
-    
-    renderEntities(ctx, px, py) {
-        const entities = this.game.entities || [];
-        const scale = this.size / (this.mapRadius * 2);
-        const centerX = this.size / 2;
-        const centerY = this.size / 2;
-        
-        for (const entity of entities) {
-            const dx = entity.x - px;
-            const dy = entity.y - py;
-            
-            if (Math.abs(dx) > this.mapRadius || Math.abs(dy) > this.mapRadius) continue;
-            
-            const sx = centerX + dx * scale;
-            const sy = centerY + dy * scale;
-            
-            // Check if in circle
-            const distFromCenter = Math.sqrt((sx - centerX) ** 2 + (sy - centerY) ** 2);
-            if (distFromCenter > this.size / 2 - 10) continue;
-            
-            // Different colors for different entity types
-            if (entity.isBoss) {
-                ctx.fillStyle = '#ff0000';
-                ctx.beginPath();
-                ctx.arc(sx, sy, 4, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (entity.stats?.aggressive) {
-                ctx.fillStyle = '#ff6600';
-                ctx.beginPath();
-                ctx.arc(sx, sy, 2, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (entity.isPet) {
-                ctx.fillStyle = '#00ffff';
-                ctx.beginPath();
-                ctx.arc(sx, sy, 3, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.fillStyle = '#ffff00';
-                ctx.beginPath();
-                ctx.arc(sx, sy, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
+
+        // Draw Player Marker
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        const center = this.size / 2;
+        ctx.arc(center, center, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Direction arrow?
+        // Player facing is tricky without rotation angle, but velocity helps.
+        if (player.vx || player.vy) {
+            const angle = Math.atan2(player.vy, player.vx);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(center, center);
+            ctx.lineTo(center + Math.cos(angle) * 8, center + Math.sin(angle) * 8);
+            ctx.stroke();
         }
     }
-    
-    adjustBrightness(color, factor) {
-        // Convert hex to RGB, adjust, convert back
-        let r, g, b;
-        if (color.startsWith('#')) {
-            r = parseInt(color.slice(1, 3), 16);
-            g = parseInt(color.slice(3, 5), 16);
-            b = parseInt(color.slice(5, 7), 16);
-        } else {
-            return color;
+
+    adjustColor(hex, amt) {
+        let usePound = false;
+        if (hex[0] === "#") {
+            hex = hex.slice(1);
+            usePound = true;
         }
-        
-        r = Math.min(255, Math.floor(r * factor));
-        g = Math.min(255, Math.floor(g * factor));
-        b = Math.min(255, Math.floor(b * factor));
-        
-        return `rgb(${r},${g},${b})`;
-    }
-    
-    // Set home position
-    setHome(x, y, z) {
-        this.homePosition = { x, y, z };
-        this.game.ui?.showMessage('🏠 Home position set!', 2000);
-    }
-    
-    // Add a marker
-    addMarker(x, y, z, emoji, color) {
-        this.markers.push({ x, y, z, emoji, color, time: Date.now() });
-        
-        // Limit markers
-        if (this.markers.length > 10) {
-            this.markers.shift();
-        }
-    }
-    
-    // Toggle visibility
-    toggle() {
-        this.visible = !this.visible;
-    }
-    
-    // Zoom in/out
-    setZoom(level) {
-        this.zoom = Math.max(0.5, Math.min(2, level));
-        this.mapRadius = Math.floor(40 / this.zoom);
-    }
-    
-    // Serialize for save
-    serialize() {
-        return {
-            homePosition: this.homePosition,
-            markers: this.markers,
-        };
-    }
-    
-    deserialize(data) {
-        if (data) {
-            this.homePosition = data.homePosition || null;
-            this.markers = data.markers || [];
-        }
+        let num = parseInt(hex, 16);
+        let r = (num >> 16) + amt;
+        if (r > 255) r = 255; else if (r < 0) r = 0;
+        let b = ((num >> 8) & 0x00FF) + amt;
+        if (b > 255) b = 255; else if (b < 0) b = 0;
+        let g = (num & 0x0000FF) + amt;
+        if (g > 255) g = 255; else if (g < 0) g = 0;
+        return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
     }
 }

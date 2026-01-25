@@ -40,6 +40,10 @@ export class InventoryUI {
 
         if (this.craftBtn) {
             this.craftBtn.addEventListener('click', () => this.craftSelected());
+            this.craftBtn.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < 5; i++) this.craftSelected();
+            });
         }
 
         // Close on click outside
@@ -98,16 +102,16 @@ export class InventoryUI {
     renderCrafting() {
         if (!this.craftingGrid) return;
         this.craftingGrid.innerHTML = '';
-        
+
         // Get player's current age from quest manager
         const currentAge = this.game.quests?.currentAge || 'STONE_AGE';
         const playerAgeIndex = AGE_INDEX[currentAge] ?? 0;
-        
+
         // Create category filter tabs
         const categories = ['all', 'tools', 'weapons', 'armor', 'building', 'materials', 'stations', 'ammo'];
         const tabsDiv = document.createElement('div');
         tabsDiv.className = 'crafting-tabs';
-        
+
         categories.forEach(cat => {
             const tab = document.createElement('button');
             tab.className = `crafting-tab ${this.activeCategory === cat ? 'active' : ''}`;
@@ -118,9 +122,9 @@ export class InventoryUI {
             });
             tabsDiv.appendChild(tab);
         });
-        
+
         this.craftingGrid.appendChild(tabsDiv);
-        
+
         // Create recipe grid container
         const recipeGrid = document.createElement('div');
         recipeGrid.className = 'recipe-grid';
@@ -145,7 +149,7 @@ export class InventoryUI {
 
             const canCraft = this.canCraft(recipe);
             if (!canCraft) slot.classList.add('disabled');
-            
+
             // Add age indicator badge
             const ageNames = ['🪨', '🦴', '🥉', '⚔️', '🏰', '⚙️', '💻'];
             const ageBadge = recipe.age > 0 ? `<span class="age-badge">${ageNames[recipe.age] || ''}</span>` : '';
@@ -164,9 +168,9 @@ export class InventoryUI {
 
             recipeGrid.appendChild(slot);
         });
-        
+
         this.craftingGrid.appendChild(recipeGrid);
-        
+
         // Show current age info
         const ageInfo = document.createElement('div');
         ageInfo.className = 'age-info';
@@ -249,7 +253,7 @@ export class InventoryUI {
         // Add result
         const resultCount = this.selectedRecipe.count || 1;
         this.game.player.addItem(this.selectedRecipe.result, resultCount);
-        
+
         // Notify quest system about crafting
         if (this.game.questManager) {
             this.game.questManager.onItemCrafted(this.selectedRecipe.result, resultCount);
@@ -290,9 +294,24 @@ export class InventoryUI {
         if (isHotbar) slot.classList.add('hotbar-slot-ui');
 
         if (item) {
+            let durabilityHtml = '';
+            if (item.durability !== undefined && item.maxDurability) {
+                const pct = Math.max(0, Math.min(100, (item.durability / item.maxDurability) * 100));
+                let color = '#4ade80'; // Green
+                if (pct < 50) color = '#facc15'; // Yellow
+                if (pct < 20) color = '#ef4444'; // Red
+
+                durabilityHtml = `
+                    <div class="durability-container">
+                        <div class="durability-bar" style="width: ${pct}%; background-color: ${color};"></div>
+                    </div>
+                `;
+            }
+
             slot.innerHTML = `
                 <div class="item-icon">${item.emoji}</div>
                 <div class="item-count">${item.count}</div>
+                ${durabilityHtml}
                 <div class="item-tooltip">${item.name}</div>
             `;
             slot.draggable = true;
@@ -356,7 +375,55 @@ export class InventoryUI {
     }
 
     onClick(e, index, isHotbar) {
-        // Fallback for mobile tap-to-move if needed using a "selected" state
-        // For now, assume drag-drop is primary
+        if (e.shiftKey) {
+            this.quickMove(index, isHotbar);
+        }
+    }
+
+    quickMove(index, isHotbar) {
+        const player = this.game.player;
+        const sourceList = isHotbar ? player.hotbar : player.inventory;
+        const targetList = isHotbar ? player.inventory : player.hotbar;
+        const item = sourceList[index];
+
+        if (!item) return;
+
+        // Try to add to target list
+        let leftover = item.count;
+
+        // 1. Try to stack with existing
+        for (let i = 0; i < targetList.length; i++) {
+            if (leftover <= 0) break;
+            const target = targetList[i];
+            if (target && target.name === item.name && target.stackable) {
+                const space = CONFIG.STACK_SIZE - target.count;
+                if (space > 0) {
+                    const toMove = Math.min(space, leftover);
+                    target.count += toMove;
+                    leftover -= toMove;
+                }
+            }
+        }
+
+        // 2. Try to fill empty slots
+        if (leftover > 0) {
+            for (let i = 0; i < targetList.length; i++) {
+                if (leftover <= 0) break;
+                if (!targetList[i]) {
+                    targetList[i] = { ...item, count: leftover }; // Clone
+                    leftover = 0;
+                }
+            }
+        }
+
+        // Update source
+        if (leftover <= 0) {
+            sourceList[index] = null;
+        } else {
+            item.count = leftover;
+        }
+
+        this.render();
+        player.updateUI();
     }
 }

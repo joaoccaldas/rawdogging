@@ -23,7 +23,6 @@ import { TamingSystem } from './core/taming.js';
 // New Systems (10 Feature Update)
 import { WeatherSystem } from './core/weather.js';
 import { ArmorSystem } from './core/armor.js';
-import { Minimap } from './ui/minimap.js';
 import { Statistics } from './core/statistics.js';
 import { ThrowableSystem } from './core/throwables.js';
 import { TemperatureSystem } from './core/temperature.js';
@@ -63,7 +62,6 @@ import { InventorySortingSystem } from './ui/inventorysorting.js';
 import { ConsumptionEffects } from './core/consumptioneffects.js';
 import { ToolDurabilitySystem } from './core/tooldurability.js';
 import { DifficultySystem } from './core/difficulty.js';
-import { TutorialSystem } from './core/tutorial.js';
 import { BestiarySystem } from './core/bestiary.js';
 import { MapSystem } from './core/mapcraft.js';
 import { FishingSystem } from './core/fishing.js';
@@ -80,11 +78,14 @@ class Game {
     constructor() {
         this.lastTime = 0;
         this.accumulator = 0;
+        this.debugMode = false;
         this.tickRate = 1 / 60;
         this.initialized = false;
+        this.firstSteps = false; // Walking tutorial state
+        this.introCinematic = false; // Blocking input during eyes opening
 
         this.spriteManager = new SpriteManager();
-        
+
         // Initialize async components
         this.initAsync();
     }
@@ -102,187 +103,177 @@ class Game {
         this.particles = new ParticleSystem(this);
 
         // Initialize Player
-        // Find safe spawn
-        let spawnZ = 20;
-        const groundZ = this.world.getHeight(0, 0);
-        if (groundZ > 0) {
-            spawnZ = groundZ + 2;
-        }
-
-        this.player = new Player(this, 0, 0, spawnZ);
+        // Find safe spawn (non-water, solid ground)
+        this.world.generateChunk(0, 0); // Ensure origin chunk exists
+        const safeSpawn = this.world.getSafeSpawnPoint(0, 0);
+        this.player = new Player(this, safeSpawn.x, safeSpawn.y, safeSpawn.z);
         this.camera.follow(this.player);
 
         // UI Manager (after player init as it might need player ref)
         this.ui = new UIManager(this);
         this.saveManager = new SaveManager(this);
-        
+
         // Quest System
         this.questManager = new QuestManager(this);
         this.questManager.init();
-        
+
         // Lighting System
         this.lighting = new LightingSystem(this);
-        
+
         // Skills System
         this.skills = new SkillsManager(this);
-        
+
         // Taming System
         this.taming = new TamingSystem(this);
-        
+
         // ====== NEW SYSTEMS (10 Feature Update) ======
-        
+
         // Weather System - Dynamic weather effects
         this.weather = new WeatherSystem(this);
-        
+
         // Armor System - Damage reduction
         this.armor = new ArmorSystem(this);
-        
-        // Minimap - Navigation aid
-        this.minimap = new Minimap(this);
-        
+
         // Statistics - Track achievements
         this.statistics = new Statistics(this);
-        
+
         // Throwables - Ranged combat
         this.throwables = new ThrowableSystem(this);
-        
+
         // Temperature - Biome survival
         this.temperature = new TemperatureSystem(this);
-        
+
         // Food Buffs - Cooking benefits
         this.foodBuffs = new FoodBuffSystem(this);
-        
+
         // Home Beacons - Respawn points
         this.homeBeacons = new HomeBeaconSystem(this);
-        
+
         // Wildlife - Passive creatures
         this.wildlife = new WildlifeSystem(this);
-        
+
         // ====== NEW SYSTEMS (20 Feature Expansion) ======
-        
+
         // Stamina System - Energy for actions
         this.stamina = new StaminaSystem(this);
-        
+
         // Status Effects - Buffs and debuffs
         this.statusEffects = new StatusEffectSystem(this);
-        
+
         // Crafting Stations - Advanced crafting
         this.craftingStations = new CraftingStationSystem(this);
-        
+
         // Storage System - Chests
         this.storage = new StorageSystem(this);
-        
+
         // Farming System - Crops
         this.farming = new FarmingSystem(this);
-        
+
         // Pet Commands - Control tamed animals
         this.petCommands = new PetCommandSystem(this);
-        
+
         // Combo System - Chain attacks
         this.combos = new ComboSystem(this);
-        
+
         // Achievement System - Milestones
         this.achievements = new AchievementSystem(this);
-        
+
         // Loot Tables - Random drops
         this.lootTables = new LootTableSystem(this);
-        
+
         // Map Markers - Waypoints
         this.mapMarkers = new MapMarkerSystem(this);
-        
+
         // World Events - Random events
         this.worldEvents = new WorldEventSystem(this);
-        
+
         // Enchantments - Tool upgrades
         this.enchantments = new EnchantmentSystem(this);
-        
+
         // Swimming - Water mechanics
         this.swimming = new SwimmingSystem(this);
-        
+
         // Sound Manager - Audio system
         this.soundManager = new SoundManager(this);
-        
+
         // NPC Trading - Villagers
         this.npcTrading = new NPCTradingSystem(this);
-        
+
         // Boss Summoning - Epic battles
         this.bossSummoning = new BossSummoningSystem(this);
-        
+
         // Day/Night Visuals - Sky effects
         this.dayNightVisuals = new DayNightVisualSystem(this);
-        
+
         // Building Snap Grid - Construction
         this.buildingSnapGrid = new BuildingSnapGridSystem(this);
-        
+
         // Torch Lighting - Placed lights
         this.torchLighting = new TorchLightingSystem(this);
-        
+
         // Damage Numbers - Combat feedback
         this.damageNumbers = new DamageNumberSystem(this);
-        
+
         // Side Quests - Random location-based quests
         this.sideQuests = new SideQuestSystem(this);
         this.sideQuests.init();
-        
+
         // ====== NEW SYSTEMS (20 Additional Features) ======
-        
+
         // Block Breaking - Mining animations and progress
         this.blockBreaking = new BlockBreakingSystem(this);
-        
+
         // Death Screen - Death UI and respawn system
         this.deathScreen = new DeathSystem(this);
-        
+
         // Boss Health Bars - Boss combat UI
         this.bossHealthBar = new BossHealthBarSystem(this);
-        
+
         // Block Preview - Ghost preview for placement
         this.blockPreview = new BlockPlacementPreview(this);
-        
+
         // Inventory Sorting - Sort, quick-stack features
         this.inventorySorting = new InventorySortingSystem(this);
-        
+
         // Consumption Effects - Eating/drinking visuals
         this.consumptionEffects = new ConsumptionEffects(this);
-        
+
         // Tool Durability - Tool wear and repair
         this.toolDurability = new ToolDurabilitySystem(this);
-        
+
         // Difficulty System - Game difficulty settings
         this.difficulty = new DifficultySystem(this);
-        
-        // Tutorial System - Player onboarding
-        this.tutorial = new TutorialSystem(this);
-        
+
         // Bestiary - Creature encyclopedia
         this.bestiary = new BestiarySystem(this);
-        
+
         // Map Craft - Craftable maps
         this.mapCraft = new MapSystem(this);
-        
+
         // Fishing - Fishing minigame
         this.fishing = new FishingSystem(this);
-        
+
         // Potion Brewing - Potions and effects
         this.potions = new PotionSystem(this);
-        
+
         // Grappling Hook - Movement tool
         this.grappling = new GrapplingSystem(this);
-        
+
         // Photo Mode - Screenshot system
         this.photoMode = new PhotoModeSystem(this);
-        
+
         // Adaptive Music - Dynamic soundtrack
         this.adaptiveMusic = new MusicSystem(this);
-        
+
         // Dungeon System - Procedural dungeons
         this.dungeons = new DungeonSystem(this);
-        
+
         // Structure Generator - World structures
         this.structures = new StructureSystem(this);
-        
+
         // Seasonal Events - Time-limited events
         this.seasonalEvents = new SeasonalEventsSystem(this);
-        
+
         // Blueprint System - Building templates
         this.blueprints = new BlueprintSystem(this);
 
@@ -350,13 +341,17 @@ class Game {
 
         // Render
         this.renderer.render();
-        this.renderer.renderDebug();
+        if (this.debugMode) {
+            this.renderer.renderDebug();
+        }
 
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 
     startNewGame() {
         console.log('Game: startNewGame called. Creating fresh world...');
+        this.firstSteps = false; // Will be enabled by UIManager after intro
+        this.introCinematic = false;
 
         // 1. Reset World
         this.world.chunks.clear();
@@ -373,49 +368,42 @@ class Game {
         this.player.xp = 0;
         this.player.level = 1;
         this.player.nextLevelXp = 100;
-        
+
         // Give Stone Age starter items
         this.player.addItem('club', 1);
         this.player.addItem('cobblestone', 5);
         this.player.addItem('stick', 8);
         this.player.addItem('raw_meat', 3);
 
-        // 3. Find Spawn at chunk center
-        this.world.generateChunk(0, 0); // Ensure origin chunk exists
-        let spawnZ = this.world.getHeight(8, 8); // Get height at actual spawn point!
-        console.log(`Spawn height at (8,8): ${spawnZ}`);
-
-        // DEBUG: Verify ground blocks exist
-        const blockAtSpawn = this.world.getBlock(8, 8, spawnZ);
-        const blockBelow = this.world.getBlock(8, 8, spawnZ - 1);
-        const blockAbove = this.world.getBlock(8, 8, spawnZ + 1);
-        console.log(`Ground verification: block@Z${spawnZ}=${blockAtSpawn}, @Z${spawnZ - 1}=${blockBelow}, @Z${spawnZ + 1}=${blockAbove}`);
-
-        if (spawnZ <= 0) spawnZ = 20; // Fallback
-
-        this.player.x = 8.5;
-        this.player.y = 8.5;
-        this.player.z = spawnZ + 1; // Spawn 1 above ground (feet at spawnZ+1, ground at spawnZ)
+        // 3. Find Safe Spawn
+        this.world.generateChunk(0, 0); // Ensure origin chunk is generated first!
+        const safeSpawn = this.world.getSafeSpawnPoint(8, 8);
+        this.player.x = safeSpawn.x;
+        this.player.y = safeSpawn.y;
+        this.player.z = safeSpawn.z;
         this.player.vx = 0; this.player.vy = 0; this.player.vz = 0;
-        this.player.spawnPoint = { x: 8.5, y: 8.5, z: spawnZ + 1 };
-        this.player.grounded = true; // Start grounded!
-        
+        this.player.spawnPoint = { ...safeSpawn };
+        this.player.grounded = true; // Start grounded
+
+        // Spawn Easter Egg relics
+        this.world.spawnRelics();
+
         // Reset quest system for new game
         if (this.questManager) {
             this.questManager.reset();
             this.questManager.init();
         }
-        
+
         // Reset skills system
         if (this.skills) {
             this.skills.reset();
         }
-        
+
         // Reset taming system
         if (this.taming) {
             this.taming.reset();
         }
-        
+
         // Reset new systems
         if (this.weather) this.weather.reset();
         if (this.armor) this.armor.reset();
@@ -427,7 +415,7 @@ class Game {
             this.homeBeacons.lastDeathPosition = null;
         }
         if (this.wildlife) this.wildlife.clear();
-        
+
         // Reset 20 new systems
         if (this.stamina) this.stamina.reset();
         if (this.statusEffects) this.statusEffects.reset();
@@ -453,7 +441,7 @@ class Game {
             this.sideQuests.reset();
             this.sideQuests.init();
         }
-        
+
         // Reset 20 additional feature systems
         if (this.blockBreaking) this.blockBreaking.reset?.();
         if (this.deathScreen) this.deathScreen.reset?.();
@@ -463,7 +451,6 @@ class Game {
         if (this.consumptionEffects) this.consumptionEffects.reset?.();
         if (this.toolDurability) this.toolDurability.reset?.();
         if (this.difficulty) this.difficulty.reset?.();
-        if (this.tutorial) this.tutorial.reset?.();
         if (this.bestiary) this.bestiary.reset?.();
         if (this.mapCraft) this.mapCraft.reset?.();
         if (this.fishing) this.fishing.reset?.();
@@ -488,218 +475,236 @@ class Game {
         this.player.updateUI();
     }
 
+    togglePause(paused) {
+        this.paused = paused;
+
+        // Clear input state when pausing to prevent stuck keys
+        if (this.paused && this.input) {
+            this.input.keys = {};
+        }
+
+        // Inform UI to show/hide pause menu
+        if (this.ui) {
+            this.ui.togglePauseUI(this.paused);
+        }
+
+        console.log(`Game: ${this.paused ? 'Paused' : 'Resumed'}`);
+    }
+
     update(deltaTime) {
         this.saveManager.update(Date.now());
         this.world.update(deltaTime);
-        
+
         // Update quest system
         if (this.questManager) {
             this.questManager.update(deltaTime);
         }
-        
+
         // Update lighting system
         if (this.lighting) {
             this.lighting.update(deltaTime);
         }
-        
+
         // Update taming system (pets)
         if (this.taming) {
             this.taming.update(deltaTime);
         }
-        
+
         // ====== UPDATE NEW SYSTEMS ======
-        
+
         // Weather effects
         if (this.weather) {
             this.weather.update(deltaTime);
         }
-        
+
         // Statistics tracking
         if (this.statistics) {
             this.statistics.update(deltaTime);
         }
-        
+
         // Temperature effects
         if (this.temperature) {
             this.temperature.update(deltaTime);
         }
-        
+
         // Food buffs
         if (this.foodBuffs) {
             this.foodBuffs.update(deltaTime);
         }
-        
+
         // Home beacon cooldowns
         if (this.homeBeacons) {
             this.homeBeacons.update(deltaTime);
         }
-        
+
         // Throwable projectiles
         if (this.throwables) {
             this.throwables.update(deltaTime);
         }
-        
+
         // Ambient wildlife
         if (this.wildlife) {
             this.wildlife.update(deltaTime);
         }
-        
+
         // ====== UPDATE 20 NEW SYSTEMS ======
-        
+
         // Stamina management
         if (this.stamina) {
             this.stamina.update(deltaTime);
         }
-        
+
         // Status effects (poison, burn, etc.)
         if (this.statusEffects) {
             this.statusEffects.update(deltaTime);
         }
-        
+
         // Crafting stations
         if (this.craftingStations) {
             this.craftingStations.update(deltaTime);
         }
-        
+
         // Farming (crop growth)
         if (this.farming) {
             this.farming.update(deltaTime);
         }
-        
+
         // Pet commands
         if (this.petCommands) {
             this.petCommands.update(deltaTime);
         }
-        
+
         // Combat combos
         if (this.combos) {
             this.combos.update(deltaTime);
         }
-        
+
         // Achievements
         if (this.achievements) {
             this.achievements.update(deltaTime);
         }
-        
+
         // World events
         if (this.worldEvents) {
             this.worldEvents.update(deltaTime);
         }
-        
+
         // Swimming mechanics
         if (this.swimming) {
             this.swimming.update(deltaTime);
         }
-        
+
         // NPC Trading
         if (this.npcTrading) {
             this.npcTrading.update(deltaTime);
         }
-        
+
         // Boss summoning
         if (this.bossSummoning) {
             this.bossSummoning.update(deltaTime);
         }
-        
+
         // Day/Night visuals
         if (this.dayNightVisuals) {
             this.dayNightVisuals.update(deltaTime);
         }
-        
+
         // Building snap grid
         if (this.buildingSnapGrid) {
             this.buildingSnapGrid.update(deltaTime);
         }
-        
+
         // Torch lighting
         if (this.torchLighting) {
             this.torchLighting.update(deltaTime);
         }
-        
+
         // Damage numbers
         if (this.damageNumbers) {
             this.damageNumbers.update(deltaTime);
         }
-        
+
         // Side quests - random location-based missions
         if (this.sideQuests) {
             this.sideQuests.update(deltaTime);
         }
-        
+
         // ====== UPDATE 20 ADDITIONAL FEATURE SYSTEMS ======
-        
+
         // Block breaking animations
         if (this.blockBreaking) {
             this.blockBreaking.update(deltaTime);
         }
-        
+
         // Death screen
         if (this.deathScreen) {
             this.deathScreen.update(deltaTime);
         }
-        
+
         // Boss health bars
         if (this.bossHealthBar) {
             this.bossHealthBar.update(deltaTime);
         }
-        
+
         // Block placement preview
         if (this.blockPreview) {
             this.blockPreview.update(deltaTime);
         }
-        
+
         // Tool durability
         if (this.toolDurability) {
             this.toolDurability.update(deltaTime);
         }
-        
+
         // Difficulty system
         if (this.difficulty) {
             this.difficulty.update?.(deltaTime);
         }
-        
-        // Tutorial system
-        if (this.tutorial) {
-            this.tutorial.update(deltaTime);
-        }
-        
+
         // Fishing minigame
         if (this.fishing) {
             this.fishing.update(deltaTime);
         }
-        
+
         // Potions brewing
         if (this.potions) {
             this.potions.update(deltaTime);
         }
-        
+
         // Grappling hook physics
         if (this.grappling) {
             this.grappling.update(deltaTime);
         }
-        
+
         // Adaptive music
         if (this.adaptiveMusic) {
             this.adaptiveMusic.update(deltaTime);
         }
-        
+
         // Dungeons
         if (this.dungeons) {
             this.dungeons.update?.(deltaTime);
         }
-        
+
         // Seasonal events
         if (this.seasonalEvents) {
             this.seasonalEvents.update(deltaTime);
         }
-        
+
         // Blueprint system
         if (this.blueprints) {
             this.blueprints.update?.(deltaTime);
         }
 
+        if (this.ui) {
+            this.ui.update(deltaTime);
+        }
+
         if (this.player) {
             this.player.update(deltaTime);
+            if (this.questManager) {
+                this.questManager.onLocationUpdate(this.player.x, this.player.y);
+            }
         }
 
         this.camera.update(deltaTime);
@@ -720,12 +725,12 @@ class Game {
         if (this.statistics) {
             this.statistics.onDeath();
         }
-        
+
         // Record death position for home beacon system
         if (this.homeBeacons) {
             this.homeBeacons.onPlayerDeath(this.player.x, this.player.y, this.player.z);
         }
-        
+
         this.player.health = this.player.maxHealth;
         this.player.hunger = this.player.maxHunger;
         this.player.isDead = false;
@@ -741,9 +746,11 @@ class Game {
             this.player.y = this.player.spawnPoint.y;
             this.player.z = this.player.spawnPoint.z;
         } else {
-            this.player.x = 0;
-            this.player.y = 0;
-            this.player.z = 20;
+            this.world.generateChunk(0, 0); // Ensure origin chunk exists
+            const safeSpawn = this.world.getSafeSpawnPoint(0, 0);
+            this.player.x = safeSpawn.x;
+            this.player.y = safeSpawn.y;
+            this.player.z = safeSpawn.z;
         }
 
         this.player.vx = 0;
@@ -762,9 +769,9 @@ class Game {
         this.ui.closeAllModals();
         this.player.updateUI();
     }
-    
+
     // ====== HELPER METHODS FOR SYSTEMS ======
-    
+
     // Spawn an item entity at a location
     spawnItem(itemId, count, x, y, z) {
         // Import ItemEntity dynamically to avoid circular deps
@@ -774,28 +781,28 @@ class Game {
             this.entities.push(item);
         });
     }
-    
+
     // Spawn an entity (enemy, wildlife, etc.)
     spawnEntity(type, x, y, z) {
         // Try wildlife first
         if (this.wildlife?.spawnCreature) {
             return this.wildlife.spawnCreature(type, x, y, z);
         }
-        
+
         // Try enemy spawning
         import('./entities/enemy.js').then(({ Enemy }) => {
             const enemy = new Enemy(this, x, y, z, type);
             this.entities.push(enemy);
             return enemy;
         });
-        
+
         return null;
     }
-    
+
     // Get active world event modifiers
     getEventModifier(modifierName) {
         if (!this.worldEvents) return null;
-        
+
         for (const event of this.worldEvents.activeEvents.values()) {
             if (event.modifiers && event.modifiers[modifierName] !== undefined) {
                 return event.modifiers[modifierName];
@@ -803,7 +810,7 @@ class Game {
         }
         return null;
     }
-    
+
     // Check if specific event is active
     isEventActive(eventId) {
         return this.worldEvents?.isEventActive?.(eventId) || false;

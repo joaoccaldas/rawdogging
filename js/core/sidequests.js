@@ -29,7 +29,7 @@ export const SIDE_QUEST_TEMPLATES = {
         expiresIn: 600, // 10 minutes
         rarity: 'common',
     },
-    
+
     MOUNTAIN_PEAK: {
         id: 'mountain_peak',
         name: 'Summit Challenge',
@@ -51,7 +51,7 @@ export const SIDE_QUEST_TEMPLATES = {
         expiresIn: 900, // 15 minutes
         rarity: 'common',
     },
-    
+
     ANCIENT_TREE: {
         id: 'ancient_tree',
         name: 'The Elder Tree',
@@ -76,7 +76,7 @@ export const SIDE_QUEST_TEMPLATES = {
         expiresIn: 600,
         rarity: 'common',
     },
-    
+
     // ========== HUNTING QUESTS ==========
     PREDATOR_THREAT: {
         id: 'predator_threat',
@@ -102,7 +102,7 @@ export const SIDE_QUEST_TEMPLATES = {
         rarity: 'common',
         spawnEnemiesOnStart: { type: 'wolf', count: 3 },
     },
-    
+
     BEAST_BOUNTY: {
         id: 'beast_bounty',
         name: 'Beast Bounty',
@@ -127,7 +127,7 @@ export const SIDE_QUEST_TEMPLATES = {
         rarity: 'rare',
         spawnEnemiesOnStart: { type: 'sabertooth', count: 1, boss: true },
     },
-    
+
     // ========== GATHERING QUESTS ==========
     ORE_EXPEDITION: {
         id: 'ore_expedition',
@@ -152,7 +152,7 @@ export const SIDE_QUEST_TEMPLATES = {
         expiresIn: 720,
         rarity: 'uncommon',
     },
-    
+
     DIAMOND_RUSH: {
         id: 'diamond_rush',
         name: 'Diamond Rush',
@@ -176,7 +176,7 @@ export const SIDE_QUEST_TEMPLATES = {
         expiresIn: 900,
         rarity: 'epic',
     },
-    
+
     HERB_GATHERING: {
         id: 'herb_gathering',
         name: 'Medicinal Herbs',
@@ -200,7 +200,7 @@ export const SIDE_QUEST_TEMPLATES = {
         rarity: 'common',
         spawnItemsOnStart: { item: 'berry', count: 8 },
     },
-    
+
     // ========== SURVIVAL QUESTS ==========
     SURVIVE_NIGHT: {
         id: 'survive_night_quest',
@@ -225,7 +225,7 @@ export const SIDE_QUEST_TEMPLATES = {
         rarity: 'uncommon',
         nightOnly: true,
     },
-    
+
     EXTREME_WEATHER: {
         id: 'extreme_weather',
         name: 'Storm Chaser',
@@ -248,7 +248,7 @@ export const SIDE_QUEST_TEMPLATES = {
         rarity: 'rare',
         triggerWeather: 'storm',
     },
-    
+
     // ========== CONSTRUCTION QUESTS ==========
     BUILD_OUTPOST: {
         id: 'build_outpost',
@@ -274,7 +274,7 @@ export const SIDE_QUEST_TEMPLATES = {
         expiresIn: 1200,
         rarity: 'uncommon',
     },
-    
+
     // ========== RESCUE QUESTS ==========
     LOST_SUPPLIES: {
         id: 'lost_supplies',
@@ -298,7 +298,7 @@ export const SIDE_QUEST_TEMPLATES = {
         rarity: 'common',
         spawnChestOnStart: true,
     },
-    
+
     // ========== SPECIAL QUESTS ==========
     METEOR_SITE: {
         id: 'meteor_site',
@@ -324,7 +324,7 @@ export const SIDE_QUEST_TEMPLATES = {
         triggerOnWorldEvent: 'meteor_shower',
         spawnBlocksOnStart: { block: BLOCKS.OBSIDIAN, count: 5 },
     },
-    
+
     ANCIENT_RUINS: {
         id: 'ancient_ruins',
         name: 'Ancient Ruins',
@@ -370,20 +370,20 @@ class ActiveSideQuest {
         this.type = template.type;
         this.difficulty = template.difficulty;
         this.rarity = template.rarity;
-        
+
         this.location = { ...location };
         this.objectives = JSON.parse(JSON.stringify(template.objectives));
         this.rewards = JSON.parse(JSON.stringify(template.rewards));
-        
+
         this.startTime = Date.now();
         this.expiresIn = template.expiresIn;
         this.timeRemaining = template.expiresIn;
-        
+
         this.status = 'active'; // active, completed, failed, expired
         this.currentObjectiveIndex = 0;
-        
+
         this.game = game;
-        
+
         // Track progress
         this.progress = {
             enemiesKilled: 0,
@@ -394,19 +394,19 @@ class ActiveSideQuest {
             reachedLocation: false,
         };
     }
-    
+
     formatLocation(loc) {
         const dir = this.getCardinalDirection(loc);
         const dist = Math.round(loc.distance);
         return `${dist} blocks ${dir}`;
     }
-    
+
     getCardinalDirection(loc) {
         const dx = loc.x - (this.game?.player?.x || 0);
         const dy = loc.y - (this.game?.player?.y || 0);
-        
+
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-        
+
         if (angle >= -22.5 && angle < 22.5) return 'East';
         if (angle >= 22.5 && angle < 67.5) return 'Southeast';
         if (angle >= 67.5 && angle < 112.5) return 'South';
@@ -415,39 +415,39 @@ class ActiveSideQuest {
         if (angle >= -157.5 && angle < -112.5) return 'Northwest';
         if (angle >= -112.5 && angle < -67.5) return 'North';
         if (angle >= -67.5 && angle < -22.5) return 'Northeast';
-        
+
         return 'nearby';
     }
-    
+
     update(deltaTime) {
         if (this.status !== 'active') return;
-        
+
         // Update timer
         this.timeRemaining -= deltaTime;
         if (this.timeRemaining <= 0) {
             this.fail('expired');
             return;
         }
-        
+
         // Check current objective
         const objective = this.objectives[this.currentObjectiveIndex];
         if (!objective) {
             this.complete();
             return;
         }
-        
+
         this.checkObjective(objective, deltaTime);
     }
-    
+
     checkObjective(objective, deltaTime) {
         const player = this.game.player;
         if (!player) return;
-        
+
         const distToLocation = Math.hypot(
             player.x - this.location.x,
             player.y - this.location.y
         );
-        
+
         switch (objective.type) {
             case 'reach_location':
                 if (distToLocation <= (objective.radius || 5)) {
@@ -457,7 +457,7 @@ class ActiveSideQuest {
                     this.advanceObjective();
                 }
                 break;
-                
+
             case 'survive_time':
                 if (this.progress.reachedLocation || distToLocation <= 15) {
                     // Check night condition if required
@@ -466,17 +466,17 @@ class ActiveSideQuest {
                         const isNight = timeOfDay < 0.2 || timeOfDay > 0.8;
                         if (!isNight) return;
                     }
-                    
+
                     this.progress.timeAtLocation += deltaTime;
                     objective.current = Math.floor(this.progress.timeAtLocation);
                     objective.required = objective.duration;
-                    
+
                     if (this.progress.timeAtLocation >= objective.duration) {
                         this.advanceObjective();
                     }
                 }
                 break;
-                
+
             case 'kill_enemies':
                 objective.current = this.progress.enemiesKilled;
                 objective.required = objective.count;
@@ -484,7 +484,7 @@ class ActiveSideQuest {
                     this.advanceObjective();
                 }
                 break;
-                
+
             case 'mine_block':
                 const minedCount = this.progress.blocksMined[objective.block] || 0;
                 objective.current = minedCount;
@@ -493,7 +493,7 @@ class ActiveSideQuest {
                     this.advanceObjective();
                 }
                 break;
-                
+
             case 'place_blocks':
                 objective.current = this.progress.blocksPlaced;
                 objective.required = objective.count;
@@ -501,7 +501,7 @@ class ActiveSideQuest {
                     this.advanceObjective();
                 }
                 break;
-                
+
             case 'place_block':
                 const placedCount = this.progress.blocksMined[objective.block] || 0; // Reuse for placed
                 objective.current = placedCount;
@@ -510,7 +510,7 @@ class ActiveSideQuest {
                     this.advanceObjective();
                 }
                 break;
-                
+
             case 'collect_item':
                 const collected = this.progress.itemsCollected[objective.item] || 0;
                 objective.current = collected;
@@ -519,7 +519,7 @@ class ActiveSideQuest {
                     this.advanceObjective();
                 }
                 break;
-                
+
             case 'interact':
                 // Interaction checked via onInteract method
                 objective.current = objective.current || 0;
@@ -527,20 +527,20 @@ class ActiveSideQuest {
                 break;
         }
     }
-    
+
     advanceObjective() {
         this.currentObjectiveIndex++;
-        
+
         // Play progress sound
         if (this.game.audio) {
             this.game.audio.play('pickup');
         }
-        
+
         // Show notification
         if (this.game.ui) {
             this.game.ui.showMessage(`📋 Objective complete!`, 2000);
         }
-        
+
         // Particles
         if (this.game.particles && this.game.player) {
             this.game.particles.emitText(
@@ -551,39 +551,39 @@ class ActiveSideQuest {
                 '#4ade80'
             );
         }
-        
+
         // Check if all objectives done
         if (this.currentObjectiveIndex >= this.objectives.length) {
             this.complete();
         }
     }
-    
+
     // Event handlers - called by game systems
     onEnemyKilled(enemyType) {
         if (this.status !== 'active') return;
         this.progress.enemiesKilled++;
     }
-    
+
     onBlockMined(blockId) {
         if (this.status !== 'active') return;
         this.progress.blocksMined[blockId] = (this.progress.blocksMined[blockId] || 0) + 1;
     }
-    
+
     onBlockPlaced(blockId) {
         if (this.status !== 'active') return;
         this.progress.blocksPlaced++;
         // Track specific block placements
         this.progress.blocksMined[blockId] = (this.progress.blocksMined[blockId] || 0) + 1;
     }
-    
+
     onItemCollected(itemKey, count = 1) {
         if (this.status !== 'active') return;
         this.progress.itemsCollected[itemKey] = (this.progress.itemsCollected[itemKey] || 0) + count;
     }
-    
+
     onInteract(x, y, z) {
         if (this.status !== 'active') return;
-        
+
         const objective = this.objectives[this.currentObjectiveIndex];
         if (objective?.type === 'interact') {
             // Check if within quest area
@@ -594,18 +594,18 @@ class ActiveSideQuest {
             }
         }
     }
-    
+
     complete() {
         this.status = 'completed';
-        
+
         // Give rewards
         this.giveRewards();
-        
+
         // Effects
         if (this.game.audio) {
             this.game.audio.play('pickup');
         }
-        
+
         if (this.game.particles && this.game.player) {
             this.game.particles.emitText(
                 this.game.player.x,
@@ -622,22 +622,22 @@ class ActiveSideQuest {
                 30
             );
         }
-        
+
         if (this.game.ui) {
             this.game.ui.showMessage(`🎉 Side Quest Complete: ${this.name}`, 4000);
         }
     }
-    
+
     fail(reason = 'failed') {
         this.status = 'failed';
-        
+
         if (this.game.ui) {
-            const message = reason === 'expired' 
+            const message = reason === 'expired'
                 ? `⏰ Quest Expired: ${this.name}`
                 : `❌ Quest Failed: ${this.name}`;
             this.game.ui.showMessage(message, 3000);
         }
-        
+
         if (this.game.particles && this.game.player) {
             this.game.particles.emitText(
                 this.game.player.x,
@@ -648,21 +648,21 @@ class ActiveSideQuest {
             );
         }
     }
-    
+
     giveRewards() {
         const player = this.game.player;
         if (!player) return;
-        
+
         for (const reward of this.rewards) {
             switch (reward.type) {
                 case 'item':
                     player.addItem(reward.item, reward.count);
                     break;
-                    
+
                 case 'xp':
                     player.gainXP(reward.amount);
                     break;
-                    
+
                 case 'random_items':
                     for (let i = 0; i < reward.count; i++) {
                         const item = reward.pool[Math.floor(Math.random() * reward.pool.length)];
@@ -672,7 +672,7 @@ class ActiveSideQuest {
             }
         }
     }
-    
+
     // For save/load
     serialize() {
         return {
@@ -694,7 +694,7 @@ export class SideQuestSystem {
         this.game = game;
         this.reset();
     }
-    
+
     reset() {
         this.activeQuests = [];
         this.completedQuests = [];
@@ -705,61 +705,61 @@ export class SideQuestSystem {
         this.totalCompleted = 0;
         this.questsSpawned = 0;
     }
-    
+
     init() {
         // Initial quest after short delay
         this.questCooldown = 30;
     }
-    
+
     update(deltaTime) {
         // Update active quests
         for (const quest of this.activeQuests) {
             quest.update(deltaTime);
         }
-        
+
         // Remove completed/failed quests
         this.activeQuests = this.activeQuests.filter(q => q.status === 'active');
-        
+
         // Spawn new quests
         this.questCooldown -= deltaTime;
         if (this.questCooldown <= 0 && this.activeQuests.length < this.maxActiveQuests) {
             this.trySpawnQuest();
             this.questCooldown = this.minCooldown + Math.random() * (this.maxCooldown - this.minCooldown);
         }
-        
+
         // Update UI
         this.updateUI();
     }
-    
+
     trySpawnQuest() {
         const player = this.game.player;
         if (!player) return;
-        
+
         // Select quest template based on rarity
         const template = this.selectQuestTemplate();
         if (!template) return;
-        
+
         // Find valid location
         const location = this.findQuestLocation(template);
         if (!location) return;
-        
+
         // Create quest
         const quest = new ActiveSideQuest(template, location, this.game);
         this.activeQuests.push(quest);
         this.questsSpawned++;
-        
+
         // Spawn any required entities/items
         this.spawnQuestElements(quest, template, location);
-        
+
         // Notify player
         if (this.game.ui) {
             this.game.ui.showMessage(`📋 New Side Quest: ${quest.name}`, 4000);
         }
-        
+
         if (this.game.audio) {
             this.game.audio.play('pickup');
         }
-        
+
         // Add marker to minimap
         if (this.game.mapMarkers) {
             this.game.mapMarkers.createMarker(
@@ -772,22 +772,22 @@ export class SideQuestSystem {
             );
         }
     }
-    
+
     selectQuestTemplate() {
         // Get current game state for filtering
         const player = this.game.player;
         const currentAge = this.game.questManager?.currentAge || 'STONE_AGE';
         const timeOfDay = this.game.world?.timeOfDay || 0.5;
         const isNight = timeOfDay < 0.2 || timeOfDay > 0.8;
-        
+
         // Filter templates
         const validTemplates = [];
         const weights = [];
-        
+
         for (const [key, template] of Object.entries(SIDE_QUEST_TEMPLATES)) {
             // Skip night-only quests during day
             if (template.nightOnly && !isNight) continue;
-            
+
             // Skip world event quests unless event is active
             if (template.triggerOnWorldEvent) {
                 const activeEvents = this.game.worldEvents?.getActiveEvents?.() || [];
@@ -796,48 +796,48 @@ export class SideQuestSystem {
                 );
                 if (!activeEvent) continue;
             }
-            
+
             // Difficulty check based on player level
             const playerLevel = player?.level || 1;
             if (template.difficulty > playerLevel + 2) continue;
-            
+
             validTemplates.push(template);
             weights.push(RARITY_WEIGHTS[template.rarity] || 10);
         }
-        
+
         if (validTemplates.length === 0) return null;
-        
+
         // Weighted random selection
         const totalWeight = weights.reduce((a, b) => a + b, 0);
         let random = Math.random() * totalWeight;
-        
+
         for (let i = 0; i < validTemplates.length; i++) {
             random -= weights[i];
             if (random <= 0) {
                 return validTemplates[i];
             }
         }
-        
+
         return validTemplates[0];
     }
-    
+
     findQuestLocation(template) {
         const player = this.game.player;
         if (!player) return null;
-        
+
         const requirements = template.locationRequirements || {};
         const minDist = 20;
         const maxDist = 60;
-        
+
         // Try multiple times to find valid location
         for (let attempt = 0; attempt < 20; attempt++) {
             const angle = Math.random() * Math.PI * 2;
             const distance = minDist + Math.random() * (maxDist - minDist);
-            
+
             const x = Math.floor(player.x + Math.cos(angle) * distance);
             const y = Math.floor(player.y + Math.sin(angle) * distance);
             const z = this.game.world?.getHeight(x, y) || 10;
-            
+
             // Check biome
             if (requirements.biome && !requirements.biome.includes('any')) {
                 const biome = this.game.world?.getBiomeAt(x, y);
@@ -845,11 +845,11 @@ export class SideQuestSystem {
                     continue;
                 }
             }
-            
+
             // Check height requirements
             if (requirements.minHeight && z < requirements.minHeight) continue;
             if (requirements.maxHeight && z > requirements.maxHeight) continue;
-            
+
             // Check for specific block requirement
             if (requirements.findBlock) {
                 let found = false;
@@ -868,21 +868,21 @@ export class SideQuestSystem {
                 }
                 if (!found) continue;
             }
-            
+
             // Valid location found
             return { x, y, z, distance };
         }
-        
+
         // Fallback - just use a random location
         const angle = Math.random() * Math.PI * 2;
         const distance = minDist + Math.random() * (maxDist - minDist);
         const x = Math.floor(player.x + Math.cos(angle) * distance);
         const y = Math.floor(player.y + Math.sin(angle) * distance);
         const z = this.game.world?.getHeight(x, y) || 10;
-        
+
         return { x, y, z, distance };
     }
-    
+
     spawnQuestElements(quest, template, location) {
         // Spawn enemies
         if (template.spawnEnemiesOnStart) {
@@ -890,7 +890,7 @@ export class SideQuestSystem {
             // This would integrate with enemy spawning system
             // For now, we'll rely on the world's natural spawning
         }
-        
+
         // Spawn items
         if (template.spawnItemsOnStart) {
             const { item, count } = template.spawnItemsOnStart;
@@ -899,12 +899,12 @@ export class SideQuestSystem {
                 const ox = location.x + (Math.random() - 0.5) * 6;
                 const oy = location.y + (Math.random() - 0.5) * 6;
                 const oz = (this.game.world?.getHeight(Math.floor(ox), Math.floor(oy)) || location.z) + 1;
-                
+
                 // Would need to import ItemEntity to spawn items
                 // this.game.entities.push(new ItemEntity(this.game, ox, oy, oz, item, 1));
             }
         }
-        
+
         // Spawn blocks (like meteor obsidian)
         if (template.spawnBlocksOnStart) {
             const { block, count } = template.spawnBlocksOnStart;
@@ -915,23 +915,23 @@ export class SideQuestSystem {
                 this.game.world?.setBlock(ox, oy, oz, block);
             }
         }
-        
+
         // Trigger weather
         if (template.triggerWeather && this.game.weather) {
-            this.game.weather.startWeather(template.triggerWeather);
+            this.game.weather.setWeather(template.triggerWeather);
         }
-        
+
         // Spawn chest
         if (template.spawnChestOnStart) {
             this.game.world?.setBlock(
-                Math.floor(location.x), 
-                Math.floor(location.y), 
-                location.z, 
+                Math.floor(location.x),
+                Math.floor(location.y),
+                location.z,
                 BLOCKS.CHEST
             );
         }
     }
-    
+
     getRarityColor(rarity) {
         switch (rarity) {
             case 'common': return '#a0a0a0';
@@ -941,53 +941,53 @@ export class SideQuestSystem {
             default: return '#ffffff';
         }
     }
-    
+
     // Event hooks - call these from game systems
     onEnemyKilled(enemyType) {
         for (const quest of this.activeQuests) {
             quest.onEnemyKilled(enemyType);
         }
     }
-    
+
     onBlockMined(blockId) {
         for (const quest of this.activeQuests) {
             quest.onBlockMined(blockId);
         }
     }
-    
+
     onBlockPlaced(blockId) {
         for (const quest of this.activeQuests) {
             quest.onBlockPlaced(blockId);
         }
     }
-    
+
     onItemCollected(itemKey, count = 1) {
         for (const quest of this.activeQuests) {
             quest.onItemCollected(itemKey, count);
         }
     }
-    
+
     onInteract(x, y, z) {
         for (const quest of this.activeQuests) {
             quest.onInteract(x, y, z);
         }
     }
-    
+
     // UI
     updateUI() {
         const panel = document.getElementById('side-quest-panel');
         if (!panel) return;
-        
+
         if (this.activeQuests.length === 0) {
             panel.innerHTML = '<div class="no-quests">No active side quests</div>';
             return;
         }
-        
+
         const questHTML = this.activeQuests.map(quest => {
             const objective = quest.objectives[quest.currentObjectiveIndex];
             const timeStr = this.formatTime(quest.timeRemaining);
             const rarityClass = `rarity-${quest.rarity}`;
-            
+
             return `
                 <div class="side-quest ${rarityClass}">
                     <div class="quest-header">
@@ -1003,42 +1003,42 @@ export class SideQuestSystem {
                     ` : ''}
                     <div class="quest-distance">
                         ${Math.round(Math.hypot(
-                            (this.game.player?.x || 0) - quest.location.x,
-                            (this.game.player?.y || 0) - quest.location.y
-                        ))} blocks away
+                (this.game.player?.x || 0) - quest.location.x,
+                (this.game.player?.y || 0) - quest.location.y
+            ))} blocks away
                     </div>
                 </div>
             `;
         }).join('');
-        
+
         panel.innerHTML = questHTML;
     }
-    
+
     formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
-    
+
     // Get active quest by template type (for world event hooks)
     getActiveQuestByType(templateId) {
         return this.activeQuests.find(q => q.templateId === templateId);
     }
-    
+
     // Abandon a quest
     abandonQuest(questId) {
         const quest = this.activeQuests.find(q => q.id === questId);
         if (quest) {
             quest.fail('abandoned');
             this.activeQuests = this.activeQuests.filter(q => q.id !== questId);
-            
+
             // Remove map marker
             if (this.game.mapMarkers) {
                 this.game.mapMarkers.removeMarker(questId);
             }
         }
     }
-    
+
     // Save/Load
     serialize() {
         return {
@@ -1049,15 +1049,15 @@ export class SideQuestSystem {
             questCooldown: this.questCooldown,
         };
     }
-    
+
     deserialize(data) {
         if (!data) return;
-        
+
         this.completedQuests = data.completedQuests || [];
         this.totalCompleted = data.totalCompleted || 0;
         this.questsSpawned = data.questsSpawned || 0;
         this.questCooldown = data.questCooldown || 0;
-        
+
         // Restore active quests
         this.activeQuests = [];
         if (data.activeQuests) {

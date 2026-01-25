@@ -1,5 +1,6 @@
 // Renderer - Handles all drawing operations
 import { CONFIG, BLOCK_DATA, BLOCKS } from '../config.js';
+import { InteractionUtils } from '../utils/interaction.js';
 
 export class Renderer {
     constructor(game) {
@@ -13,7 +14,7 @@ export class Renderer {
         // Damage flash overlay
         this.damageFlash = 0;
         this.damageFlashColor = 'rgba(255, 0, 0, 0)';
-        
+
         // Hit feedback
         this.hitFlash = 0;
         this.hitFlashColor = 'rgba(255, 255, 0, 0)';
@@ -119,45 +120,45 @@ export class Renderer {
             // Get visible chunks and sort blocks for rendering
             this.renderWorld();
             this.renderEntities();
-            
+
             // Render wildlife (ambient creatures)
             if (this.game.wildlife) {
                 this.game.wildlife.render(this.ctx, camera);
             }
-            
+
             // Render throwable projectiles
             if (this.game.throwables) {
                 this.game.throwables.render(this.ctx, camera);
             }
-            
+
             // Render home beacon markers
             if (this.game.homeBeacons) {
                 this.game.homeBeacons.render(this.ctx, camera);
             }
-            
+
             // Render block breaking progress
             if (this.game.blockBreaking?.render) {
                 this.game.blockBreaking.render(this.ctx, camera);
             }
-            
+
             // Render block placement preview
             if (this.game.blockPreview?.render) {
                 this.game.blockPreview.render(this.ctx, camera);
             }
-            
+
             // Render grappling hook rope
             if (this.game.grappling?.render) {
                 this.game.grappling.render(this.ctx, camera);
             }
-            
+
             // Render fishing line
             if (this.game.fishing?.render) {
                 this.game.fishing.render(this.ctx, camera);
             }
-            
+
             // Particles
             this.renderParticles();
-            
+
             // Render weather effects (rain, snow, etc.)
             if (this.game.weather) {
                 this.game.weather.render(this.ctx, this.width, this.height);
@@ -168,60 +169,56 @@ export class Renderer {
 
             // Attack Swipe
             this.renderAttackSwipe();
-            
+
             // Cursor
             this.renderCursor();
-            
+
             // Render minimap (UI overlay)
             if (this.game.minimap) {
                 this.game.minimap.render(this.ctx);
             }
-            
+
             // Render boss health bars
             if (this.game.bossHealthBar?.render) {
                 this.game.bossHealthBar.render(this.ctx);
             }
-            
-            // Render tutorial hints
-            if (this.game.tutorial?.render) {
-                this.game.tutorial.render(this.ctx);
-            }
-            
+
+
             // Render bestiary overlay (when open)
             if (this.game.bestiary?.render) {
                 this.game.bestiary.render(this.ctx);
             }
-            
+
             // Render fishing minigame UI
             if (this.game.fishing?.isActive && this.game.fishing?.renderMinigame) {
                 this.game.fishing.renderMinigame(this.ctx);
             }
-            
+
             // Render potion brewing UI
             if (this.game.potions?.isBrewingUIOpen && this.game.potions?.render) {
                 this.game.potions.render(this.ctx);
             }
-            
+
             // Render death screen
             if (this.game.deathScreen?.render) {
                 this.game.deathScreen.render(this.ctx);
             }
-            
+
             // Render photo mode UI
             if (this.game.photoMode?.isActive && this.game.photoMode?.render) {
                 this.game.photoMode.render(this.ctx);
             }
-            
+
             // Render seasonal event banner
             if (this.game.seasonalEvents?.render) {
                 this.game.seasonalEvents.render(this.ctx);
             }
-            
+
             // Render dungeon portals
             if (this.game.dungeons?.render) {
                 this.game.dungeons.render(this.ctx, this.game.camera);
             }
-            
+
             // Render damage/hit flash overlays
             this.renderDamageOverlay();
 
@@ -232,18 +229,18 @@ export class Renderer {
             this.ctx.restore();
         }
     }
-    
+
     renderCursor() {
         const mouseX = this.game.input.mouse.x;
         const mouseY = this.game.input.mouse.y;
-        
+
         // Don't render if mouse hasn't moved
         if (mouseX === 0 && mouseY === 0) return;
-        
+
         // Draw a small crosshair at mouse position
         this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
         this.ctx.lineWidth = 2;
-        
+
         const size = 10;
         this.ctx.beginPath();
         this.ctx.moveTo(mouseX - size, mouseY);
@@ -286,7 +283,7 @@ export class Renderer {
             this.ctx.restore();
         }
     }
-    
+
     // Damage overlay - red vignette when taking damage, yellow when dealing damage
     renderDamageOverlay() {
         // Update flash values (decay)
@@ -298,7 +295,7 @@ export class Renderer {
             this.hitFlash -= 0.08;
             if (this.hitFlash < 0) this.hitFlash = 0;
         }
-        
+
         // Draw damage received flash (red vignette)
         if (this.damageFlash > 0) {
             const gradient = this.ctx.createRadialGradient(
@@ -310,7 +307,7 @@ export class Renderer {
             this.ctx.fillStyle = gradient;
             this.ctx.fillRect(0, 0, this.width, this.height);
         }
-        
+
         // Draw hit dealt flash (brief yellow/white flash on edges)
         if (this.hitFlash > 0) {
             const gradient = this.ctx.createRadialGradient(
@@ -323,12 +320,12 @@ export class Renderer {
             this.ctx.fillRect(0, 0, this.width, this.height);
         }
     }
-    
+
     // Called when player takes damage
     flashDamage(intensity = 0.7) {
         this.damageFlash = Math.min(1, intensity);
     }
-    
+
     // Called when player deals damage
     flashHit(intensity = 0.5) {
         this.hitFlash = Math.min(1, intensity);
@@ -336,22 +333,22 @@ export class Renderer {
 
     renderHighlight() {
         if (!this.game.player) return;
-        
+
         const player = this.game.player;
         const mouseX = this.game.input.mouse.x;
         const mouseY = this.game.input.mouse.y;
-        
+
         // Get player screen position
         const playerScreen = this.game.camera.worldToScreen(player.x, player.y, player.z);
-        
+
         // Calculate direction from player to mouse on screen
         const dx = mouseX - playerScreen.x;
         const dy = mouseY - playerScreen.y;
-        
+
         // Convert screen direction to isometric world direction
         const isoX = (dx / (CONFIG.TILE_WIDTH / 2) + dy / (CONFIG.TILE_HEIGHT / 2)) / 2;
         const isoY = (dy / (CONFIG.TILE_HEIGHT / 2) - dx / (CONFIG.TILE_WIDTH / 2)) / 2;
-        
+
         // Normalize and scale to get target offset
         const mag = Math.sqrt(isoX * isoX + isoY * isoY);
         let targetOffsetX = 0, targetOffsetY = 0;
@@ -360,13 +357,13 @@ export class Renderer {
             targetOffsetX = isoX * scale;
             targetOffsetY = isoY * scale;
         }
-        
+
         const bx = Math.floor(player.x + targetOffsetX);
         const by = Math.floor(player.y + targetOffsetY);
-        
+
         const playerZ = Math.floor(player.z);
         let bz = this.game.world.getHeight(bx, by);
-        
+
         if (Math.abs(bz - playerZ) > 2) {
             for (let checkZ = playerZ; checkZ >= playerZ - 2; checkZ--) {
                 const checkBlock = this.game.world.getBlock(bx, by, checkZ);
@@ -380,7 +377,7 @@ export class Renderer {
         // Check range
         const dist = Math.hypot(bx + 0.5 - player.x, by + 0.5 - player.y, bz - player.z);
         if (dist > player.interactionRange) return;
-        
+
         // Only highlight if there's a mineable block
         const block = this.game.world.getBlock(bx, by, bz);
         if (block === BLOCKS.AIR || block === BLOCKS.BEDROCK) return;
@@ -406,7 +403,7 @@ export class Renderer {
         this.ctx.lineTo(screen.x - halfW, screen.y - depth);
         this.ctx.closePath();
         this.ctx.stroke();
-        
+
         // Draw vertical lines for the cube outline
         this.ctx.beginPath();
         // Right edge
@@ -476,12 +473,24 @@ export class Renderer {
                 }
 
                 // Iterate Z
+                const isPlayerUnderRoof = world.getHeight(player.x, player.y) > player.z + 1.5;
+
                 for (let z = 0; z < CONFIG.WORLD_HEIGHT; z++) {
                     const block = world.getBlock(x, y, z);
                     if (block !== BLOCKS.AIR) {
+                        // Roof Transparency: If player is under a roof, fade out blocks above them
+                        let alpha = 1;
+                        if (isPlayerUnderRoof && z > player.z + 1) {
+                            // Check if block is roughly between camera and player
+                            // Camera is at a higher Y (isometric view), so blocks at higher Y are "roof"
+                            if (y >= player.y - 2) {
+                                alpha = 0.2;
+                            }
+                        }
+
                         // Occlusion Culling: Only draw if visible
                         if (this.isBlockVisible(world, x, y, z)) {
-                            this.drawBlock(x, y, z, block, light);
+                            this.drawBlock(x, y, z, block, light, alpha);
                         }
                     }
                 }
@@ -490,23 +499,21 @@ export class Renderer {
     }
 
     isBlockVisible(world, x, y, z) {
-        // Optimization: Only check immediate neighbors relevant to camera view
-        // For isometric from South-East (standard):
-        // We see Top (Z+1), Front-Right (X+1), Front-Left (Y+1) surfaces?
-        // Wait, standard iso:
-        // Top face: Z+1
-        // Right face: X+1? Left face: Y+1?
-        // Actually, let's just check: is there a solid block covering it?
-
         const top = world.getBlock(x, y, z + 1);
-        // If top is transparent (air, water, glass) we see the top face
-        if (top === BLOCKS.AIR || (BLOCK_DATA[top] && BLOCK_DATA[top].transparent)) return true;
+        // Translucent blocks like water (1) or air (0) should reveal neighbors
+        const isTranslucent = (id) => {
+            if (id === 0) return true;
+            const data = BLOCK_DATA[id];
+            return data && (data.transparent || data.opacity < 1);
+        };
+
+        if (isTranslucent(top)) return true;
 
         const south = world.getBlock(x, y + 1, z);
-        if (south === BLOCKS.AIR || (BLOCK_DATA[south] && BLOCK_DATA[south].transparent)) return true;
+        if (isTranslucent(south)) return true;
 
         const east = world.getBlock(x + 1, y, z);
-        if (east === BLOCKS.AIR || (BLOCK_DATA[east] && BLOCK_DATA[east].transparent)) return true;
+        if (isTranslucent(east)) return true;
 
         return false;
     }
@@ -523,7 +530,7 @@ export class Renderer {
         this.drawBlock(worldX, worldY, worldZ, blockType, lightLevel);
     }
 
-    drawBlock(x, y, z, block, light = 1) {
+    drawBlock(x, y, z, block, light = 1, alpha = 1) {
         const ctx = this.ctx;
         // World to Screen
         // We need to align the sprite correctly.
@@ -551,7 +558,9 @@ export class Renderer {
         const drawX = screen.x - (w / 2);
         const drawY = screen.y - (32 * zoom); // Shift up so top-face center aligns with screen.y
 
+        if (alpha < 1) ctx.globalAlpha = alpha;
         ctx.drawImage(sprite, drawX, drawY, w, h);
+        if (alpha < 1) ctx.globalAlpha = 1;
 
         // Apply Lighting (darkness mask)
         if (light < 1) {
@@ -569,7 +578,7 @@ export class Renderer {
         if (this.game.lighting) {
             return this.game.lighting.getLightLevel(x, y, z);
         }
-        
+
         // Fallback to basic lighting
         let light = this.ambientLight;
 
@@ -637,7 +646,7 @@ export class Renderer {
                 const spriteHeight = size * 2.5;
                 const aspectRatio = playerSprite.naturalWidth / playerSprite.naturalHeight;
                 const spriteWidth = spriteHeight * aspectRatio;
-                
+
                 // Draw the player sprite centered above the position
                 this.ctx.drawImage(
                     playerSprite,
@@ -658,14 +667,14 @@ export class Renderer {
             // Check if this is an enemy with a sprite
             const enemySpriteName = entity.stats?.sprite;
             const enemySprite = enemySpriteName ? this.game.spriteManager.getEnemySprite(enemySpriteName) : null;
-            
+
             if (enemySprite && enemySprite.complete && enemySprite.naturalWidth > 0) {
                 // Use the entity's size multiplier (default 1, SABER_CAT uses 2)
                 const sizeMultiplier = entity.stats?.size || 1;
                 const spriteHeight = size * 2.5 * sizeMultiplier;
                 const aspectRatio = enemySprite.naturalWidth / enemySprite.naturalHeight;
                 const spriteWidth = spriteHeight * aspectRatio;
-                
+
                 // Draw the enemy sprite centered above the position
                 this.ctx.drawImage(
                     enemySprite,
@@ -696,6 +705,24 @@ export class Renderer {
             this.ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.25 ? '#FF9800' : '#F44336';
             this.ctx.fillRect(screen.x - barWidth / 2, screen.y - size - 10, barWidth * healthPercent, barHeight);
         }
+
+        // Draw Interaction Indicator (Range check)
+        const mouseX = this.game.input.mouse.x;
+        const mouseY = this.game.input.mouse.y;
+
+        let inRange = false;
+        // Check distance to targeted block or enemy using InteractionUtils
+        const hit = InteractionUtils.getSelection(this.game, CONFIG.MINING_RANGE);
+        if (hit) {
+            inRange = true;
+        }
+
+        // Crosshair circle
+        this.ctx.beginPath();
+        this.ctx.arc(mouseX, mouseY, 15, 0, Math.PI * 2);
+        this.ctx.strokeStyle = inRange ? 'rgba(74, 222, 128, 0.8)' : 'rgba(255, 255, 255, 0.3)';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
 
         this.ctx.restore();
     }
@@ -821,7 +848,7 @@ export class Renderer {
         ];
 
         debugInfo.forEach((text, i) => {
-            this.ctx.fillText(text, 20, 100 + i * 25);
+            this.ctx.fillText(text, 20, 200 + i * 25);
         });
 
         this.ctx.shadowBlur = 0;

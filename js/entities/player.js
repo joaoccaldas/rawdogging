@@ -2,6 +2,7 @@ import { Entity } from './entity.js';
 import { ItemEntity } from './item.js';
 import { ITEMS, CONFIG, BLOCKS, BLOCK_DATA } from '../config.js';
 import { Enemy } from '../entities/enemy.js';
+import { InteractionUtils } from '../utils/interaction.js';
 
 export class Player extends Entity {
     constructor(game, x, y, z) {
@@ -37,8 +38,24 @@ export class Player extends Entity {
 
         // Physics
         this.speed = CONFIG.PLAYER_SPEED;
+        this.distanceWalked = 0; // For First Steps tutorial
         this.jumpForce = CONFIG.PLAYER_JUMP_FORCE;
         this.grounded = false;
+
+        // Physics Polish
+        this.coyoteTime = 0; // Time since left ground
+        this.jumpBuffer = 0; // Time since jump press
+
+        // Movement Dynamics
+        this.baseSpeed = CONFIG.PLAYER_SPEED;
+        this.sprintSpeed = CONFIG.PLAYER_SPEED * 1.6;
+        this.isSprinting = false;
+        this.dashCooldown = 0;
+
+        // View Bobbing
+        this.bobTime = 0;
+        this.bobAmount = 0.1;
+
 
         // Inventory
         this.inventory = new Array(CONFIG.INVENTORY_SIZE).fill(null);
@@ -49,7 +66,7 @@ export class Player extends Entity {
         this.hotbar[0] = { ...ITEMS.club, count: 1 };
         this.hotbar[1] = { ...ITEMS.cobblestone, count: 5 };
         this.hotbar[2] = { ...ITEMS.stick, count: 8 };
-        this.hotbar[2] = { ...ITEMS.cooked_meat, count: 5 };
+        this.hotbar[3] = { ...ITEMS.cooked_meat, count: 5 };
 
         // Interaction
         this.interactionRange = CONFIG.MINING_RANGE;
@@ -71,8 +88,11 @@ export class Player extends Entity {
     update(deltaTime) {
         // Safety Check for NaNs
         if (isNaN(this.x) || isNaN(this.y) || isNaN(this.z)) {
-            console.error('Player coordinates are NaN! Resetting to spawn.');
-            this.x = 0.5; this.y = 0.5; this.z = 20;
+            console.error('Player coordinates are NaN! Resetting to safe spawn.');
+            const safeSpawn = this.game.world.getSafeSpawnPoint(0, 0);
+            this.x = safeSpawn.x;
+            this.y = safeSpawn.y;
+            this.z = safeSpawn.z;
             this.vx = 0; this.vy = 0; this.vz = 0;
         }
 
@@ -106,7 +126,7 @@ export class Player extends Entity {
                 this.health = Math.min(this.maxHealth, this.health + 1);
             }
         }
-        
+
         // Process active effects
         this.updateEffects(deltaTime);
 
@@ -126,10 +146,10 @@ export class Player extends Entity {
             this.drowningTimer = 0;
         }
     }
-    
+
     updateEffects(deltaTime) {
         if (!this.activeEffects) return;
-        
+
         // Regeneration effect
         if (this.activeEffects.regen) {
             this.activeEffects.regen.timer += deltaTime;
@@ -140,7 +160,7 @@ export class Player extends Entity {
                     this.game.particles.emit(this.x, this.y, this.z + 1.5, '#4ade80', 3);
                 }
             }
-            
+
             this.activeEffects.regen.duration -= deltaTime;
             if (this.activeEffects.regen.duration <= 0) {
                 delete this.activeEffects.regen;
@@ -149,28 +169,32 @@ export class Player extends Entity {
     }
 
     handleInput(deltaTime) {
+        if (this.game.introCinematic) return;
         const input = this.game.input;
         if (!input) return;
-        
+
         const cam = this.game.camera;
 
         // Movement
         const move = input.getMovement() || { x: 0, y: 0 };
 
-        // Relative to camera
-        // Note: Simple movement for now, ignoring camera rotation as it's fixed isometric
-        // In true isometric, 'up' is up-right or up-left depending on convention.
-        // Here we'll map W to 'North' (decreasing Y, decreasing X in iso?? No wait)
-        // Let's stick to world coordinates: +X is R, +Y is D.
-        // Isometric: X axis goes down-right, Y axis goes down-left.
-        // To move 'Up' on screen (negative Screen Y), we need to move negative X and negative Y in world.
-        // To move 'Right' on screen, we need +X and -Y.
+        // Sprint Logic
+        this.isSprinting = input.isSprinting() && (move.x !== 0 || move.y !== 0);
 
-        // Let's implement standard controls relative to screen:
-        // W (Up) -> -X, -Y
-        // S (Down) -> +X, +Y
-        // A (Left) -> -X, +Y
-        // D (Right) -> +X, -Y
+        // Consume Stamina
+        if (this.isSprinting && this.game.stamina) {
+            if (this.game.stamina.current > 0) {
+                this.game.stamina.consume(15 * deltaTime); // 15 unit/sec
+            } else {
+                this.isSprinting = false; // Exhausted
+            }
+        }
+
+        // Check Dash
+        if (this.dashCooldown > 0) this.dashCooldown -= deltaTime;
+        if (input.checkDash && input.checkDash() && this.dashCooldown <= 0) {
+            this.performDash(input);
+        }
 
         // Isometric Control Mapping
         // W (Up) -> -X, -Y
@@ -178,13 +202,9 @@ export class Player extends Entity {
         // A (Left) -> -X, +Y
         // D (Right) -> +X, -Y
 
-        // But getMovement returns normalized x/y (-1 to 1).
-        // move.y < 0 is Up. move.x < 0 is Left.
-
         let dx = 0;
         let dy = 0;
 
-        // Apply basis vectors
         // Up/Down (Y axis of input)
         // Up (-1) => -X, -Y
         dx += move.y;
@@ -195,49 +215,176 @@ export class Player extends Entity {
         dx += move.x;
         dy -= move.x;
 
-        // Normalize again to cap speed?
-        // If holding W (-X, -Y) and D (+X, -Y), result is (0, -2Y).
-        // Should trigger pure "Up-Right" screen movement.
-
         if (dx !== 0 || dy !== 0) {
             const len = Math.sqrt(dx * dx + dy * dy);
             dx /= len;
             dy /= len;
-            // Slower movement in water
-            const currentSpeed = this.isInWater ? CONFIG.SWIM_SPEED : this.speed;
-            this.vx = dx * currentSpeed;
-            this.vy = dy * currentSpeed;
+
+            // Speed calculation
+            let targetSpeed = this.baseSpeed;
+            if (this.isInWater) targetSpeed = CONFIG.SWIM_SPEED;
+            else if (this.isSprinting) targetSpeed = this.sprintSpeed;
+
+            this.vx = dx * targetSpeed;
+            this.vy = dy * targetSpeed;
+
+            // View Bobbing & Footsteps
+            if (this.grounded) {
+                const bobFreq = this.isSprinting ? 20 : 12;
+                const prevBob = Math.sin(this.bobTime);
+                this.bobTime += deltaTime * bobFreq;
+                const currentBob = Math.sin(this.bobTime);
+
+                // Bobbing Visuals
+                const bobAmp = this.isSprinting ? 5 : 2; // Screen pixels
+                if (this.game.camera) {
+                    this.game.camera.bobOffset = Math.abs(currentBob) * bobAmp;
+                }
+
+                // Footstep Audio (Trigger when bob hits ground/trough)
+                // Sine wave goes 1 -> 0 -> -1 -> 0. Let's trigger at -0.9 (bottom)
+                if (prevBob > -0.9 && currentBob <= -0.9) {
+                    // Raycast down for material
+                    const blockBelow = this.game.world.getBlock(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z - 0.1));
+                    import('../config.js').then(({ BLOCK_DATA }) => {
+                        // This is async inside render loop, suboptimal but safe for prototype
+                        // Actually BLOCK_DATA is likely available globally or on instance if passed?
+                        // It was imported in Player.js? No, only BLOCKS.
+                        // Let's pass block ID string directly to audio
+                        this.game.audio.playFootstep(blockBelow); // Audio manager can handle ID
+                    });
+                }
+            } else {
+                if (this.game.camera) this.game.camera.bobOffset = 0;
+            }
         } else {
-            // Explicitly zero velocity when no movement input
             this.vx = 0;
             this.vy = 0;
+            this.bobTime = 0;
         }
 
-        // Jump / Swim up
+        // Jump Buffering & Execution
         if (input.isJumping()) {
+            this.jumpBuffer = 0.15; // Buffer jump for 150ms
+        }
+
+        // Decrease buffer
+        if (this.jumpBuffer > 0) this.jumpBuffer -= deltaTime;
+
+        // Consumed buffer
+        if (this.jumpBuffer > 0) {
+            const canJump = this.grounded || (this.coyoteTime > 0 && !this.isInWater);
+
             if (this.isInWater) {
                 // Swimming up
                 this.vz = CONFIG.SWIM_SPEED * 2;
-            } else if (this.grounded) {
+                this.jumpBuffer = 0; // Consumed
+            } else if (canJump) {
                 this.vz = this.jumpForce;
                 this.grounded = false;
+                this.coyoteTime = 0; // Consumed
+                this.jumpBuffer = 0; // Consumed
                 this.game.audio.play('jump');
             }
         }
 
-        // Mining / Attacking
+        // Track distance walked for First Steps tutorial
+        if (this.game.firstSteps && (this.vx !== 0 || this.vy !== 0)) {
+            const currentMove = Math.sqrt(this.vx * this.vx + this.vy * this.vy) * deltaTime;
+            this.distanceWalked += currentMove;
+
+            if (this.distanceWalked >= 15) {
+                this.game.firstSteps = false;
+                if (this.game.ui) {
+                    this.game.ui.showNotification("Success! Now you are officially a walking human.", 'success', 5000);
+                }
+            }
+        }
+
+        // Restriction during "First Steps" tutorial
+        if (this.game.firstSteps) {
+            if (input.isMining() || input.isAttacking() || input.isUsing()) {
+                if (Date.now() - (this.lastRestrictionNotify || 0) > 2000) {
+                    this.game.ui?.showNotification("Learn to walk properly first! Use WASD to move around.", 'warning');
+                    this.lastRestrictionNotify = Date.now();
+                }
+            }
+            return;
+        }
+
+        // Mining / Attacking (Creative Flow: Repeat if held)
         if (input.isMining()) {
-            this.tryMine();
+            this.mineTimer = (this.mineTimer || 0) + deltaTime;
+            if (!this.lastMining || this.mineTimer > 0.25) { // Rapid repeat every 0.25s if held
+                this.tryMine();
+                this.mineTimer = 0;
+            }
+            this.lastMining = true;
+        } else {
+            this.lastMining = false;
+            this.mineTimer = 0;
         }
 
         if (input.isAttacking()) {
             this.tryAttack();
         }
 
-        // Placing / Using
+        // Placing / Using (Creative Flow: Repeat if held)
         if (input.isUsing()) {
-            this.tryPlace();
+            this.useTimer = (this.useTimer || 0) + deltaTime;
+            if (!this.lastUsing || this.useTimer > 0.2) { // Rapid repeat every 0.2s if held
+                this.tryPlace();
+                this.useTimer = 0;
+            }
+            this.lastUsing = true;
+        } else {
+            this.lastUsing = false;
+            this.useTimer = 0;
         }
+        if ((this.vx !== 0 || this.vy !== 0)) {
+            this.lastUnzeroVx = this.vx;
+            this.lastUnzeroVy = this.vy;
+        }
+    }
+
+    getFacing() {
+        const vx = this.lastUnzeroVx || 0;
+        const vy = this.lastUnzeroVy || 1; // Default S
+
+        if (Math.abs(vx) > Math.abs(vy)) {
+            return vx > 0 ? 'E' : 'W';
+        } else {
+            return vy > 0 ? 'S' : 'N';
+        }
+    }
+
+    performDash(input) {
+        if (this.game.stamina && this.game.stamina.current < 25) return;
+
+        const move = input.getMovement();
+        if (move.x === 0 && move.y === 0) return; // Can't dash in place
+
+        // Consume Cost
+        if (this.game.stamina) this.game.stamina.consume(25);
+
+        // Calculate Dash Direction (same rotation)
+        const worldDx = (move.x - move.y) * 0.707;
+        const worldDy = (move.x + move.y) * 0.707;
+
+        const dashForce = 15; // Instant burst
+        this.vx = worldDx * dashForce;
+        this.vy = worldDy * dashForce;
+
+        // Small vertical hop
+        this.vz = 2;
+        this.grounded = false;
+
+        this.dashCooldown = 1.0; // 1 second cooldown
+
+        // Visuals
+        this.game.particles.emit(this.x, this.y, this.z, '#ffffff', 10);
+        this.game.camera.addShake(2, 0.2); // Impact feel
+        this.game.audio.play('jump'); // Placeholder for dash sound
     }
 
     applyPhysics(deltaTime) {
@@ -271,13 +418,20 @@ export class Player extends Entity {
             this.wasFalling = true;
         }
 
+        // Coyote Time Logic
+        if (this.grounded) {
+            this.coyoteTime = 0.1; // Reset coyote time while grounded
+        } else {
+            this.coyoteTime -= deltaTime;
+        }
+
         // Apply gravity (reduced in water)
         if (!this.grounded) {
             if (this.isInWater) {
                 // Water physics - slower fall, can swim up
                 this.vz -= CONFIG.GRAVITY * CONFIG.WATER_DRAG;
                 this.vz = Math.max(this.vz, -2); // Terminal velocity in water
-                
+
                 // Apply water drag to horizontal movement
                 this.vx *= 0.95;
                 this.vy *= 0.95;
@@ -318,23 +472,48 @@ export class Player extends Entity {
         // Check X
         if (!this.checkCollision(nextX, this.y, this.z)) {
             this.x = nextX;
+            this.x = nextX;
         } else {
-            // Wall collision feedback
-            if (Math.abs(this.vx) > this.speed * 0.5) {
-                this.game.particles.emit(nextX + (this.vx > 0 ? this.width : 0), this.y + this.height/2, this.z + 0.5, '#888888', 3);
-            }
-            this.vx = 0;
-        }
+            // Auto-Jump / Step Assist
+            // Allow stepping if grounded OR small fall (walking down slope / micro gravity)
+            // Use Math.floor(z) + 1 to find the step surface
+            const stepTargetZ = Math.floor(this.z) + 1.01;
+            const canStep = (this.grounded || this.vz > -5.0) && !this.checkCollision(nextX, this.y, stepTargetZ);
 
+            if (canStep) {
+                this.z = stepTargetZ;
+                this.x = nextX;
+                this.grounded = true;
+                this.vz = 0;
+                console.log('Auto-Step X triggered');
+            } else {
+                // Wall collision feedback
+                if (Math.abs(this.vx) > this.speed * 0.5) {
+                    this.game.particles.emit(nextX + (this.vx > 0 ? this.width : 0), this.y + this.height / 2, this.z + 0.5, '#888888', 3);
+                }
+                this.vx = 0;
+            }
+        }
         // Check Y
         if (!this.checkCollision(this.x, nextY, this.z)) {
             this.y = nextY;
         } else {
-            // Wall collision feedback
-            if (Math.abs(this.vy) > this.speed * 0.5) {
-                this.game.particles.emit(this.x + this.width/2, nextY + (this.vy > 0 ? this.height : 0), this.z + 0.5, '#888888', 3);
+            // Auto-Jump / Step Assist Y
+            const stepTargetZ = Math.floor(this.z) + 1.01;
+            const canStep = (this.grounded || this.vz > -5.0) && !this.checkCollision(this.x, nextY, stepTargetZ);
+
+            if (canStep) {
+                this.z = stepTargetZ;
+                this.y = nextY;
+                this.grounded = true;
+                this.vz = 0;
+            } else {
+                // Wall collision feedback
+                if (Math.abs(this.vy) > this.speed * 0.5) {
+                    this.game.particles.emit(this.x + this.width / 2, nextY + (this.vy > 0 ? this.height : 0), this.z + 0.5, '#888888', 3);
+                }
+                this.vy = 0;
             }
-            this.vy = 0;
         }
 
         // Check Z (Ground/Ceiling)
@@ -353,7 +532,7 @@ export class Player extends Entity {
                     }
                 }
                 this.wasFalling = false;
-                
+
                 // Landing on ground
                 this.grounded = true;
                 // Snap to the top of the block we landed on
@@ -418,77 +597,23 @@ export class Player extends Entity {
         const now = Date.now();
         if (!this.lastMineTime) this.lastMineTime = 0;
         if (now - this.lastMineTime < 250) return; // 250ms cooldown between mines
-        
-        // Get player screen position
-        const playerScreen = this.game.camera.worldToScreen(this.x, this.y, this.z);
-        const mouseX = this.game.input.mouse.x;
-        const mouseY = this.game.input.mouse.y;
-        
-        // Calculate direction from player to mouse on screen
-        const dx = mouseX - playerScreen.x;
-        const dy = mouseY - playerScreen.y;
-        
-        // Convert screen direction to isometric world direction
-        // In isometric: moving right on screen = +X, -Y in world
-        //               moving down on screen = +X, +Y in world
-        const isoX = (dx / (CONFIG.TILE_WIDTH / 2) + dy / (CONFIG.TILE_HEIGHT / 2)) / 2;
-        const isoY = (dy / (CONFIG.TILE_HEIGHT / 2) - dx / (CONFIG.TILE_WIDTH / 2)) / 2;
-        
-        // Normalize and scale to get target offset (max ~3 blocks away)
-        const mag = Math.sqrt(isoX * isoX + isoY * isoY);
-        let targetOffsetX = 0, targetOffsetY = 0;
-        if (mag > 0.5) {
-            const scale = Math.min(3, mag) / mag;
-            targetOffsetX = isoX * scale;
-            targetOffsetY = isoY * scale;
-        }
-        
-        // Target block position
-        const bx = Math.floor(this.x + targetOffsetX);
-        const by = Math.floor(this.y + targetOffsetY);
-        
-        // Find the surface block or block at player level
-        const playerZ = Math.floor(this.z);
-        let bz = this.game.world.getHeight(bx, by);
-        
-        // Prefer blocks at or near player's level
-        if (Math.abs(bz - playerZ) > 2) {
-            // Look for blocks near player level
-            for (let checkZ = playerZ; checkZ >= playerZ - 2; checkZ--) {
-                const checkBlock = this.game.world.getBlock(bx, by, checkZ);
-                if (checkBlock !== BLOCKS.AIR && checkBlock !== BLOCKS.WATER) {
-                    bz = checkZ;
-                    break;
-                }
-            }
+
+        // Use unified selection to find target
+        const hit = InteractionUtils.getSelection(this.game, this.interactionRange);
+
+        if (!hit || hit.type !== 'block') {
+            return;
         }
 
-        // Distance check
-        const dist = Math.hypot(bx + 0.5 - this.x, by + 0.5 - this.y, bz - this.z);
-        
-        console.log(`Mining: player(${this.x.toFixed(1)},${this.y.toFixed(1)},${this.z.toFixed(1)}) target(${bx},${by},${bz}) dist=${dist.toFixed(2)}`);
-        
-        if (dist > this.interactionRange) {
-            console.log('Block too far');
+        const { x: bx, y: by, z: bz, blockId: block } = hit;
+
+        // Valid block check
+        if (block === BLOCKS.AIR || block === BLOCKS.BEDROCK) {
             return;
         }
-        
-        const block = this.game.world.getBlock(bx, by, bz);
-        
-        if (block === BLOCKS.AIR) {
-            console.log('Block is air');
-            return;
-        }
-        if (block === BLOCKS.BEDROCK) {
-            console.log('Block is bedrock');
-            return;
-        }
-        
+
         const blockInfo = BLOCK_DATA[block];
-        if (!blockInfo) {
-            console.log('No block info');
-            return;
-        }
+        if (!blockInfo) return;
 
         // Tool check - hardness > 2 needs pickaxe
         const tool = this.getSelectedItem();
@@ -496,16 +621,19 @@ export class Player extends Entity {
         if (blockInfo.hardness > 2) {
             canMine = tool && tool.type === 'tool' && tool.toolType === 'pickaxe';
             if (!canMine) {
-                console.log('Need pickaxe for this block');
-                this.game.camera.addShake(3, 0.1);
+                // Throttle error message
+                if (now - (this.lastErrorTime || 0) > 1000) {
+                    this.game.camera.addShake(3, 0.1);
+                    this.game.particles.emitText(bx, by, bz + 1, 'Need Pickaxe!', '#ff4444');
+                    this.lastErrorTime = now;
+                }
                 return;
             }
         }
 
         // SUCCESS - Mine the block
         this.lastMineTime = now;
-        console.log(`Mining SUCCESS! Block: ${blockInfo.name}, Drops: ${blockInfo.drops}`);
-        
+
         // Reduce tool durability
         if (tool && tool.durability !== undefined) {
             tool.durability--;
@@ -516,25 +644,36 @@ export class Player extends Entity {
             this.updateUI();
         }
 
-        // Create item drop
+        // Create item drop (Auto-Pickup)
         if (blockInfo.drops) {
-            const dropX = bx + 0.5 + (Math.random() - 0.5) * 0.2;
-            const dropY = by + 0.5 + (Math.random() - 0.5) * 0.2;
-            const dropZ = bz + 0.5;
+            // Try to add directly to inventory
+            const added = this.addItem(blockInfo.drops, 1);
 
-            const item = new ItemEntity(this.game, dropX, dropY, dropZ, blockInfo.drops);
-            item.vx = (Math.random() - 0.5) * 2;
-            item.vy = (Math.random() - 0.5) * 2;
-            item.vz = 3;
+            if (!added) {
+                // Inventory full, spawn physical drop
+                const dropX = bx + 0.5 + (Math.random() - 0.5) * 0.2;
+                const dropY = by + 0.5 + (Math.random() - 0.5) * 0.2;
+                const dropZ = bz + 0.5;
 
-            this.game.entities.push(item);
+                const item = new ItemEntity(this.game, dropX, dropY, dropZ, blockInfo.drops);
+                item.vx = (Math.random() - 0.5) * 2;
+                item.vy = (Math.random() - 0.5) * 2;
+                item.vz = 3;
+
+                this.game.entities.push(item);
+            } else {
+                // Visual feedback for auto-pickup (optional, maybe small particle or sound)
+                // addItem handles 'pickup' sound usually.
+                // Let's add a small 'poof' particle to show something happened at the block
+                this.game.particles.emit(bx + 0.5, by + 0.5, bz + 0.5, '#ffffff', 5);
+            }
         }
 
         // Remove the block
         this.game.world.setBlock(bx, by, bz, BLOCKS.AIR);
         this.game.audio.play('mine');
-        this.game.particles.emit(bx + 0.5, by + 0.5, bz + 0.5, blockInfo.color || '#888', 8);
-        
+        this.game.particles.emitBlockParticles(bx, by, bz, block, 12); // Use enhanced block particles
+
         // Notify side quest system about mined block
         if (this.game.sideQuests) {
             this.game.sideQuests.onBlockMined(block);
@@ -551,12 +690,15 @@ export class Player extends Entity {
         // Play pickup sound and show notification
         this.game.audio.play('pickup');
         this.showItemPickup(itemDef.name, itemDef.emoji);
-        
+
+        // Add particle feedback above player
+        this.game.particles.emitItemPickup(this.x, this.y, this.z + 4, itemDef.emoji, itemDef.name, count);
+
         // Notify quest system
         if (this.game.questManager) {
             this.game.questManager.onItemCollected(itemKey, count);
         }
-        
+
         // Notify side quest system
         if (this.game.sideQuests) {
             this.game.sideQuests.onItemCollected(itemKey, count);
@@ -605,14 +747,14 @@ export class Player extends Entity {
 
         return false; // Inventory full
     }
-    
+
     showItemPickup(itemName, emoji) {
         // Create floating text notification
         const notification = document.createElement('div');
         notification.className = 'item-pickup-notification';
         notification.innerHTML = `${emoji || '📦'} +1 ${itemName}`;
         document.body.appendChild(notification);
-        
+
         // Remove after animation
         setTimeout(() => {
             notification.remove();
@@ -624,105 +766,37 @@ export class Player extends Entity {
         const now = Date.now();
         if (!this.lastPlaceTime) this.lastPlaceTime = 0;
         if (now - this.lastPlaceTime < 250) return;
-        
+
         const item = this.getSelectedItem();
         if (!item) return;
 
-        // Get target position using raycast-like approach
-        const playerScreen = this.game.camera.worldToScreen(this.x, this.y, this.z);
-        const mouseX = this.game.input.mouse.x;
-        const mouseY = this.game.input.mouse.y;
-        
-        // Convert screen delta to isometric world direction
-        const dx = mouseX - playerScreen.x;
-        const dy = mouseY - playerScreen.y;
-        
-        // Isometric to world coordinate conversion
-        const isoX = (dx / (CONFIG.TILE_WIDTH / 2) + dy / (CONFIG.TILE_HEIGHT / 2)) / 2;
-        const isoY = (dy / (CONFIG.TILE_HEIGHT / 2) - dx / (CONFIG.TILE_WIDTH / 2)) / 2;
-        
-        // Normalize and scale direction
-        const mag = Math.sqrt(isoX * isoX + isoY * isoY);
-        
-        // Cast a ray from player to find target block
-        let targetBlock = null;
-        let placePosition = null;
-        
-        // Step along the ray direction
-        for (let dist = 1; dist <= this.interactionRange; dist += 0.5) {
-            const scale = dist / Math.max(0.1, mag);
-            const checkX = Math.floor(this.x + isoX * scale);
-            const checkY = Math.floor(this.y + isoY * scale);
-            
-            // Check at player's Z level, above, and below
-            for (let zOffset = 1; zOffset >= -1; zOffset--) {
-                const checkZ = Math.floor(this.z) + zOffset;
-                const block = this.game.world.getBlock(checkX, checkY, checkZ);
-                const blockData = BLOCK_DATA[block];
-                
-                if (block !== BLOCKS.AIR && blockData && blockData.solid) {
-                    // Found a solid block, place adjacent to it
-                    targetBlock = { x: checkX, y: checkY, z: checkZ };
-                    
-                    // Determine which face to place on (prefer top)
-                    const aboveBlock = this.game.world.getBlock(checkX, checkY, checkZ + 1);
-                    if (aboveBlock === BLOCKS.AIR) {
-                        placePosition = { x: checkX, y: checkY, z: checkZ + 1 };
-                    } else {
-                        // Try adjacent horizontal positions
-                        const adjacentOffsets = [
-                            { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
-                            { dx: 0, dy: -1 }, { dx: 0, dy: 1 }
-                        ];
-                        for (const off of adjacentOffsets) {
-                            const adjBlock = this.game.world.getBlock(checkX + off.dx, checkY + off.dy, checkZ);
-                            if (adjBlock === BLOCKS.AIR) {
-                                placePosition = { x: checkX + off.dx, y: checkY + off.dy, z: checkZ };
-                                break;
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-            if (targetBlock) break;
+        // Use unified selection to find placement
+        const hit = InteractionUtils.getSelection(this.game, this.interactionRange);
+
+        if (!hit) {
+            // No block targeted
+            return;
         }
-        
-        // Fallback: place at surface near mouse position
-        if (!placePosition) {
-            const targetOffsetX = mag > 0.5 ? (isoX / mag) * Math.min(3, mag) : 0;
-            const targetOffsetY = mag > 0.5 ? (isoY / mag) * Math.min(3, mag) : 0;
-            
-            const bx = Math.floor(this.x + targetOffsetX);
-            const by = Math.floor(this.y + targetOffsetY);
-            const surfaceZ = this.game.world.getHeight(bx, by);
-            
-            if (surfaceZ > 0) {
-                placePosition = { x: bx, y: by, z: surfaceZ + 1 };
-            }
-        }
-        
+
+        // Calculate placement position based on adjacency
+        const placePosition = InteractionUtils.getPlacementPosition(this.game, hit);
         if (!placePosition) return;
-        
+
         const bx = placePosition.x;
         const by = placePosition.y;
-        const playerZ = Math.floor(this.z);
-        let surfaceZ = placePosition.z - 1;
-        
-        // Hoe Logic (Till Dirt)
+        const placeZ = placePosition.z;
+
+        // Hoe Logic (Till Dirt) - Special Case target EXISTING block
         if (item.type === 'tool' && item.toolType === 'hoe') {
-            const dist = Math.hypot(bx + 0.5 - this.x, by + 0.5 - this.y, surfaceZ - this.z);
-            if (dist <= this.interactionRange) {
-                const block = this.game.world.getBlock(bx, by, surfaceZ);
-                if (block === BLOCKS.DIRT || block === BLOCKS.GRASS) {
-                    this.lastPlaceTime = now;
-                    this.game.world.setBlock(bx, by, surfaceZ, BLOCKS.FARMLAND);
-                    this.game.audio.play('place');
-                    item.durability--;
-                    if (item.durability <= 0) this.hotbar[this.selectedSlot] = null;
-                    this.updateUI();
-                    return;
-                }
+            const { x: hx, y: hy, z: hz, blockId } = hit;
+            if (blockId === BLOCKS.DIRT || blockId === BLOCKS.GRASS) {
+                this.lastPlaceTime = now;
+                this.game.world.setBlock(hx, hy, hz, BLOCKS.FARMLAND);
+                this.game.audio.play('place');
+                item.durability--;
+                if (item.durability <= 0) this.hotbar[this.selectedSlot] = null;
+                this.updateUI();
+                return;
             }
         }
 
@@ -734,13 +808,13 @@ export class Player extends Entity {
                 this.health = Math.min(this.maxHealth, this.health + (item.health || 0));
                 this.game.audio.play('pickup'); // Eating sound
                 this.game.particles.emitText(this.x, this.y, this.z + 2, `+${item.hunger} 🍖`, '#4ade80');
-                
+
                 // Notify quest system about food consumption
                 const itemKey = Object.keys(ITEMS).find(k => ITEMS[k].name === item.name);
                 if (this.game.questManager && itemKey) {
                     this.game.questManager.onItemConsumed(itemKey);
                 }
-                
+
                 // Apply special effects
                 if (item.effect === 'regen') {
                     this.activeEffects = this.activeEffects || {};
@@ -750,7 +824,7 @@ export class Player extends Entity {
                     };
                     this.game.particles.emitText(this.x, this.y, this.z + 2.5, '✨ Regeneration!', '#ffd700');
                 }
-                
+
                 if (item.stackable && item.count > 1) {
                     item.count--;
                 } else {
@@ -763,20 +837,39 @@ export class Player extends Entity {
 
         // Block placement
         if (item.type === 'block' || item.type === 'placeable') {
-            // Use the calculated placement position
-            let placeZ = placePosition.z;
-            
-            const dist = Math.hypot(bx + 0.5 - this.x, by + 0.5 - this.y, placeZ - this.z);
-            if (dist > this.interactionRange) return;
-            
             // Check if space is empty
             if (this.game.world.getBlock(bx, by, placeZ) !== BLOCKS.AIR) return;
-            
+
             // Check collision with player (can't place inside self)
             if (this.checkCollisionWithBlock(bx, by, placeZ)) return;
-            
+
             // Get block ID to place
             let blockId = item.blockId;
+
+            // Special placement logic (Stairs, etc)
+            if (item.placeFunc === 'stairs' && item.baseId) {
+                // Determine rotation based on player facing
+                const facing = this.getFacing(); // N, S, E, W
+                // Config keys are e.g. THATCH_STAIRS_N
+                // We need to resolve the generic baseId to specific ID.
+                // Assuming baseId is string "THATCH_STAIRS_" 
+                // We need to import BLOCKS to resolve string key? 
+                // Or we store baseId as a prefix and use BLOCKS[baseId + facing].
+
+                // Since I can't import BLOCKS here easily without adding to top, 
+                // I rely on item.blockId being a "default" and offset? 
+                // No, Config IDs are explicitly named.
+
+                // Let's assume we can access BLOCKS globally if Config is imported.
+                // It is imported as `import { CONFIG, BLOCKS, ... }`.
+
+                const key = item.baseId + facing;
+                const dynamicId = BLOCKS[key];
+                if (dynamicId !== undefined) {
+                    blockId = dynamicId;
+                }
+            }
+
             if (!blockId && item.type === 'placeable') {
                 // Torch, seeds, etc - need special handling
                 if (item.name === 'Torch') {
@@ -787,23 +880,24 @@ export class Player extends Entity {
                     blockId = BLOCKS.WHEAT_CROP;
                 }
             }
-            
+
             if (blockId !== undefined) {
                 this.lastPlaceTime = now;
                 this.game.world.setBlock(bx, by, placeZ, blockId);
                 this.game.audio.play('place');
                 this.game.particles.emit(bx + 0.5, by + 0.5, placeZ + 0.5, '#ffffff', 5);
-                
+
                 // Notify quest system about block placement
                 if (this.game.questManager) {
                     this.game.questManager.onBlockPlaced(blockId);
                 }
-                
+
+
                 // Notify side quest system about block placement
                 if (this.game.sideQuests) {
                     this.game.sideQuests.onBlockPlaced(blockId);
                 }
-                
+
                 // Consume item
                 if (item.stackable && item.count > 1) {
                     item.count--;
@@ -824,7 +918,7 @@ export class Player extends Entity {
         const playerMaxY = this.y + this.height - margin;
         const playerMinZ = this.z;
         const playerMaxZ = this.z + this.depth;
-        
+
         // Block bounds
         const blockMinX = bx;
         const blockMaxX = bx + 1;
@@ -832,18 +926,18 @@ export class Player extends Entity {
         const blockMaxY = by + 1;
         const blockMinZ = bz;
         const blockMaxZ = bz + 1;
-        
+
         // AABB collision
         return !(playerMaxX < blockMinX || playerMinX > blockMaxX ||
-                 playerMaxY < blockMinY || playerMinY > blockMaxY ||
-                 playerMaxZ < blockMinZ || playerMinZ > blockMaxZ);
+            playerMaxY < blockMinY || playerMinY > blockMaxY ||
+            playerMaxZ < blockMinZ || playerMinZ > blockMaxZ);
     }
 
     tryAttack() {
         const now = Date.now();
         if (now - this.lastAttackTime < CONFIG.ATTACK_COOLDOWN) return;
         this.lastAttackTime = now;
-        
+
         // Visual swing effect
         this.swingTime = 200;
         this.swingAngle = 0;
@@ -870,67 +964,67 @@ export class Player extends Entity {
             this.z + 1,
             '#ffffff', 3
         );
-        
+
         // Play swing sound
         this.game.audio.play('hit');
 
         // Check for enemies in attack cone
         const enemies = this.game.entities.filter(e => e instanceof Enemy && !e.isDead);
         let hitCount = 0;
-        
+
         for (const enemy of enemies) {
             const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y, enemy.z - this.z);
             if (dist <= CONFIG.ATTACK_RANGE) {
                 // Calculate angle to enemy
                 const enemyAngle = Math.atan2(enemy.y - this.y, enemy.x - this.x);
                 const angleDiff = Math.abs(this.normalizeAngle(angle - enemyAngle));
-                
+
                 // Check if within 90 degree cone
                 if (angleDiff < Math.PI / 2) {
                     enemy.takeDamage(damage, this);
                     hitCount++;
-                    
+
                     // Screen flash for hit feedback
                     if (this.game.renderer) {
                         this.game.renderer.flashHit(0.4);
                     }
-                    
+
                     // Damage number popup on enemy
                     const dmgColor = isCrit ? '#ffd700' : '#ffffff';
                     this.game.particles.emitText(enemy.x, enemy.y, enemy.z + 2, `${damage}`, dmgColor);
-                    
+
                     // Hit particles on enemy
                     this.game.particles.emit(enemy.x, enemy.y, enemy.z + 1, '#ff4444', 8);
-                    
+
                     // Critical hit visual
                     if (isCrit) {
                         this.game.particles.emitText(enemy.x, enemy.y, enemy.z + 2.5, "CRIT!", '#ffd700');
                         this.game.camera.addShake(3, 0.15);
                         this.game.audio.play('hit'); // Double sound for crit
                     }
-                    
+
                     // XP for hitting enemies
                     this.gainXP(1);
-                    
+
                     // Reduce durability on hit
                     if (tool && (tool.type === 'weapon' || tool.type === 'tool')) {
                         tool.durability--;
                         if (tool.durability <= 0) {
                             this.hotbar[this.selectedSlot] = null;
-                            this.game.particles.emitText(this.x, this.y, this.z + 2, "🔨 Broke!", '#ff6b6b');
+                            this.game.particles.emitText(this.x, this.y, this.z + 3, "🔨 Broke!", '#ff6b6b');
                         }
                         this.updateUI();
                     }
                 }
             }
         }
-        
+
         // XP bonus for multi-kill
         if (hitCount >= 2) {
             this.gainXP(hitCount);
         }
     }
-    
+
     normalizeAngle(angle) {
         while (angle > Math.PI) angle -= Math.PI * 2;
         while (angle < -Math.PI) angle += Math.PI * 2;
@@ -942,19 +1036,19 @@ export class Player extends Entity {
 
         this.health -= amount;
         this.game.audio.play('hurt');
-        
+
         // Screen flash for damage feedback
         if (this.game.renderer) {
             this.game.renderer.flashDamage(Math.min(1, amount / 10));
         }
-        
+
         // Different colors for damage types
         let damageColor = '#ff6b6b';
         if (damageType === 'fall') damageColor = '#ff9500';
         if (damageType === 'drowning') damageColor = '#4169E1';
         if (damageType === 'starvation') damageColor = '#8B4513';
-        
-        this.game.particles.emitText(this.x, this.y, this.z + 2, `-${Math.floor(amount)}`, damageColor);
+
+        this.game.particles.emitText(this.x, this.y, this.z + 4, `-${Math.floor(amount)}`, damageColor);
         this.invincibleTime = CONFIG.INVINCIBILITY_TIME;
 
         // Camera shake on damage - stronger shake for higher damage
@@ -983,6 +1077,10 @@ export class Player extends Entity {
 
     gainXP(amount) {
         this.xp += amount;
+
+        // Visual feedback for XP gain
+        this.game.particles.emitText(this.x, this.y, this.z + 1.5, `+${amount} XP`, '#00ff88', 16);
+
         if (this.xp >= this.nextLevelXp) {
             this.xp -= this.nextLevelXp;
             this.level++;
@@ -1025,7 +1123,7 @@ export class Player extends Entity {
             const pct = (this.xp / this.nextLevelXp) * 100;
             this.ui.xpBar.style.width = `${pct}%`;
         }
-        
+
         // Update Temperature UI
         const tempFill = document.getElementById('temperature-fill');
         const tempText = document.getElementById('temperature-text');
@@ -1035,21 +1133,21 @@ export class Player extends Entity {
             tempText.textContent = `${this.game.temperature.getStatusIcon()} ${temp}°`;
             tempFill.style.background = this.game.temperature.getTemperatureColor();
         }
-        
+
         // Update Armor UI
         const armorText = document.getElementById('armor-text');
         if (armorText && this.game.armor) {
             const defense = this.game.armor.getTotalDefense();
             armorText.textContent = `🛡️ ${defense}`;
         }
-        
+
         // Update Weather UI
         const weatherText = document.getElementById('weather-text');
         if (weatherText && this.game.weather) {
             const weather = this.game.weather.currentWeather;
             weatherText.textContent = `${weather.emoji} ${weather.name}`;
         }
-        
+
         // Update Buffs UI
         const buffsDisplay = document.getElementById('buffs-display');
         if (buffsDisplay && this.game.foodBuffs) {

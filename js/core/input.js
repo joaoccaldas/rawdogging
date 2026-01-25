@@ -14,13 +14,15 @@ export class InputManager {
             jump: false,
             inventory: false,
             use: false,
+            sprint: false,
+            dash: false,
         };
 
         this.joystickBase = null;
         this.joystickStick = null;
         this.joystickCenter = { x: 0, y: 0 };
         this.joystickRadius = 35;
-        
+
         this.mobileEnabled = CONFIG.MOBILE_CONTROLS_ENABLED;
 
         this.init();
@@ -41,6 +43,8 @@ export class InputManager {
                 jump: false,
                 inventory: false,
                 use: false,
+                sprint: false,
+                dash: false,
             };
         });
 
@@ -108,6 +112,16 @@ export class InputManager {
             });
             btnInventory.addEventListener('touchend', () => this.actions.inventory = false);
         }
+        if (btnInventory) {
+            btnInventory.addEventListener('touchstart', () => {
+                this.actions.inventory = true;
+                this.game.ui?.toggleInventory();
+            });
+            btnInventory.addEventListener('touchend', () => this.actions.inventory = false);
+        }
+
+        // Add Sprint button for mobile if needed (not in current UI but safe to add logic)
+        // For now, auto-sprint if joystick pushed far? OR toggle
     }
 
     onKeyDown(e) {
@@ -145,6 +159,13 @@ export class InputManager {
             case 'Escape':
                 this.game.ui?.closeAllModals();
                 break;
+            case 'ShiftLeft':
+            case 'ShiftRight':
+                this.actions.sprint = true;
+                break;
+            case 'KeyC':
+                this.actions.dash = true;
+                break;
         }
     }
 
@@ -159,6 +180,12 @@ export class InputManager {
         }
         if (e.code === 'KeyQ') {
             this.actions.use = false;
+        }
+        if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+            this.actions.sprint = false;
+        }
+        if (e.code === 'KeyC') {
+            this.actions.dash = false;
         }
     }
 
@@ -320,6 +347,16 @@ export class InputManager {
 
     isUsing() {
         return this.actions.use || (this.mouse.down && this.mouse.button === 2);
+    }
+
+    isSprinting() {
+        return this.actions.sprint;
+    }
+
+    checkDash() {
+        const dash = this.actions.dash;
+        this.actions.dash = false; // Consume dash action
+        return dash;
     }
 
     getMouseWorldPosition(camera) {

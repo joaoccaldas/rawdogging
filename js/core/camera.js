@@ -17,6 +17,7 @@ export class Camera {
 
         this.followedEntity = null;
         this.shake = { x: 0, y: 0, intensity: 0, duration: 0 };
+        this.bobOffset = 0; // Vertical bobbing
     }
 
     resize(width, height) {
@@ -90,8 +91,9 @@ export class Camera {
         // We want (camIsoX, camIsoY) to be at (this.width/2, this.height/2).
         // screenX = (isoX - camIsoX) * zoom + center + shake
 
+        // screenX = (isoX - camIsoX) * zoom + center + shake
         const screenX = (isoX - camIsoX) * this.zoom + this.width / 2 + this.shake.x;
-        const screenY = (isoY - camIsoY) * this.zoom + this.height / 2 + this.shake.y;
+        const screenY = (isoY - camIsoY) * this.zoom + this.height / 2 + this.shake.y + this.bobOffset;
 
         return { x: screenX, y: screenY };
     }
@@ -113,10 +115,10 @@ export class Camera {
         // Get camera isometric position (without Z for base calculation)
         const camIsoX = (this.x - this.y) * (CONFIG.TILE_WIDTH / 2);
         const camIsoY = (this.x + this.y) * (CONFIG.TILE_HEIGHT / 2);
-        
+
         // The clicked isometric position relative to world origin
         const isoX = relX + camIsoX;
-        
+
         // For Y, we need to account for Z offset
         // The camera is offset by -z * TILE_DEPTH in screen space
         // When converting back, we assume we're clicking at a certain Z level
@@ -128,10 +130,10 @@ export class Camera {
         // isoX = (x - y) * (W/2)  =>  x - y = isoX / (W/2)
         // isoY = (x + y) * (H/2)  =>  x + y = isoY / (H/2)
         // Solving: x = ((x-y) + (x+y)) / 2, y = ((x+y) - (x-y)) / 2
-        
+
         const xMinusY = isoX / (CONFIG.TILE_WIDTH / 2);
         const xPlusY = isoY / (CONFIG.TILE_HEIGHT / 2);
-        
+
         const worldX = (xMinusY + xPlusY) / 2;
         const worldY = (xPlusY - xMinusY) / 2;
 
