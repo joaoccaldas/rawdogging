@@ -665,6 +665,16 @@ export class World {
                             const oreNoise = this.noise.perlin3(wx * 0.12, wy * 0.12, z * 0.12);
                             if (oreNoise > 0.7) block = BLOCKS.IRON_ORE;
                         }
+                        // Copper ore - common, similar to iron depth
+                        if (z >= 4 && z < height - 5) {
+                            const oreNoise = this.noise.perlin3(wx * 0.13, wy * 0.13, z * 0.13);
+                            if (oreNoise > 0.68 && oreNoise < 0.73) block = BLOCKS.COPPER_ORE;
+                        }
+                        // Tin ore - slightly rarer than copper
+                        if (z >= 3 && z < height - 8) {
+                            const oreNoise = this.noise.perlin3(wx * 0.11, wy * 0.11, z * 0.11);
+                            if (oreNoise > 0.72 && oreNoise < 0.76) block = BLOCKS.TIN_ORE;
+                        }
                         // Gold deeper
                         if (z >= 3 && z < height - 10) {
                             const oreNoise = this.noise.perlin3(wx * 0.1, wy * 0.1, z * 0.1);
