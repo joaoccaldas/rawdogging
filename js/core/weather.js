@@ -400,4 +400,12 @@ export class WeatherSystem {
             this.weatherDuration = data.duration || 60;
         }
     }
+    
+    reset() {
+        this.currentWeather = WEATHER_TYPES.CLEAR;
+        this.weatherDuration = 60;
+        this.weatherTransition = 0;
+        this.weatherParticles = [];
+        this.lightningFlash = 0;
+    }
 }

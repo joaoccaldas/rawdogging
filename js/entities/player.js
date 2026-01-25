@@ -936,6 +936,47 @@ export class Player extends Entity {
             const pct = (this.xp / this.nextLevelXp) * 100;
             this.ui.xpBar.style.width = `${pct}%`;
         }
+        
+        // Update Temperature UI
+        const tempFill = document.getElementById('temperature-fill');
+        const tempText = document.getElementById('temperature-text');
+        if (tempFill && tempText && this.game.temperature) {
+            const temp = this.game.temperature.getTemperature();
+            tempFill.style.width = `${temp}%`;
+            tempText.textContent = `${this.game.temperature.getStatusIcon()} ${temp}°`;
+            tempFill.style.background = this.game.temperature.getTemperatureColor();
+        }
+        
+        // Update Armor UI
+        const armorText = document.getElementById('armor-text');
+        if (armorText && this.game.armor) {
+            const defense = this.game.armor.getTotalDefense();
+            armorText.textContent = `🛡️ ${defense}`;
+        }
+        
+        // Update Weather UI
+        const weatherText = document.getElementById('weather-text');
+        if (weatherText && this.game.weather) {
+            const weather = this.game.weather.currentWeather;
+            weatherText.textContent = `${weather.emoji} ${weather.name}`;
+        }
+        
+        // Update Buffs UI
+        const buffsDisplay = document.getElementById('buffs-display');
+        if (buffsDisplay && this.game.foodBuffs) {
+            const buffs = this.game.foodBuffs.getActiveBuffs();
+            buffsDisplay.innerHTML = '';
+            for (const buff of buffs) {
+                const buffEl = document.createElement('div');
+                buffEl.className = 'buff-icon';
+                buffEl.innerHTML = `
+                    <span>${buff.icon}</span>
+                    <span class="buff-timer">${buff.remaining}s</span>
+                `;
+                buffEl.title = buff.name;
+                buffsDisplay.appendChild(buffEl);
+            }
+        }
 
         // Render Hotbar
         if (this.ui.hotbar) {

@@ -10,9 +10,33 @@ export class SpriteManager {
         this.tileSize = 16; // Texture resolution
         this.isoSize = 64; // Rendered block size (match CONFIG.TILE_WIDTH)
         this.spritesLoaded = false;
+        
+        // Block texture atlas
+        this.blockAtlas = null;
+        this.blockAtlasLoaded = false;
+        // Block positions in atlas (col, row) - based on blocks.png layout
+        this.atlasBlockMap = {
+            'grass': { col: 0, row: 0 },
+            'dirt': { col: 1, row: 0 },
+            'stone': { col: 2, row: 0 },
+            'sand': { col: 0, row: 1 },
+            'wood': { col: 1, row: 1 },
+            'log': { col: 1, row: 1 },
+            'leaves': { col: 2, row: 1 },
+            'coal_ore': { col: 0, row: 2 },
+            'water': { col: 1, row: 2 },
+            'ice': { col: 1, row: 2 },
+            'lava': { col: 2, row: 2 },
+            'gravel': { col: 0, row: 3 },
+            'cobblestone': { col: 0, row: 3 },
+        };
+        this.atlasBlockSize = 150; // Size of each block in the atlas
     }
 
     async init() {
+        // Load the block texture atlas first
+        await this.loadBlockAtlas();
+        
         // Generate all block textures with unique patterns
         this.generateAllTextures();
 
@@ -24,6 +48,80 @@ export class SpriteManager {
 
         this.spritesLoaded = true;
         console.log('Sprites Generated and Loaded');
+    }
+    
+    async loadBlockAtlas() {
+        return new Promise((resolve) => {
+            this.blockAtlas = new Image();
+            this.blockAtlas.onload = () => {
+                this.blockAtlasLoaded = true;
+                console.log('Block atlas loaded successfully');
+                resolve();
+            };
+            this.blockAtlas.onerror = () => {
+                console.warn('Block atlas failed to load, using generated textures');
+                this.blockAtlasLoaded = false;
+                resolve();
+            };
+            this.blockAtlas.src = 'assets/sprites/blocks/blocks.png';
+        });
+    }
+    
+    // Get a texture from the atlas
+    getAtlasTexture(blockType) {
+        if (!this.blockAtlasLoaded || !this.atlasBlockMap[blockType]) {
+            return null;
+        }
+        
+        const pos = this.atlasBlockMap[blockType];
+        const canvas = document.createElement('canvas');
+        // Create a smaller texture for pattern use (16x16)
+        canvas.width = this.tileSize;
+        canvas.height = this.tileSize;
+        const ctx = canvas.getContext('2d');
+        
+        // Extract the block from the atlas and scale down for texture pattern
+        ctx.drawImage(
+            this.blockAtlas,
+            pos.col * this.atlasBlockSize,
+            pos.row * this.atlasBlockSize,
+            this.atlasBlockSize,
+            this.atlasBlockSize,
+            0,
+            0,
+            this.tileSize,
+            this.tileSize
+        );
+        
+        return canvas;
+    }
+    
+    // Get a full isometric block sprite from the atlas
+    getAtlasBlockSprite(blockType) {
+        if (!this.blockAtlasLoaded || !this.atlasBlockMap[blockType]) {
+            return null;
+        }
+        
+        const pos = this.atlasBlockMap[blockType];
+        const canvas = document.createElement('canvas');
+        canvas.width = this.isoSize;
+        canvas.height = this.isoSize * 1.5; // Match the expected sprite dimensions
+        const ctx = canvas.getContext('2d');
+        
+        // Draw the atlas block scaled to our iso size
+        ctx.drawImage(
+            this.blockAtlas,
+            pos.col * this.atlasBlockSize,
+            pos.row * this.atlasBlockSize,
+            this.atlasBlockSize,
+            this.atlasBlockSize,
+            0,
+            (this.isoSize * 1.5 - this.isoSize) / 2, // Center vertically
+            this.isoSize,
+            this.isoSize
+        );
+        
+        return canvas;
     }
 
     generateAllTextures() {
@@ -1011,19 +1109,52 @@ export class SpriteManager {
             [BLOCKS.CACTUS]: 'cactus',
             [BLOCKS.WHEAT_CROP]: 'wheat',
         };
+        
+        // Map texture names to atlas block types
+        const atlasMap = {
+            'grass_top': 'grass',
+            'dirt': 'dirt',
+            'stone': 'stone',
+            'cobblestone': 'cobblestone',
+            'sand': 'sand',
+            'wood': 'wood',
+            'leaves': 'leaves',
+            'coal_ore': 'coal_ore',
+            'water': 'water',
+            'ice': 'ice',
+            'gravel': 'gravel',
+        };
 
         // Generate for all blocks
         for (const [id, data] of Object.entries(BLOCK_DATA)) {
             if (parseInt(id) === BLOCKS.AIR) continue;
 
             const textureName = textureMap[parseInt(id)];
-            const texture = textureName ? this.textures.get(textureName) : null;
-            const color = data.color;
-            const isLiquid = parseInt(id) === BLOCKS.WATER;
-            const isTransparent = data.transparent && parseInt(id) !== BLOCKS.WATER;
+            
+            // Try to use atlas texture first
+            let texture = null;
+            let useAtlasSprite = false;
+            const atlasType = atlasMap[textureName];
+            
+            if (atlasType && this.blockAtlasLoaded) {
+                // For main terrain blocks, use the pre-rendered atlas sprites
+                const atlasSprite = this.getAtlasBlockSprite(atlasType);
+                if (atlasSprite) {
+                    this.blockSprites.set(parseInt(id), atlasSprite);
+                    useAtlasSprite = true;
+                }
+            }
+            
+            // Fall back to generated texture if no atlas sprite
+            if (!useAtlasSprite) {
+                texture = textureName ? this.textures.get(textureName) : null;
+                const color = data.color;
+                const isLiquid = parseInt(id) === BLOCKS.WATER;
+                const isTransparent = data.transparent && parseInt(id) !== BLOCKS.WATER;
 
-            const sprite = this.renderIsoBlock(texture, color, isLiquid, isTransparent);
-            this.blockSprites.set(parseInt(id), sprite);
+                const sprite = this.renderIsoBlock(texture, color, isLiquid, isTransparent);
+                this.blockSprites.set(parseInt(id), sprite);
+            }
         }
     }
 
