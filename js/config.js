@@ -488,6 +488,7 @@ export const SMELTING = {
 
 // Enemy Types
 export const ENEMIES = {
+    // Common animals
     WOLF: {
         name: 'Dire Wolf',
         emoji: '🐺',
@@ -497,6 +498,7 @@ export const ENEMIES = {
         aggressive: true,
         xp: 20,
         drops: [['raw_meat', 2, 3], ['leather', 1, 2], ['bone', 1, 2]],
+        tameable: true,
     },
     BEAR: {
         name: 'Cave Bear',
@@ -527,6 +529,7 @@ export const ENEMIES = {
         aggressive: false,
         xp: 15,
         drops: [['raw_meat', 2, 4], ['leather', 1, 2], ['bone', 0, 1]],
+        tameable: true,
     },
     MAMMOTH: {
         name: 'Woolly Mammoth',
@@ -548,5 +551,375 @@ export const ENEMIES = {
         xp: 60,
         drops: [['raw_meat', 2, 4], ['leather', 2, 3], ['bone', 2, 3]],
         nightOnly: true,
+    },
+    // New enemies
+    TERROR_BIRD: {
+        name: 'Terror Bird',
+        emoji: '🦅',
+        health: 35,
+        damage: 8,
+        speed: 4,
+        aggressive: true,
+        xp: 40,
+        drops: [['raw_meat', 2, 3], ['feather', 3, 5], ['bone', 1, 2]],
+    },
+    GIANT_SLOTH: {
+        name: 'Giant Sloth',
+        emoji: '🦥',
+        health: 80,
+        damage: 6,
+        speed: 0.8,
+        aggressive: false,
+        xp: 45,
+        drops: [['raw_meat', 4, 6], ['leather', 3, 4]],
+    },
+    CAVE_LION: {
+        name: 'Cave Lion',
+        emoji: '🦁',
+        health: 55,
+        damage: 12,
+        speed: 3.2,
+        aggressive: true,
+        xp: 70,
+        drops: [['raw_meat', 3, 5], ['leather', 2, 4], ['bone', 2, 3]],
+        nightOnly: true,
+    },
+    HYENA: {
+        name: 'Giant Hyena',
+        emoji: '🐕',
+        health: 30,
+        damage: 6,
+        speed: 3,
+        aggressive: true,
+        xp: 25,
+        drops: [['raw_meat', 2, 3], ['leather', 1, 2], ['bone', 1, 2]],
+        packAnimal: true, // Spawns in groups
+    },
+    RHINO: {
+        name: 'Woolly Rhino',
+        emoji: '🦏',
+        health: 90,
+        damage: 18,
+        speed: 2,
+        aggressive: false,
+        xp: 80,
+        drops: [['raw_meat', 5, 7], ['leather', 3, 5], ['bone', 3, 5]],
+    },
+    CROCODILE: {
+        name: 'Giant Crocodile',
+        emoji: '🐊',
+        health: 50,
+        damage: 14,
+        speed: 2.5,
+        aggressive: true,
+        xp: 55,
+        drops: [['raw_meat', 3, 5], ['leather', 3, 4]],
+        waterOnly: true,
+    },
+    SPIDER: {
+        name: 'Giant Spider',
+        emoji: '🕷️',
+        health: 20,
+        damage: 6,
+        speed: 2.8,
+        aggressive: true,
+        xp: 25,
+        drops: [['string', 2, 4], ['leather', 1, 2]],
+        caveOnly: true,
+    },
+};
+
+// Boss creatures
+export const BOSSES = {
+    ALPHA_MAMMOTH: {
+        name: 'Alpha Mammoth',
+        emoji: '🦣',
+        health: 500,
+        damage: 30,
+        speed: 1.5,
+        aggressive: true,
+        xp: 500,
+        drops: [['raw_meat', 15, 20], ['leather', 10, 15], ['bone', 10, 15], ['diamond', 1, 3]],
+        abilities: ['charge', 'stomp'],
+        spawnCondition: 'day_10',
+    },
+    PACK_LEADER: {
+        name: 'Pack Leader Wolf',
+        emoji: '🐺',
+        health: 200,
+        damage: 15,
+        speed: 3.5,
+        aggressive: true,
+        xp: 300,
+        drops: [['raw_meat', 8, 12], ['leather', 5, 8], ['bone', 5, 8]],
+        abilities: ['summon_pack', 'howl'],
+        spawnCondition: 'night',
+    },
+    CAVE_GUARDIAN: {
+        name: 'Cave Guardian Bear',
+        emoji: '🐻',
+        health: 400,
+        damage: 25,
+        speed: 2,
+        aggressive: true,
+        xp: 400,
+        drops: [['raw_meat', 12, 18], ['leather', 8, 12], ['bone', 8, 12], ['gold_ingot', 2, 5]],
+        abilities: ['roar', 'swipe'],
+        spawnCondition: 'cave_depth_10',
+    },
+};
+
+// Biome definitions
+export const BIOMES = {
+    PLAINS: {
+        name: 'Plains',
+        groundBlock: 'GRASS',
+        subBlock: 'DIRT',
+        treeChance: 0.005,
+        grassChance: 0.02,
+        enemies: ['WOLF', 'BOAR', 'HYENA'],
+        temperature: 0.5,
+        humidity: 0.5,
+    },
+    DESERT: {
+        name: 'Desert',
+        groundBlock: 'SAND',
+        subBlock: 'SANDSTONE',
+        treeChance: 0,
+        cactusChance: 0.005,
+        enemies: ['SNAKE', 'HYENA'],
+        temperature: 0.9,
+        humidity: 0.1,
+    },
+    SNOW: {
+        name: 'Frozen Tundra',
+        groundBlock: 'SNOW',
+        subBlock: 'DIRT',
+        treeChance: 0.003,
+        enemies: ['WOLF', 'MAMMOTH', 'RHINO'],
+        temperature: 0.1,
+        humidity: 0.3,
+    },
+    JUNGLE: {
+        name: 'Dense Jungle',
+        groundBlock: 'GRASS',
+        subBlock: 'DIRT',
+        treeChance: 0.03,
+        vineChance: 0.01,
+        enemies: ['SNAKE', 'TERROR_BIRD', 'SPIDER'],
+        temperature: 0.8,
+        humidity: 0.9,
+    },
+    SWAMP: {
+        name: 'Murky Swamp',
+        groundBlock: 'GRASS',
+        subBlock: 'CLAY',
+        waterChance: 0.3,
+        treeChance: 0.01,
+        enemies: ['CROCODILE', 'SNAKE', 'GIANT_SLOTH'],
+        temperature: 0.6,
+        humidity: 0.9,
+    },
+    CAVE: {
+        name: 'Deep Caves',
+        groundBlock: 'STONE',
+        subBlock: 'STONE',
+        oreChance: 0.05,
+        enemies: ['SPIDER', 'BEAR'],
+        temperature: 0.4,
+        humidity: 0.6,
+        underground: true,
+    },
+    SAVANNA: {
+        name: 'Savanna',
+        groundBlock: 'GRASS',
+        subBlock: 'DIRT',
+        treeChance: 0.002,
+        grassChance: 0.05,
+        enemies: ['CAVE_LION', 'HYENA', 'RHINO'],
+        temperature: 0.7,
+        humidity: 0.3,
+    },
+};
+
+// Quest System
+export const QUESTS = {
+    // Tutorial/Early Quests
+    FIRST_TOOLS: {
+        id: 'first_tools',
+        name: 'First Steps',
+        description: 'Craft your first stone tools',
+        type: 'craft',
+        requirements: [
+            { item: 'stone_pickaxe', count: 1 },
+            { item: 'stone_axe', count: 1 }
+        ],
+        rewards: { xp: 50, items: [['leather', 3]] },
+        unlocks: ['BUILD_SHELTER'],
+    },
+    BUILD_SHELTER: {
+        id: 'build_shelter',
+        name: 'Shelter from the Storm',
+        description: 'Build a basic shelter to survive the nights',
+        type: 'place',
+        requirements: [
+            { block: 'COBBLESTONE', count: 20 },
+            { block: 'WOOD', count: 10 }
+        ],
+        rewards: { xp: 100, items: [['torch', 5]] },
+        unlocks: ['HUNT_PREY'],
+    },
+    HUNT_PREY: {
+        id: 'hunt_prey',
+        name: 'The Hunt Begins',
+        description: 'Hunt wildlife for food and resources',
+        type: 'kill',
+        requirements: [
+            { enemy: 'BOAR', count: 3 }
+        ],
+        rewards: { xp: 75, items: [['cooked_meat', 5]] },
+        unlocks: ['WOLF_SLAYER'],
+    },
+    WOLF_SLAYER: {
+        id: 'wolf_slayer',
+        name: 'Wolf Slayer',
+        description: 'Defend yourself against the dire wolves',
+        type: 'kill',
+        requirements: [
+            { enemy: 'WOLF', count: 5 }
+        ],
+        rewards: { xp: 150, items: [['bone', 10], ['leather', 5]] },
+        unlocks: ['TAME_COMPANION'],
+    },
+    TAME_COMPANION: {
+        id: 'tame_companion',
+        name: 'Best Friend',
+        description: 'Tame a wolf or boar as your companion',
+        type: 'tame',
+        requirements: [
+            { tamed: 1 }
+        ],
+        rewards: { xp: 200, items: [['raw_meat', 10]] },
+        unlocks: ['DEEP_MINING'],
+    },
+    DEEP_MINING: {
+        id: 'deep_mining',
+        name: 'Into the Depths',
+        description: 'Mine valuable ores from deep underground',
+        type: 'collect',
+        requirements: [
+            { item: 'iron_ingot', count: 10 },
+            { item: 'gold_ingot', count: 5 }
+        ],
+        rewards: { xp: 250, items: [['diamond', 2]] },
+        unlocks: ['BEAR_HUNTER'],
+    },
+    BEAR_HUNTER: {
+        id: 'bear_hunter',
+        name: 'Bear Hunter',
+        description: 'Defeat a fearsome cave bear',
+        type: 'kill',
+        requirements: [
+            { enemy: 'BEAR', count: 1 }
+        ],
+        rewards: { xp: 200, items: [['leather', 10], ['bone', 8]] },
+        unlocks: ['MAMMOTH_SLAYER'],
+    },
+    MAMMOTH_SLAYER: {
+        id: 'mammoth_slayer',
+        name: 'Mammoth Slayer',
+        description: 'Take down a mighty woolly mammoth',
+        type: 'kill',
+        requirements: [
+            { enemy: 'MAMMOTH', count: 1 }
+        ],
+        rewards: { xp: 500, items: [['raw_meat', 20], ['bone', 15]] },
+        unlocks: ['BOSS_ALPHA'],
+    },
+    BOSS_ALPHA: {
+        id: 'boss_alpha',
+        name: 'Alpha Challenge',
+        description: 'Defeat the Alpha Mammoth boss',
+        type: 'kill',
+        requirements: [
+            { enemy: 'ALPHA_MAMMOTH', count: 1 }
+        ],
+        rewards: { xp: 1000, items: [['diamond', 5]] },
+        unlocks: [],
+    },
+    SURVIVAL_10: {
+        id: 'survival_10',
+        name: 'Seasoned Survivor',
+        description: 'Survive for 10 days in the wilderness',
+        type: 'survive',
+        requirements: [
+            { days: 10 }
+        ],
+        rewards: { xp: 300, items: [['torch', 10], ['cooked_meat', 10]] },
+        unlocks: [],
+    },
+    MASTER_CRAFTER: {
+        id: 'master_crafter',
+        name: 'Master Crafter',
+        description: 'Craft 50 different items',
+        type: 'craft_total',
+        requirements: [
+            { crafted: 50 }
+        ],
+        rewards: { xp: 400, items: [['iron_ingot', 10]] },
+        unlocks: [],
+    },
+};
+
+// Age Progression System
+export const AGES = {
+    STONE_AGE: {
+        name: 'Stone Age',
+        description: 'The beginning of human civilization',
+        unlockRequirements: null, // Starting age
+        unlocksRecipes: ['stone_pickaxe', 'stone_axe', 'stone_sword', 'campfire', 'torch'],
+        bonuses: {},
+    },
+    TRIBAL_AGE: {
+        name: 'Tribal Age',
+        description: 'Form tribes and develop culture',
+        unlockRequirements: {
+            quests: ['HUNT_PREY', 'BUILD_SHELTER'],
+            level: 5,
+        },
+        unlocksRecipes: ['leather_armor', 'bone_tools', 'tanning_rack'],
+        bonuses: {
+            tamingBonus: 0.1,
+            craftingSpeed: 0.1,
+        },
+    },
+    BRONZE_AGE: {
+        name: 'Bronze Age',
+        description: 'Discover metallurgy and forge stronger tools',
+        unlockRequirements: {
+            quests: ['DEEP_MINING'],
+            level: 10,
+            items: { 'copper_ingot': 20, 'tin_ingot': 10 },
+        },
+        unlocksRecipes: ['bronze_pickaxe', 'bronze_axe', 'bronze_sword', 'bronze_armor', 'forge'],
+        bonuses: {
+            miningSpeed: 0.2,
+            combatDamage: 0.15,
+        },
+    },
+    IRON_AGE: {
+        name: 'Iron Age',
+        description: 'Master iron working and build settlements',
+        unlockRequirements: {
+            quests: ['BOSS_ALPHA'],
+            level: 20,
+            items: { 'iron_ingot': 50 },
+        },
+        unlocksRecipes: ['iron_pickaxe', 'iron_axe', 'iron_sword', 'iron_armor', 'anvil'],
+        bonuses: {
+            miningSpeed: 0.3,
+            combatDamage: 0.25,
+            maxHealth: 20,
+        },
     },
 };

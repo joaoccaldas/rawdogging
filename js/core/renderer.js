@@ -416,7 +416,12 @@ export class Renderer {
     }
 
     calculateLightLevel(x, y, z) {
-        // Base ambient light from time of day
+        // Use the LightingSystem if available
+        if (this.game.lighting) {
+            return this.game.lighting.getLightLevel(x, y, z);
+        }
+        
+        // Fallback to basic lighting
         let light = this.ambientLight;
 
         // Height bonus

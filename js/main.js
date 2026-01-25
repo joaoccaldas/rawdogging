@@ -16,6 +16,9 @@ import { SpriteManager } from './core/sprites.js';
 import { ParticleSystem } from './core/particles.js';
 import { Noise } from './utils/math.js';
 import { QuestManager } from './core/quests.js';
+import { LightingSystem } from './core/lighting.js';
+import { SkillsManager } from './core/skills.js';
+import { TamingSystem } from './core/taming.js';
 
 class Game {
     constructor() {
@@ -60,6 +63,15 @@ class Game {
         // Quest System
         this.questManager = new QuestManager(this);
         this.questManager.init();
+        
+        // Lighting System
+        this.lighting = new LightingSystem(this);
+        
+        // Skills System
+        this.skills = new SkillsManager(this);
+        
+        // Taming System
+        this.taming = new TamingSystem(this);
 
         this.entities = [];
         this.mining = { currentBlock: null, progress: 0, maxProgress: 0 };
@@ -180,6 +192,16 @@ class Game {
             this.questManager.reset();
             this.questManager.init();
         }
+        
+        // Reset skills system
+        if (this.skills) {
+            this.skills.reset();
+        }
+        
+        // Reset taming system
+        if (this.taming) {
+            this.taming.reset();
+        }
 
         // Snap camera to new position
         this.camera.snapToTarget();
@@ -200,6 +222,16 @@ class Game {
         // Update quest system
         if (this.questManager) {
             this.questManager.update(deltaTime);
+        }
+        
+        // Update lighting system
+        if (this.lighting) {
+            this.lighting.update(deltaTime);
+        }
+        
+        // Update taming system (pets)
+        if (this.taming) {
+            this.taming.update(deltaTime);
         }
 
         if (this.player) {

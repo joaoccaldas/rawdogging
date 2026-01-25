@@ -305,7 +305,11 @@ export class QuestManager {
         `;
     }
     
-    // Save quest progress
+    // Save quest progress (alias for compatibility)
+    serialize() {
+        return this.getSaveData();
+    }
+    
     getSaveData() {
         return {
             currentAge: this.currentAge,
@@ -315,6 +319,11 @@ export class QuestManager {
             stats: this.stats,
             nightsSurvived: this.nightsSurvived,
         };
+    }
+    
+    // Load quest progress (alias for compatibility)
+    deserialize(data) {
+        this.loadSaveData(data);
     }
     
     // Load quest progress

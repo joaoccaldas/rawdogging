@@ -275,4 +275,9 @@ export class UIManager {
             setTimeout(() => notification.remove(), 300);
         }, duration);
     }
+    
+    // Alias for showNotification for compatibility
+    showMessage(message, duration = 3000) {
+        this.showNotification(message, 'info', duration);
+    }
 }

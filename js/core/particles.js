@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js';
+import { CONFIG, BLOCK_DATA, BLOCKS } from '../config.js';
 
 export class ParticleSystem {
     constructor(game) {
@@ -32,6 +32,173 @@ export class ParticleSystem {
         p.decay = 1.0; // Slower fade
         p.size = 20; // Text size
         this.particles.push(p);
+    }
+    
+    // Spawn predefined particle effects
+    spawn(effectType, x, y, z, count = 5) {
+        switch (effectType) {
+            case 'dust':
+                // Small dust particles (for block falling, footsteps)
+                for (let i = 0; i < count; i++) {
+                    const p = new Particle(x, y, z, '#8b7355');
+                    p.size = 1 + Math.random() * 2;
+                    p.vz = Math.random() * 2;
+                    p.vx = (Math.random() - 0.5) * 2;
+                    p.vy = (Math.random() - 0.5) * 2;
+                    p.decay = 3;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'fire':
+                // Fire sparks (for torches, campfires)
+                for (let i = 0; i < count; i++) {
+                    const p = new Particle(x, y, z, Math.random() < 0.5 ? '#ff6600' : '#ffcc00');
+                    p.size = 2 + Math.random() * 3;
+                    p.vz = 2 + Math.random() * 3;
+                    p.vx = (Math.random() - 0.5) * 1;
+                    p.vy = (Math.random() - 0.5) * 1;
+                    p.decay = 2;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'smoke':
+                // Smoke particles
+                for (let i = 0; i < count; i++) {
+                    const gray = Math.floor(80 + Math.random() * 80);
+                    const p = new Particle(x, y, z, `rgb(${gray},${gray},${gray})`);
+                    p.size = 3 + Math.random() * 4;
+                    p.vz = 1 + Math.random() * 2;
+                    p.vx = (Math.random() - 0.5) * 0.5;
+                    p.vy = (Math.random() - 0.5) * 0.5;
+                    p.decay = 1;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'water':
+                // Water splash
+                for (let i = 0; i < count; i++) {
+                    const p = new Particle(x, y, z, '#4488ff');
+                    p.size = 2 + Math.random() * 2;
+                    p.vz = 2 + Math.random() * 4;
+                    p.vx = (Math.random() - 0.5) * 4;
+                    p.vy = (Math.random() - 0.5) * 4;
+                    p.decay = 2;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'blood':
+                // Blood splatter (for combat)
+                for (let i = 0; i < count; i++) {
+                    const p = new Particle(x, y, z, '#aa0000');
+                    p.size = 2 + Math.random() * 2;
+                    p.vz = 1 + Math.random() * 3;
+                    p.vx = (Math.random() - 0.5) * 5;
+                    p.vy = (Math.random() - 0.5) * 5;
+                    p.decay = 1.5;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'heart':
+                // Hearts (for taming, healing)
+                for (let i = 0; i < count; i++) {
+                    const p = new Particle(x, y, z, '#ff6699');
+                    p.emoji = '❤️';
+                    p.size = 16;
+                    p.vz = 1.5;
+                    p.vx = (Math.random() - 0.5) * 2;
+                    p.vy = (Math.random() - 0.5) * 2;
+                    p.decay = 1;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'star':
+                // Stars (for level up, achievements)
+                for (let i = 0; i < count; i++) {
+                    const p = new Particle(x, y, z, '#ffdd00');
+                    p.emoji = '⭐';
+                    p.size = 20;
+                    p.vz = 2 + Math.random() * 2;
+                    p.vx = (Math.random() - 0.5) * 4;
+                    p.vy = (Math.random() - 0.5) * 4;
+                    p.decay = 1;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'xp':
+                // XP orbs
+                for (let i = 0; i < count; i++) {
+                    const p = new Particle(x, y, z, '#00ff88');
+                    p.size = 4 + Math.random() * 2;
+                    p.vz = 3 + Math.random() * 2;
+                    p.vx = (Math.random() - 0.5) * 3;
+                    p.vy = (Math.random() - 0.5) * 3;
+                    p.decay = 1.5;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'block_break':
+                // Block breaking particles - use block color
+                const colors = ['#8b4513', '#666666', '#228b22', '#d2b48c'];
+                for (let i = 0; i < count; i++) {
+                    const p = new Particle(x, y, z, colors[Math.floor(Math.random() * colors.length)]);
+                    p.size = 3 + Math.random() * 3;
+                    p.vz = 2 + Math.random() * 3;
+                    p.vx = (Math.random() - 0.5) * 6;
+                    p.vy = (Math.random() - 0.5) * 6;
+                    p.decay = 2;
+                    this.particles.push(p);
+                }
+                break;
+                
+            case 'critical':
+                // Critical hit indicator
+                const p = new Particle(x, y, z, '#ffff00');
+                p.text = '💥';
+                p.size = 24;
+                p.vz = 2;
+                p.decay = 1.5;
+                this.particles.push(p);
+                break;
+                
+            default:
+                this.emit(x, y, z, '#ffffff', count);
+        }
+    }
+    
+    // Emit block-specific particles when mining
+    emitBlockParticles(x, y, z, blockId, count = 8) {
+        const blockData = BLOCK_DATA[blockId];
+        let color = '#666666';
+        
+        // Determine color based on block type
+        if (blockId === BLOCKS.GRASS) color = '#228b22';
+        else if (blockId === BLOCKS.DIRT) color = '#8b4513';
+        else if (blockId === BLOCKS.STONE) color = '#808080';
+        else if (blockId === BLOCKS.SAND) color = '#f4d03f';
+        else if (blockId === BLOCKS.WOOD) color = '#8b4513';
+        else if (blockId === BLOCKS.LEAVES) color = '#228b22';
+        else if (blockId === BLOCKS.COAL_ORE) color = '#333333';
+        else if (blockId === BLOCKS.IRON_ORE) color = '#d4a574';
+        else if (blockId === BLOCKS.GOLD_ORE) color = '#ffd700';
+        else if (blockId === BLOCKS.DIAMOND_ORE) color = '#00ffff';
+        
+        for (let i = 0; i < count; i++) {
+            const p = new Particle(x + 0.5, y + 0.5, z + 0.5, color);
+            p.size = 2 + Math.random() * 3;
+            p.vz = 1 + Math.random() * 3;
+            p.vx = (Math.random() - 0.5) * 4;
+            p.vy = (Math.random() - 0.5) * 4;
+            p.decay = 2;
+            this.particles.push(p);
+        }
     }
 
     render(renderer) {
