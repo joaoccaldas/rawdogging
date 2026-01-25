@@ -12,15 +12,26 @@
 
 <body>
     <div id="game-container">
-        <!-- Start Screen -->
+        <!-- Landing Page / Story Intro (hidden by default) -->
+        <div id="landing-page" class="landing-screen hidden">
+            <canvas id="story-canvas"></canvas>
+            <div id="story-text"></div>
+            <button id="skip-intro" class="skip-btn">Skip ▶</button>
+        </div>
+
+        <!-- Start Screen (shown first) -->
         <div id="start-screen" class="menu-screen">
             <div class="menu-logo">
                 <img src="assets/sprites/player/playercave.png" alt="Player" class="menu-character" width="128" height="128" />
             </div>
             <h1>🦣 Stone Age</h1>
             <p class="tagline">Survive 300,000 BC</p>
+            <div class="name-input-container">
+                <label for="player-name">Enter Your Name</label>
+                <input type="text" id="player-name" class="name-input" placeholder="Survivor" maxlength="20" autocomplete="off" />
+            </div>
             <div class="menu-buttons">
-                <button id="btn-new-game" class="menu-btn">New Game</button>
+                <button id="btn-new-game" class="menu-btn">Start Journey</button>
                 <button id="btn-load-game" class="menu-btn">Load Game</button>
                 <button id="btn-settings" class="menu-btn">Settings</button>
             </div>
@@ -109,6 +120,11 @@
                 </div>
                 <div class="quest-description">Complete objectives to progress</div>
                 <div class="quest-objectives"></div>
+            </div>
+            
+            <!-- Side Quest Panel -->
+            <div id="side-quest-panel">
+                <div class="no-quests">No active side quests</div>
             </div>
         </div>
 

@@ -58,13 +58,14 @@ export const QUESTS = {
         id: 'first_hunt',
         age: 'STONE_AGE',
         name: 'The First Hunt',
-        description: 'Hunt animals for meat to survive. Cook the meat to restore more hunger!',
+        description: 'Hunt animals for meat to survive. Build a furnace to cook the meat!',
         icon: '🥩',
         objectives: [
             { id: 'craft_weapon', description: 'Craft a weapon (club or spear)', type: 'craft', item: 'club|spear|wooden_sword', required: 1, current: 0 },
             { id: 'kill_animal', description: 'Hunt an animal', type: 'kill', enemy: 'any', required: 1, current: 0 },
             { id: 'collect_meat', description: 'Collect raw meat', type: 'collect', item: 'raw_meat', required: 2, current: 0 },
-            { id: 'eat_meat', description: 'Eat cooked meat', type: 'consume', item: 'cooked_meat', required: 1, current: 0 },
+            { id: 'craft_furnace', description: 'Craft a furnace (stone furnace)', type: 'craft', item: 'stone_furnace|furnace', required: 1, current: 0 },
+            { id: 'eat_meat', description: 'Cook and eat meat', type: 'consume', item: 'cooked_meat', required: 1, current: 0 },
         ],
         rewards: [
             { type: 'item', item: 'cooked_meat', count: 5 },

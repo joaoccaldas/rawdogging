@@ -11,33 +11,22 @@ export class SpriteManager {
         this.isoSize = 64; // Rendered block size (match CONFIG.TILE_WIDTH)
         this.spritesLoaded = false;
         
-        // Block texture atlas
-        this.blockAtlas = null;
-        this.blockAtlasLoaded = false;
-        // Block positions in atlas (col, row) - based on blocks.png layout
-        this.atlasBlockMap = {
-            'grass': { col: 0, row: 0 },
-            'dirt': { col: 1, row: 0 },
-            'stone': { col: 2, row: 0 },
-            'sand': { col: 0, row: 1 },
-            'wood': { col: 1, row: 1 },
-            'log': { col: 1, row: 1 },
-            'leaves': { col: 2, row: 1 },
-            'coal_ore': { col: 0, row: 2 },
-            'water': { col: 1, row: 2 },
-            'ice': { col: 1, row: 2 },
-            'lava': { col: 2, row: 2 },
-            'gravel': { col: 0, row: 3 },
-            'cobblestone': { col: 0, row: 3 },
-        };
-        this.atlasBlockSize = 150; // Size of each block in the atlas
+        // Use seeded random for consistent textures
+        this.seed = 12345;
+    }
+    
+    // Seeded random for consistent procedural generation
+    seededRandom() {
+        this.seed = (this.seed * 9301 + 49297) % 233280;
+        return this.seed / 233280;
+    }
+    
+    resetSeed() {
+        this.seed = 12345;
     }
 
     async init() {
-        // Load the block texture atlas first
-        await this.loadBlockAtlas();
-        
-        // Generate all block textures with unique patterns
+        // Generate all block textures with unique Minecraft-style patterns
         this.generateAllTextures();
 
         // Generate Block Sprites
@@ -45,9 +34,29 @@ export class SpriteManager {
 
         // Load player sprites
         await this.loadPlayerSprites();
+        
+        // Load enemy sprites
+        await this.loadEnemySprites();
 
         this.spritesLoaded = true;
         console.log('Sprites Generated and Loaded');
+    }
+    
+    async loadGrassBlockSprite() {
+        return new Promise((resolve) => {
+            this.grassBlockSprite = new Image();
+            this.grassBlockSprite.onload = () => {
+                this.grassBlockLoaded = true;
+                console.log('Grass block sprite loaded successfully');
+                resolve();
+            };
+            this.grassBlockSprite.onerror = () => {
+                console.warn('Grass block sprite failed to load, using generated texture');
+                this.grassBlockLoaded = false;
+                resolve();
+            };
+            this.grassBlockSprite.src = 'assets/sprites/blocks/grassblock.png';
+        });
     }
     
     async loadBlockAtlas() {
@@ -125,34 +134,36 @@ export class SpriteManager {
     }
 
     generateAllTextures() {
-        // Natural blocks
-        this.generateDirtTexture();
-        this.generateGrassTexture();
-        this.generateStoneTexture();
-        this.generateCobblestoneTexture();
-        this.generateWoodTexture();
-        this.generateLeavesTexture();
-        this.generateSandTexture();
-        this.generateWaterTexture();
-        this.generateBedrockTexture();
-        this.generateSnowTexture();
-        this.generateIceTexture();
-        this.generateGravelTexture();
-        this.generateClayTexture();
+        this.resetSeed();
         
-        // Ores
-        this.generateOreTexture('coal_ore', '#808080', '#1a1a1a', 8);
-        this.generateOreTexture('iron_ore', '#808080', '#D4A76A', 6);
-        this.generateOreTexture('gold_ore', '#808080', '#FFD700', 5);
-        this.generateOreTexture('diamond_ore', '#808080', '#4AE0E0', 4);
+        // Natural blocks - Minecraft-inspired stone age textures
+        this.generateMinecraftDirt();
+        this.generateMinecraftGrass();
+        this.generateMinecraftStone();
+        this.generateMinecraftCobblestone();
+        this.generateMinecraftWood();
+        this.generateMinecraftLeaves();
+        this.generateMinecraftSand();
+        this.generateMinecraftWater();
+        this.generateMinecraftBedrock();
+        this.generateMinecraftSnow();
+        this.generateMinecraftIce();
+        this.generateMinecraftGravel();
+        this.generateMinecraftClay();
+        
+        // Ores - Minecraft style
+        this.generateMinecraftOre('coal_ore', '#7F7F7F', '#1A1A1A', 8);
+        this.generateMinecraftOre('iron_ore', '#7F7F7F', '#C8A882', 6);
+        this.generateMinecraftOre('gold_ore', '#7F7F7F', '#F8D52E', 5);
+        this.generateMinecraftOre('diamond_ore', '#7F7F7F', '#5EE8D0', 4);
         
         // Building blocks
-        this.generatePlanksTexture();
-        this.generateBrickTexture();
-        this.generateGlassTexture();
-        this.generateSandstoneTexture();
-        this.generateMossStoneTexture();
-        this.generateObsidianTexture();
+        this.generateMinecraftPlanks();
+        this.generateMinecraftBrick();
+        this.generateMinecraftGlass();
+        this.generateMinecraftSandstone();
+        this.generateMinecraftMossStone();
+        this.generateMinecraftObsidian();
         
         // Prehistoric blocks
         this.generateThatchTexture();
@@ -177,519 +188,605 @@ export class SpriteManager {
         canvas.height = this.tileSize;
         return canvas;
     }
+    
+    // Helper to get pixel-perfect color blending
+    blendColor(color1, color2, factor) {
+        const r1 = parseInt(color1.slice(1,3), 16);
+        const g1 = parseInt(color1.slice(3,5), 16);
+        const b1 = parseInt(color1.slice(5,7), 16);
+        const r2 = parseInt(color2.slice(1,3), 16);
+        const g2 = parseInt(color2.slice(3,5), 16);
+        const b2 = parseInt(color2.slice(5,7), 16);
+        const r = Math.floor(r1 + (r2 - r1) * factor);
+        const g = Math.floor(g1 + (g2 - g1) * factor);
+        const b = Math.floor(b1 + (b2 - b1) * factor);
+        return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+    }
 
-    // === NATURAL BLOCKS ===
+    // === MINECRAFT-STYLE NATURAL BLOCKS ===
 
-    generateDirtTexture() {
+    generateMinecraftDirt() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#8B4513';
+        
+        // Base dirt brown
+        ctx.fillStyle = '#8B5A2B';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Add brown variation spots
-        const browns = ['#5D3A1A', '#A0522D', '#6B4423', '#7A4A2A'];
-        for (let i = 0; i < 50; i++) {
-            ctx.fillStyle = browns[Math.floor(Math.random() * browns.length)];
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1 + Math.random(), 1 + Math.random());
+        // Minecraft-style pixel noise pattern
+        const colors = ['#6B4423', '#9C6B3C', '#7A5230', '#8B5A2B', '#5D4023'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.4) {
+                    ctx.fillStyle = colors[Math.floor(this.seededRandom() * colors.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
         
-        // Small rocks
-        ctx.fillStyle = '#696969';
-        for (let i = 0; i < 3; i++) {
-            ctx.fillRect(Math.random() * 14 + 1, Math.random() * 14 + 1, 2, 1);
+        // Small pebbles (darker spots)
+        for (let i = 0; i < 4; i++) {
+            ctx.fillStyle = '#4A3A1A';
+            const x = Math.floor(this.seededRandom() * 14) + 1;
+            const y = Math.floor(this.seededRandom() * 14) + 1;
+            ctx.fillRect(x, y, 1, 1);
         }
         
         this.textures.set('dirt', canvas);
     }
 
-    generateGrassTexture() {
+    generateMinecraftGrass() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        // Base green
-        ctx.fillStyle = '#3D8B37';
+        // Rich green base
+        ctx.fillStyle = '#5D9B41';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Grass variation
-        const greens = ['#2E7D32', '#43A047', '#388E3C', '#4CAF50', '#2E5A2E'];
-        for (let i = 0; i < 60; i++) {
-            ctx.fillStyle = greens[Math.floor(Math.random() * greens.length)];
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1, 1);
+        // Minecraft grass variation pixels
+        const greens = ['#4A8233', '#6BA84E', '#5D9B41', '#7BB35C', '#3D7029'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.3) {
+                    ctx.fillStyle = greens[Math.floor(this.seededRandom() * greens.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
         
-        // Grass blades effect
-        ctx.fillStyle = '#4CAF50';
-        for (let i = 0; i < 8; i++) {
-            const x = Math.random() * 16;
-            ctx.fillRect(x, 0, 1, 2 + Math.random() * 2);
+        // Occasional darker patches
+        for (let i = 0; i < 3; i++) {
+            ctx.fillStyle = '#3D6029';
+            const x = Math.floor(this.seededRandom() * 14);
+            const y = Math.floor(this.seededRandom() * 14);
+            ctx.fillRect(x, y, 2, 2);
         }
         
         this.textures.set('grass_top', canvas);
     }
 
-    generateStoneTexture() {
+    generateMinecraftStone() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#808080';
+        // Gray base
+        ctx.fillStyle = '#7F7F7F';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Stone variation
-        const grays = ['#696969', '#778899', '#6B6B6B', '#8B8B8B', '#5C5C5C'];
-        for (let i = 0; i < 40; i++) {
-            ctx.fillStyle = grays[Math.floor(Math.random() * grays.length)];
-            const size = 1 + Math.random() * 2;
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, size, size);
+        // Minecraft stone pixel variation
+        const grays = ['#6B6B6B', '#8C8C8C', '#7F7F7F', '#737373', '#999999'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.35) {
+                    ctx.fillStyle = grays[Math.floor(this.seededRandom() * grays.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
         
-        // Cracks
-        ctx.strokeStyle = '#4A4A4A';
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i < 3; i++) {
-            ctx.beginPath();
-            ctx.moveTo(Math.random() * 16, Math.random() * 16);
-            ctx.lineTo(Math.random() * 16, Math.random() * 16);
-            ctx.stroke();
+        // Dark cracks/spots
+        for (let i = 0; i < 6; i++) {
+            ctx.fillStyle = '#5A5A5A';
+            const x = Math.floor(this.seededRandom() * 16);
+            const y = Math.floor(this.seededRandom() * 16);
+            ctx.fillRect(x, y, 1, 1);
         }
         
         this.textures.set('stone', canvas);
     }
 
-    generateCobblestoneTexture() {
+    generateMinecraftCobblestone() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        // Background
-        ctx.fillStyle = '#606060';
+        // Dark mortar background
+        ctx.fillStyle = '#5A5A5A';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Draw cobblestone pattern (irregular stones)
+        // Draw irregular cobblestone pattern (Minecraft style)
         const stones = [
-            {x: 0, y: 0, w: 6, h: 5}, {x: 7, y: 0, w: 5, h: 4}, {x: 13, y: 0, w: 3, h: 5},
-            {x: 0, y: 6, w: 4, h: 5}, {x: 5, y: 5, w: 6, h: 6}, {x: 12, y: 5, w: 4, h: 5},
-            {x: 0, y: 12, w: 5, h: 4}, {x: 6, y: 12, w: 5, h: 4}, {x: 12, y: 11, w: 4, h: 5}
+            {x: 0, y: 0, w: 5, h: 4, c: '#8C8C8C'},
+            {x: 6, y: 0, w: 6, h: 5, c: '#7F7F7F'},
+            {x: 13, y: 0, w: 3, h: 4, c: '#858585'},
+            {x: 0, y: 5, w: 4, h: 5, c: '#757575'},
+            {x: 5, y: 4, w: 5, h: 5, c: '#8A8A8A'},
+            {x: 11, y: 5, w: 5, h: 4, c: '#7A7A7A'},
+            {x: 0, y: 11, w: 6, h: 5, c: '#828282'},
+            {x: 7, y: 10, w: 5, h: 6, c: '#787878'},
+            {x: 13, y: 10, w: 3, h: 6, c: '#8E8E8E'}
         ];
         
         stones.forEach(stone => {
-            const shade = Math.random() * 40 + 80;
-            ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+            ctx.fillStyle = stone.c;
             ctx.fillRect(stone.x, stone.y, stone.w - 1, stone.h - 1);
+            
+            // Add pixel noise to each stone
+            for (let i = 0; i < 3; i++) {
+                const shade = this.seededRandom() > 0.5 ? '#6E6E6E' : '#949494';
+                ctx.fillStyle = shade;
+                const px = stone.x + Math.floor(this.seededRandom() * (stone.w - 1));
+                const py = stone.y + Math.floor(this.seededRandom() * (stone.h - 1));
+                ctx.fillRect(px, py, 1, 1);
+            }
         });
         
         this.textures.set('cobblestone', canvas);
     }
 
-    generateWoodTexture() {
+    generateMinecraftWood() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        // Base bark color
-        ctx.fillStyle = '#6B4423';
+        // Oak bark base
+        ctx.fillStyle = '#6B5034';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Vertical wood grain
-        const barks = ['#5D3A1A', '#7A4A2A', '#4A3015', '#8B5A2B'];
-        for (let x = 0; x < 16; x += 2) {
-            ctx.fillStyle = barks[Math.floor(Math.random() * barks.length)];
-            ctx.globalAlpha = 0.6;
-            ctx.fillRect(x, 0, 1, 16);
+        // Vertical bark lines (Minecraft style)
+        const barkColors = ['#5D4427', '#7A5C3E', '#4A3A22', '#6B5034'];
+        for (let x = 0; x < 16; x++) {
+            const color = barkColors[x % barkColors.length];
+            ctx.fillStyle = color;
+            for (let y = 0; y < 16; y++) {
+                if (this.seededRandom() > 0.3) {
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
-        ctx.globalAlpha = 1;
         
-        // Bark texture lines
-        ctx.strokeStyle = '#3D2A14';
-        ctx.lineWidth = 0.5;
+        // Dark vertical line accents
+        ctx.fillStyle = '#3D2A18';
         for (let i = 0; i < 4; i++) {
-            const x = Math.random() * 16;
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x + (Math.random() - 0.5) * 4, 16);
-            ctx.stroke();
+            const x = Math.floor(this.seededRandom() * 16);
+            for (let y = 0; y < 16; y += 2 + Math.floor(this.seededRandom() * 3)) {
+                ctx.fillRect(x, y, 1, 2);
+            }
         }
         
         this.textures.set('wood', canvas);
     }
 
-    generateLeavesTexture() {
+    generateMinecraftLeaves() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        // Transparent background for leaf gaps
-        ctx.fillStyle = '#228B22';
+        // Leaf green base
+        ctx.fillStyle = '#3A8B25';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Leaf cluster effect
-        const greens = ['#1B5E20', '#2E7D32', '#388E3C', '#43A047', '#166616'];
-        for (let i = 0; i < 80; i++) {
-            ctx.fillStyle = greens[Math.floor(Math.random() * greens.length)];
-            const x = Math.random() * 16;
-            const y = Math.random() * 16;
-            ctx.beginPath();
-            ctx.arc(x, y, 1 + Math.random() * 1.5, 0, Math.PI * 2);
-            ctx.fill();
+        // Minecraft leaf cluster pattern
+        const leafColors = ['#2D6E1C', '#48A833', '#3A8B25', '#54B83F', '#267015'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                ctx.fillStyle = leafColors[Math.floor(this.seededRandom() * leafColors.length)];
+                ctx.fillRect(x, y, 1, 1);
+            }
         }
         
-        // Darker gaps
-        ctx.fillStyle = '#0D3D0D';
-        for (let i = 0; i < 10; i++) {
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1, 1);
+        // Add some transparency gaps (darker spots to simulate holes)
+        for (let i = 0; i < 8; i++) {
+            ctx.fillStyle = '#1A4010';
+            const x = Math.floor(this.seededRandom() * 16);
+            const y = Math.floor(this.seededRandom() * 16);
+            ctx.fillRect(x, y, 1, 1);
         }
         
         this.textures.set('leaves', canvas);
     }
 
-    generateSandTexture() {
+    generateMinecraftSand() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#E8D174';
+        // Sandy yellow base
+        ctx.fillStyle = '#E3D59B';
         ctx.fillRect(0, 0, 16, 16);
         
         // Sand grain variation
-        const sands = ['#DAA520', '#F0DC82', '#C4A35A', '#E8C872', '#D4B254'];
-        for (let i = 0; i < 100; i++) {
-            ctx.fillStyle = sands[Math.floor(Math.random() * sands.length)];
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1, 1);
+        const sandColors = ['#D4C68D', '#E8DAA5', '#CFBE82', '#E3D59B', '#DBC990'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.25) {
+                    ctx.fillStyle = sandColors[Math.floor(this.seededRandom() * sandColors.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
         
         this.textures.set('sand', canvas);
     }
 
-    generateWaterTexture() {
+    generateMinecraftWater() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#1E90FF';
+        // Deep blue base
+        ctx.fillStyle = '#2B5DAA';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Water ripples
-        ctx.fillStyle = '#4169E1';
-        ctx.globalAlpha = 0.5;
-        for (let i = 0; i < 5; i++) {
-            const y = Math.random() * 16;
-            ctx.fillRect(0, y, 16, 1);
+        // Water ripple pattern
+        const waterColors = ['#2454A0', '#3366B8', '#1E4D96', '#2B5DAA'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                ctx.fillStyle = waterColors[Math.floor(this.seededRandom() * waterColors.length)];
+                ctx.fillRect(x, y, 1, 1);
+            }
         }
         
-        // Highlights
-        ctx.fillStyle = '#87CEEB';
-        ctx.globalAlpha = 0.4;
-        for (let i = 0; i < 8; i++) {
-            ctx.fillRect(Math.random() * 14, Math.random() * 14, 2, 1);
+        // Light reflections
+        ctx.fillStyle = '#4A7DC4';
+        for (let i = 0; i < 5; i++) {
+            const x = Math.floor(this.seededRandom() * 14);
+            const y = Math.floor(this.seededRandom() * 14);
+            ctx.fillRect(x, y, 2, 1);
         }
-        ctx.globalAlpha = 1;
         
         this.textures.set('water', canvas);
     }
 
-    generateBedrockTexture() {
+    generateMinecraftBedrock() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#1C1C1C';
+        // Very dark base
+        ctx.fillStyle = '#333333';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Chaotic pattern
-        const darks = ['#0A0A0A', '#2A2A2A', '#1A1A1A', '#333333'];
-        for (let i = 0; i < 60; i++) {
-            ctx.fillStyle = darks[Math.floor(Math.random() * darks.length)];
-            const size = 1 + Math.random() * 3;
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, size, size);
+        // Bedrock noise pattern
+        const bedrockColors = ['#1A1A1A', '#404040', '#2D2D2D', '#4A4A4A', '#262626'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                ctx.fillStyle = bedrockColors[Math.floor(this.seededRandom() * bedrockColors.length)];
+                ctx.fillRect(x, y, 1, 1);
+            }
         }
         
         this.textures.set('bedrock', canvas);
     }
 
-    generateSnowTexture() {
+    generateMinecraftSnow() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#FAFAFA';
+        // White base
+        ctx.fillStyle = '#F0F0F0';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Snow sparkle
-        const whites = ['#FFFFFF', '#F5F5F5', '#E8E8E8', '#EBEBEB'];
-        for (let i = 0; i < 30; i++) {
-            ctx.fillStyle = whites[Math.floor(Math.random() * whites.length)];
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1, 1);
-        }
-        
-        // Ice crystals
-        ctx.fillStyle = '#D0E8FF';
-        for (let i = 0; i < 5; i++) {
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1, 1);
+        // Snow texture variation
+        const snowColors = ['#FFFFFF', '#E8E8E8', '#F5F5F5', '#EBEBEB'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.4) {
+                    ctx.fillStyle = snowColors[Math.floor(this.seededRandom() * snowColors.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
         
         this.textures.set('snow', canvas);
     }
 
-    generateIceTexture() {
+    generateMinecraftIce() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#A5D6F7';
+        // Light blue ice base
+        ctx.fillStyle = '#9BC4E2';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Ice cracks
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.globalAlpha = 0.6;
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i < 5; i++) {
-            ctx.beginPath();
-            const startX = Math.random() * 16;
-            const startY = Math.random() * 16;
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(startX + (Math.random() - 0.5) * 8, startY + (Math.random() - 0.5) * 8);
-            ctx.stroke();
+        // Ice crystal pattern
+        const iceColors = ['#8EBAD8', '#A8CEE8', '#B5D6ED', '#7AAFD0'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                ctx.fillStyle = iceColors[Math.floor(this.seededRandom() * iceColors.length)];
+                ctx.fillRect(x, y, 1, 1);
+            }
         }
-        ctx.globalAlpha = 1;
+        
+        // White streaks
+        ctx.fillStyle = '#D0E8F5';
+        for (let i = 0; i < 4; i++) {
+            const x = Math.floor(this.seededRandom() * 12);
+            const y = Math.floor(this.seededRandom() * 16);
+            ctx.fillRect(x, y, 4, 1);
+        }
         
         this.textures.set('ice', canvas);
     }
 
-    generateGravelTexture() {
+    generateMinecraftGravel() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#6B6B6B';
+        // Gray-brown base
+        ctx.fillStyle = '#8B8378';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Gravel stones
-        const gravels = ['#5A5A5A', '#7A7A7A', '#4A4A4A', '#8A8A8A', '#606060'];
-        for (let i = 0; i < 25; i++) {
-            ctx.fillStyle = gravels[Math.floor(Math.random() * gravels.length)];
-            const x = Math.random() * 14;
-            const y = Math.random() * 14;
-            ctx.beginPath();
-            ctx.ellipse(x, y, 1 + Math.random() * 2, 1 + Math.random(), 0, 0, Math.PI * 2);
-            ctx.fill();
+        // Gravel pebble noise
+        const gravelColors = ['#706B62', '#9B958A', '#858078', '#7A756C', '#A09890'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                ctx.fillStyle = gravelColors[Math.floor(this.seededRandom() * gravelColors.length)];
+                ctx.fillRect(x, y, 1, 1);
+            }
+        }
+        
+        // Darker pebble spots
+        for (let i = 0; i < 6; i++) {
+            ctx.fillStyle = '#5A564F';
+            const x = Math.floor(this.seededRandom() * 16);
+            const y = Math.floor(this.seededRandom() * 16);
+            ctx.fillRect(x, y, 1, 1);
         }
         
         this.textures.set('gravel', canvas);
     }
 
-    generateClayTexture() {
+    generateMinecraftClay() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#9FA4A8';
+        // Gray-blue clay base
+        ctx.fillStyle = '#9BA3AE';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Clay lumps
-        const clays = ['#8B9093', '#ADB1B5', '#B5BABD', '#7D8285'];
-        for (let i = 0; i < 40; i++) {
-            ctx.fillStyle = clays[Math.floor(Math.random() * clays.length)];
-            const size = 1 + Math.random() * 2;
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, size, size);
+        // Clay texture
+        const clayColors = ['#8F97A2', '#A5ADB8', '#9BA3AE', '#949CA7'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.3) {
+                    ctx.fillStyle = clayColors[Math.floor(this.seededRandom() * clayColors.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
         
         this.textures.set('clay', canvas);
     }
 
-    // === ORE TEXTURES ===
-
-    generateOreTexture(name, baseColor, oreColor, count = 6) {
+    // === MINECRAFT-STYLE ORE BLOCKS ===
+    
+    generateMinecraftOre(name, baseColor, oreColor, count) {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
-
-        // Base stone
+        
+        // Start with stone texture base
         ctx.fillStyle = baseColor;
         ctx.fillRect(0, 0, 16, 16);
-
-        // Stone noise
-        const grays = ['#696969', '#787878', '#6B6B6B'];
-        for (let i = 0; i < 30; i++) {
-            ctx.fillStyle = grays[Math.floor(Math.random() * grays.length)];
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1, 1);
+        
+        // Stone pixel variation
+        const grays = ['#6B6B6B', '#8C8C8C', '#7F7F7F', '#737373'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.4) {
+                    ctx.fillStyle = grays[Math.floor(this.seededRandom() * grays.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
-
-        // Ore deposits - clustered
-        ctx.fillStyle = oreColor;
+        
+        // Add ore clusters (Minecraft style - small grouped pixels)
         for (let i = 0; i < count; i++) {
-            const cx = Math.floor(Math.random() * 12) + 2;
-            const cy = Math.floor(Math.random() * 12) + 2;
-            // Main ore
-            ctx.fillRect(cx, cy, 2, 2);
-            // Connected pieces
-            if (Math.random() > 0.3) ctx.fillRect(cx + 2, cy, 1, 1);
-            if (Math.random() > 0.3) ctx.fillRect(cx - 1, cy + 1, 1, 1);
-            if (Math.random() > 0.3) ctx.fillRect(cx + 1, cy + 2, 1, 1);
+            const cx = 2 + Math.floor(this.seededRandom() * 12);
+            const cy = 2 + Math.floor(this.seededRandom() * 12);
+            
+            // Draw a small ore cluster (2-4 pixels)
+            ctx.fillStyle = oreColor;
+            ctx.fillRect(cx, cy, 1, 1);
+            if (this.seededRandom() > 0.3) ctx.fillRect(cx + 1, cy, 1, 1);
+            if (this.seededRandom() > 0.3) ctx.fillRect(cx, cy + 1, 1, 1);
+            if (this.seededRandom() > 0.5) ctx.fillRect(cx + 1, cy + 1, 1, 1);
         }
-
-        // Highlight
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        for (let i = 0; i < count / 2; i++) {
-            ctx.fillRect(Math.random() * 14 + 1, Math.random() * 14 + 1, 1, 1);
-        }
-
+        
         this.textures.set(name, canvas);
     }
 
-    // === BUILDING BLOCKS ===
+    // === MINECRAFT-STYLE BUILDING BLOCKS ===
 
-    generatePlanksTexture() {
+    generateMinecraftPlanks() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#B8945F';
+        // Oak plank base
+        ctx.fillStyle = '#BC9456';
         ctx.fillRect(0, 0, 16, 16);
         
         // Horizontal plank lines
-        ctx.strokeStyle = '#8B6914';
-        ctx.lineWidth = 1;
-        [0, 4, 8, 12].forEach(y => {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(16, y);
-            ctx.stroke();
-        });
+        const plankColors = ['#A88347', '#C9A162', '#B58E4F', '#BC9456'];
         
-        // Wood grain
-        ctx.strokeStyle = '#9B7524';
-        ctx.globalAlpha = 0.5;
-        for (let i = 0; i < 8; i++) {
-            const y = Math.random() * 16;
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(16, y + (Math.random() - 0.5) * 2);
-            ctx.stroke();
+        // Draw 4 horizontal planks
+        for (let plank = 0; plank < 4; plank++) {
+            const y = plank * 4;
+            ctx.fillStyle = plankColors[plank];
+            ctx.fillRect(0, y, 16, 4);
+            
+            // Add wood grain pixels
+            for (let px = 0; px < 16; px++) {
+                for (let py = y; py < y + 4; py++) {
+                    if (this.seededRandom() > 0.6) {
+                        ctx.fillStyle = this.seededRandom() > 0.5 ? '#A07840' : '#C8A060';
+                        ctx.fillRect(px, py, 1, 1);
+                    }
+                }
+            }
+            
+            // Dark line at bottom of each plank
+            ctx.fillStyle = '#8A6E3B';
+            ctx.fillRect(0, y + 3, 16, 1);
         }
-        ctx.globalAlpha = 1;
-        
-        // Nail holes
-        ctx.fillStyle = '#3D2A14';
-        ctx.fillRect(2, 2, 1, 1);
-        ctx.fillRect(13, 6, 1, 1);
-        ctx.fillRect(2, 10, 1, 1);
-        ctx.fillRect(13, 14, 1, 1);
         
         this.textures.set('planks', canvas);
     }
 
-    generateBrickTexture() {
+    generateMinecraftBrick() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
         // Mortar background
-        ctx.fillStyle = '#A0A0A0';
+        ctx.fillStyle = '#8B8378';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Brick pattern
-        const brickColors = ['#8B4513', '#A0522D', '#6B3A1A', '#9B4A23'];
+        // Draw brick pattern
+        const brickColor = '#9B4B4B';
+        const brickAlt = '#8A4242';
         
-        // Row 1 (offset)
-        for (let x = -4; x < 16; x += 8) {
-            ctx.fillStyle = brickColors[Math.floor(Math.random() * brickColors.length)];
-            ctx.fillRect(x + 1, 1, 6, 3);
+        // Row 1: full bricks
+        for (let i = 0; i < 2; i++) {
+            ctx.fillStyle = this.seededRandom() > 0.5 ? brickColor : brickAlt;
+            ctx.fillRect(i * 8, 0, 7, 3);
         }
-        // Row 2
-        for (let x = 0; x < 16; x += 8) {
-            ctx.fillStyle = brickColors[Math.floor(Math.random() * brickColors.length)];
-            ctx.fillRect(x + 1, 5, 6, 3);
+        
+        // Row 2: offset bricks
+        ctx.fillStyle = brickAlt;
+        ctx.fillRect(0, 4, 3, 3);
+        ctx.fillStyle = brickColor;
+        ctx.fillRect(4, 4, 7, 3);
+        ctx.fillStyle = brickAlt;
+        ctx.fillRect(12, 4, 4, 3);
+        
+        // Row 3: full bricks
+        for (let i = 0; i < 2; i++) {
+            ctx.fillStyle = this.seededRandom() > 0.5 ? brickColor : brickAlt;
+            ctx.fillRect(i * 8, 8, 7, 3);
         }
-        // Row 3 (offset)
-        for (let x = -4; x < 16; x += 8) {
-            ctx.fillStyle = brickColors[Math.floor(Math.random() * brickColors.length)];
-            ctx.fillRect(x + 1, 9, 6, 3);
-        }
-        // Row 4
-        for (let x = 0; x < 16; x += 8) {
-            ctx.fillStyle = brickColors[Math.floor(Math.random() * brickColors.length)];
-            ctx.fillRect(x + 1, 13, 6, 3);
-        }
+        
+        // Row 4: offset bricks
+        ctx.fillStyle = brickColor;
+        ctx.fillRect(0, 12, 3, 3);
+        ctx.fillStyle = brickAlt;
+        ctx.fillRect(4, 12, 7, 3);
+        ctx.fillStyle = brickColor;
+        ctx.fillRect(12, 12, 4, 3);
         
         this.textures.set('brick', canvas);
     }
 
-    generateGlassTexture() {
+    generateMinecraftGlass() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = 'rgba(200, 230, 255, 0.4)';
+        // Light blue transparent base
+        ctx.fillStyle = '#C8DFEF';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Frame
-        ctx.strokeStyle = '#6B8E8E';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(0.5, 0.5, 15, 15);
+        // Glass border
+        ctx.fillStyle = '#9CBCD6';
+        ctx.fillRect(0, 0, 16, 1);
+        ctx.fillRect(0, 15, 16, 1);
+        ctx.fillRect(0, 0, 1, 16);
+        ctx.fillRect(15, 0, 1, 16);
         
-        // Reflection highlight
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.beginPath();
-        ctx.moveTo(2, 2);
-        ctx.lineTo(6, 2);
-        ctx.lineTo(2, 6);
-        ctx.closePath();
-        ctx.fill();
+        // Light streaks
+        ctx.fillStyle = '#E0F0FF';
+        ctx.fillRect(2, 2, 3, 1);
+        ctx.fillRect(2, 3, 1, 2);
         
         this.textures.set('glass', canvas);
     }
 
-    generateSandstoneTexture() {
+    generateMinecraftSandstone() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#D4B896';
+        // Sandstone base
+        ctx.fillStyle = '#E3D6A8';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Sandstone layers
-        const sands = ['#C4A876', '#E4C8A6', '#B49866', '#D4B486'];
-        for (let y = 0; y < 16; y += 4) {
-            ctx.fillStyle = sands[Math.floor(Math.random() * sands.length)];
-            ctx.fillRect(0, y, 16, 2);
+        // Sandstone bands
+        const sandstoneColors = ['#D6C99B', '#E8DDB5', '#CFBF8E'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.4) {
+                    ctx.fillStyle = sandstoneColors[Math.floor(this.seededRandom() * sandstoneColors.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
         
-        // Grain texture
-        for (let i = 0; i < 30; i++) {
-            ctx.fillStyle = sands[Math.floor(Math.random() * sands.length)];
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1, 1);
-        }
+        // Horizontal bands
+        ctx.fillStyle = '#C8BA85';
+        ctx.fillRect(0, 4, 16, 1);
+        ctx.fillRect(0, 11, 16, 1);
         
         this.textures.set('sandstone', canvas);
     }
 
-    generateMossStoneTexture() {
+    generateMinecraftMossStone() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
         // Start with cobblestone base
-        ctx.fillStyle = '#606060';
+        ctx.fillStyle = '#5A5A5A';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Stone pattern
-        const grays = ['#505050', '#707070', '#5A5A5A'];
-        for (let i = 0; i < 30; i++) {
-            ctx.fillStyle = grays[Math.floor(Math.random() * grays.length)];
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 2, 2);
-        }
+        // Cobblestone pattern
+        const stones = [
+            {x: 0, y: 0, w: 5, h: 4}, {x: 6, y: 0, w: 6, h: 5},
+            {x: 0, y: 5, w: 4, h: 5}, {x: 5, y: 4, w: 5, h: 5},
+            {x: 0, y: 11, w: 6, h: 5}, {x: 7, y: 10, w: 5, h: 6}
+        ];
         
-        // Moss patches
-        const greens = ['#2E5A2E', '#3A6B3A', '#4A7A4A', '#264A26'];
-        for (let i = 0; i < 20; i++) {
-            ctx.fillStyle = greens[Math.floor(Math.random() * greens.length)];
-            const size = 1 + Math.random() * 3;
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, size, size);
+        stones.forEach(stone => {
+            ctx.fillStyle = '#7A7A7A';
+            ctx.fillRect(stone.x, stone.y, stone.w - 1, stone.h - 1);
+        });
+        
+        // Add moss patches
+        const mossColors = ['#4A7335', '#3D6028', '#5A8540'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (this.seededRandom() > 0.65) {
+                    ctx.fillStyle = mossColors[Math.floor(this.seededRandom() * mossColors.length)];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
         }
         
         this.textures.set('moss_stone', canvas);
     }
 
-    generateObsidianTexture() {
+    generateMinecraftObsidian() {
         const canvas = this.createCanvas();
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#0F0F1A';
+        // Very dark purple-black base
+        ctx.fillStyle = '#1B0F2E';
         ctx.fillRect(0, 0, 16, 16);
         
-        // Purple shimmer
-        ctx.fillStyle = '#1A0A2E';
-        for (let i = 0; i < 20; i++) {
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 2, 2);
+        // Obsidian shine pattern
+        const obsidianColors = ['#0F0820', '#2A1840', '#1B0F2E', '#3D2060'];
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                ctx.fillStyle = obsidianColors[Math.floor(this.seededRandom() * obsidianColors.length)];
+                ctx.fillRect(x, y, 1, 1);
+            }
         }
         
-        // Reflective highlights
-        ctx.fillStyle = '#4A2A6A';
-        for (let i = 0; i < 8; i++) {
-            ctx.fillRect(Math.random() * 16, Math.random() * 16, 1, 1);
+        // Purple highlights
+        ctx.fillStyle = '#5030A0';
+        for (let i = 0; i < 4; i++) {
+            const x = Math.floor(this.seededRandom() * 16);
+            const y = Math.floor(this.seededRandom() * 16);
+            ctx.fillRect(x, y, 1, 1);
         }
         
         this.textures.set('obsidian', canvas);
@@ -1058,6 +1155,37 @@ export class SpriteManager {
     getPlayerSprite(state = 'idle', frame = 0) {
         return this.playerSprites.get('main') || this.playerSprites.get('idle');
     }
+    
+    async loadEnemySprites() {
+        // Enemy sprites to load - key is the sprite name in ENEMIES config
+        const enemySprites = [
+            'wolf', 'bear', 'boar', 'snake', 'mammoth', 'sabertooth',
+            'terror_bird', 'giant_sloth', 'hyena', 'crocodile', 'spider',
+            'cave_lion', 'rhino', 'catenemy'
+        ];
+        
+        const loadPromises = enemySprites.map(name => {
+            return new Promise((resolve) => {
+                const sprite = new Image();
+                sprite.src = `assets/sprites/enemies/${name}.png`;
+                sprite.onload = () => {
+                    this.enemySprites.set(name, sprite);
+                    resolve();
+                };
+                sprite.onerror = () => {
+                    console.warn(`Failed to load enemy sprite: ${name}`);
+                    resolve();
+                };
+            });
+        });
+        
+        await Promise.all(loadPromises);
+        console.log(`Loaded ${this.enemySprites.size} enemy sprites`);
+    }
+    
+    getEnemySprite(spriteName) {
+        return this.enemySprites.get(spriteName) || null;
+    }
 
     getTexture(name) {
         return this.textures.get(name);
@@ -1108,53 +1236,56 @@ export class SpriteManager {
             [BLOCKS.FARMLAND]: 'farmland',
             [BLOCKS.CACTUS]: 'cactus',
             [BLOCKS.WHEAT_CROP]: 'wheat',
-        };
-        
-        // Map texture names to atlas block types
-        const atlasMap = {
-            'grass_top': 'grass',
-            'dirt': 'dirt',
-            'stone': 'stone',
-            'cobblestone': 'cobblestone',
-            'sand': 'sand',
-            'wood': 'wood',
-            'leaves': 'leaves',
-            'coal_ore': 'coal_ore',
-            'water': 'water',
-            'ice': 'ice',
-            'gravel': 'gravel',
+            // Medieval Age blocks
+            [BLOCKS.WOOD_BEAM]: 'wood_beam',
+            [BLOCKS.COBBLESTONE_WALL]: 'cobblestone_wall',
+            [BLOCKS.IRON_BARS]: 'iron_bars',
+            [BLOCKS.GATE]: 'gate',
+            [BLOCKS.PORTCULLIS]: 'portcullis',
+            [BLOCKS.IRRIGATION]: 'irrigation',
+            [BLOCKS.BARLEY_CROP]: 'barley',
+            [BLOCKS.FLAX_CROP]: 'flax',
+            [BLOCKS.LOOM]: 'loom',
+            [BLOCKS.STABLE]: 'stable',
+            [BLOCKS.MARKET_STALL]: 'market_stall',
+            [BLOCKS.WELL]: 'well',
+            // Industrial Age blocks
+            [BLOCKS.STEEL_BLOCK]: 'steel_block',
+            [BLOCKS.STEAM_ENGINE]: 'steam_engine',
+            [BLOCKS.BOILER]: 'boiler',
+            [BLOCKS.CONVEYOR_BELT]: 'conveyor',
+            [BLOCKS.ASSEMBLER]: 'assembler',
+            [BLOCKS.CRUSHER]: 'crusher',
+            [BLOCKS.METAL_PIPE]: 'metal_pipe',
+            [BLOCKS.GEAR_BLOCK]: 'gear_block',
+            [BLOCKS.CHIMNEY]: 'chimney',
+            [BLOCKS.RAIL]: 'rail',
+            [BLOCKS.OIL_DEPOSIT]: 'oil',
+            [BLOCKS.ASPHALT]: 'asphalt',
+            // Modern Age blocks
+            [BLOCKS.CONCRETE]: 'concrete',
+            [BLOCKS.GLASS_PANEL]: 'glass_panel',
+            [BLOCKS.STEEL_FRAME]: 'steel_frame',
+            [BLOCKS.SOLAR_PANEL]: 'solar_panel',
+            [BLOCKS.WIND_TURBINE]: 'wind_turbine',
+            [BLOCKS.BATTERY]: 'battery',
+            [BLOCKS.COMPUTER]: 'computer',
+            [BLOCKS.WIRE]: 'wire',
+            [BLOCKS.CIRCUIT_BOARD]: 'circuit_board',
         };
 
-        // Generate for all blocks
+        // Generate isometric sprites for all blocks
         for (const [id, data] of Object.entries(BLOCK_DATA)) {
             if (parseInt(id) === BLOCKS.AIR) continue;
 
             const textureName = textureMap[parseInt(id)];
-            
-            // Try to use atlas texture first
-            let texture = null;
-            let useAtlasSprite = false;
-            const atlasType = atlasMap[textureName];
-            
-            if (atlasType && this.blockAtlasLoaded) {
-                // For main terrain blocks, use the pre-rendered atlas sprites
-                const atlasSprite = this.getAtlasBlockSprite(atlasType);
-                if (atlasSprite) {
-                    this.blockSprites.set(parseInt(id), atlasSprite);
-                    useAtlasSprite = true;
-                }
-            }
-            
-            // Fall back to generated texture if no atlas sprite
-            if (!useAtlasSprite) {
-                texture = textureName ? this.textures.get(textureName) : null;
-                const color = data.color;
-                const isLiquid = parseInt(id) === BLOCKS.WATER;
-                const isTransparent = data.transparent && parseInt(id) !== BLOCKS.WATER;
+            const texture = textureName ? this.textures.get(textureName) : null;
+            const color = data.color;
+            const isLiquid = parseInt(id) === BLOCKS.WATER;
+            const isTransparent = data.transparent && parseInt(id) !== BLOCKS.WATER;
 
-                const sprite = this.renderIsoBlock(texture, color, isLiquid, isTransparent);
-                this.blockSprites.set(parseInt(id), sprite);
-            }
+            const sprite = this.renderIsoBlock(texture, color, isLiquid, isTransparent);
+            this.blockSprites.set(parseInt(id), sprite);
         }
     }
 

@@ -14,6 +14,109 @@ body {
     -webkit-user-select: none;
 }
 
+/* ====== LANDING PAGE / STORY INTRO ====== */
+#landing-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #1a0f0a;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#landing-page.hidden {
+    display: none;
+}
+
+#story-canvas {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+#story-text {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Courier New', monospace;
+    font-size: 24px;
+    color: #d4a574;
+    text-align: center;
+    max-width: 80%;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+#story-text.visible {
+    opacity: 1;
+}
+
+.skip-btn {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(139, 69, 19, 0.7);
+    border: 2px solid #d4a574;
+    color: #f5deb3;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10000;
+}
+
+.skip-btn:hover {
+    background: rgba(139, 69, 19, 0.9);
+    transform: scale(1.05);
+}
+
+/* Name Input Styling */
+.name-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+    gap: 10px;
+}
+
+.name-input-container label {
+    font-size: 18px;
+    color: #d4a574;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.name-input {
+    width: 280px;
+    padding: 12px 20px;
+    font-size: 20px;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    background: rgba(45, 24, 16, 0.8);
+    border: 3px solid #8B4513;
+    border-radius: 8px;
+    color: #f5deb3;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.name-input::placeholder {
+    color: rgba(245, 222, 179, 0.5);
+}
+
+.name-input:focus {
+    border-color: #d4a017;
+    box-shadow: 0 0 15px rgba(212, 160, 23, 0.4);
+}
+
 #game-container {
     position: fixed;
     top: 0;
@@ -229,6 +332,231 @@ body {
     padding: 20px;
     color: #4ade80;
     font-style: italic;
+}
+
+/* Side Quest Panel */
+#side-quest-panel {
+    position: absolute;
+    top: 80px;
+    left: 10px;
+    width: 260px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(30, 30, 45, 0.92);
+    border: 3px solid #6366f1;
+    border-radius: 10px;
+    padding: 12px;
+    color: #e2e8f0;
+    pointer-events: auto;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+#side-quest-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+#side-quest-panel::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+}
+
+#side-quest-panel::-webkit-scrollbar-thumb {
+    background: #6366f1;
+    border-radius: 3px;
+}
+
+#side-quest-panel .panel-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #a5b4fc;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.4);
+    padding-bottom: 6px;
+}
+
+#side-quest-panel .side-quest {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-left: 4px solid #a0a0a0;
+    transition: all 0.2s ease;
+}
+
+#side-quest-panel .side-quest:last-child {
+    margin-bottom: 0;
+}
+
+#side-quest-panel .side-quest:hover {
+    background: rgba(0,0,0,0.4);
+}
+
+/* Rarity borders */
+#side-quest-panel .side-quest.rarity-common {
+    border-left-color: #a0a0a0;
+}
+
+#side-quest-panel .side-quest.rarity-uncommon {
+    border-left-color: #4ade80;
+}
+
+#side-quest-panel .side-quest.rarity-rare {
+    border-left-color: #60a5fa;
+}
+
+#side-quest-panel .side-quest.rarity-epic {
+    border-left-color: #c084fc;
+    box-shadow: 0 0 8px rgba(192, 132, 252, 0.3);
+}
+
+#side-quest-panel .quest-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+#side-quest-panel .quest-icon {
+    font-size: 18px;
+}
+
+#side-quest-panel .quest-name {
+    font-size: 13px;
+    font-weight: bold;
+    flex: 1;
+}
+
+/* Rarity name colors */
+#side-quest-panel .side-quest.rarity-common .quest-name {
+    color: #d1d5db;
+}
+
+#side-quest-panel .side-quest.rarity-uncommon .quest-name {
+    color: #4ade80;
+}
+
+#side-quest-panel .side-quest.rarity-rare .quest-name {
+    color: #60a5fa;
+}
+
+#side-quest-panel .side-quest.rarity-epic .quest-name {
+    color: #c084fc;
+}
+
+#side-quest-panel .quest-timer {
+    font-size: 11px;
+    color: #fbbf24;
+    font-weight: bold;
+    padding: 2px 6px;
+    background: rgba(251, 191, 36, 0.2);
+    border-radius: 4px;
+}
+
+#side-quest-panel .quest-timer.urgent {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.2);
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+#side-quest-panel .quest-objective {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(226, 232, 240, 0.8);
+    margin-bottom: 4px;
+}
+
+#side-quest-panel .quest-objective .check {
+    font-size: 12px;
+}
+
+#side-quest-panel .quest-objective.complete {
+    color: #4ade80;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+#side-quest-panel .quest-distance {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+#side-quest-panel .quest-distance .arrow {
+    font-size: 14px;
+}
+
+#side-quest-panel .no-quests {
+    text-align: center;
+    padding: 20px 10px;
+    color: #64748b;
+    font-style: italic;
+    font-size: 12px;
+}
+
+/* Side quest notification */
+.side-quest-notification {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(30, 30, 45, 0.95), rgba(50, 50, 70, 0.95));
+    border: 2px solid #6366f1;
+    border-radius: 12px;
+    padding: 16px 24px;
+    color: #e2e8f0;
+    z-index: 1000;
+    animation: questPopIn 0.4s ease-out, questPopOut 0.4s ease-in 3.6s forwards;
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+}
+
+.side-quest-notification h3 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    color: #a5b4fc;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.side-quest-notification p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+@keyframes questPopIn {
+    from {
+        transform: translateX(-50%) scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes questPopOut {
+    from {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-50%) scale(0.8);
+        opacity: 0;
+    }
 }
 
 /* Notification animations */
@@ -493,14 +821,14 @@ body {
     transform: scale(0.95);
 }
 
-/* Modal Styles */
+/* Modal Styles - Stone Age Theme */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(20, 10, 5, 0.9);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -512,97 +840,255 @@ body {
 }
 
 .modal-content {
-    background: linear-gradient(180deg, #2d2d44, #1a1a2e);
-    border: 3px solid #555;
-    border-radius: 12px;
-    padding: 20px;
-    max-width: 90vw;
+    background: linear-gradient(180deg, #3d2817 0%, #2a1a0f 50%, #1a0f08 100%);
+    border: 4px solid #8B4513;
+    border-radius: 16px;
+    padding: 24px 32px;
+    min-width: 700px;
+    max-width: 95vw;
     max-height: 90vh;
     overflow-y: auto;
-    color: white;
+    color: #f5deb3;
     position: relative;
+    box-shadow: 
+        0 0 0 2px #5c3317,
+        0 0 30px rgba(139, 69, 19, 0.5),
+        inset 0 0 50px rgba(0, 0, 0, 0.5);
+    font-family: 'Georgia', serif;
 }
 
 .modal-content h2 {
     text-align: center;
-    margin-bottom: 20px;
-    color: #ffd700;
+    margin-bottom: 24px;
+    color: #daa520;
+    font-size: 28px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border-bottom: 2px solid #8B4513;
+    padding-bottom: 12px;
 }
 
 .close-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 30px;
-    height: 30px;
-    border: none;
-    background: #c92a2a;
-    color: white;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border: 2px solid #5c3317;
+    background: linear-gradient(180deg, #8B0000, #5c0000);
+    color: #f5deb3;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s;
 }
 
-/* Inventory Grid */
+.close-btn:hover {
+    background: linear-gradient(180deg, #a00000, #700000);
+    transform: scale(1.1);
+}
+
+/* Inventory Grid - Stone Age */
 #inventory-grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 4px;
-    margin-bottom: 20px;
+    gap: 6px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 2px solid #5c3317;
 }
 
 .inventory-slot {
-    width: 50px;
-    height: 50px;
-    background: rgba(100, 100, 100, 0.5);
-    border: 2px solid #666;
-    border-radius: 4px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(145deg, #4a3020, #2d1a10);
+    border: 3px solid #6b4423;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 28px;
     position: relative;
     cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .inventory-slot:hover {
-    border-color: #888;
+    border-color: #daa520;
+    background: linear-gradient(145deg, #5a4030, #3d2a20);
+    transform: translateY(-2px);
 }
 
-.inventory-slot.selected {
+.inventory-slot.selected,
+.inventory-slot.hotbar-slot-ui {
     border-color: #ffd700;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.inventory-slot .item-icon {
+    font-size: 32px;
+    filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
 }
 
 .inventory-slot .item-count {
     position: absolute;
     bottom: 2px;
     right: 4px;
-    font-size: 10px;
-    color: white;
-    text-shadow: 1px 1px 2px black;
+    font-size: 12px;
+    color: #fff;
+    text-shadow: 1px 1px 2px black, -1px -1px 2px black;
     font-weight: bold;
+    font-family: 'Arial', sans-serif;
 }
 
-/* Crafting Section */
+.inventory-slot .item-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30, 15, 8, 0.95);
+    border: 2px solid #8B4513;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #f5deb3;
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.inventory-slot:hover .item-tooltip {
+    display: block;
+}
+
+/* Crafting Section - Stone Age */
 #crafting-section {
-    border-top: 2px solid #444;
-    padding-top: 15px;
-    margin-top: 15px;
+    border-top: 3px solid #8B4513;
+    padding-top: 20px;
+    margin-top: 20px;
 }
 
 #crafting-section h3 {
-    margin-bottom: 15px;
-    color: #ffd700;
-    font-size: 18px;
+    margin-bottom: 16px;
+    color: #daa520;
+    font-size: 22px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 #crafting-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 15px;
-    max-height: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    max-height: 320px;
     overflow-y: auto;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+    border: 2px solid #5c3317;
+}
+
+/* Crafting category tabs */
+.crafting-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #5c3317;
+    margin-bottom: 10px;
+}
+
+.crafting-tab {
+    padding: 6px 12px;
+    background: linear-gradient(145deg, #3a2010, #2a1508);
+    border: 2px solid #5c3317;
+    border-radius: 6px;
+    color: #d4a574;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.crafting-tab:hover {
+    background: linear-gradient(145deg, #4a3020, #3a2515);
+    border-color: #8B4513;
+}
+
+.crafting-tab.active {
+    background: linear-gradient(145deg, #8B4513, #5c3317);
+    border-color: #daa520;
+    color: #fff;
+}
+
+/* Recipe grid inside crafting */
+.recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Age info display */
+.age-info {
+    padding-top: 10px;
+    border-top: 2px solid #5c3317;
+    text-align: center;
+}
+
+.current-age {
+    color: #daa520;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Age badge on crafting slots */
+.age-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 3px;
+    padding: 1px 3px;
+}
+
+/* Custom scrollbar for crafting grid */
+#crafting-grid::-webkit-scrollbar,
+.recipe-grid::-webkit-scrollbar {
+    width: 10px;
+}
+
+#crafting-grid::-webkit-scrollbar-track,
+.recipe-grid::-webkit-scrollbar-track {
+    background: #2d1a10;
+    border-radius: 5px;
+}
+
+#crafting-grid::-webkit-scrollbar-thumb,
+.recipe-grid::-webkit-scrollbar-thumb {
+    background: #8B4513;
+    border-radius: 5px;
+}
+
+#crafting-grid::-webkit-scrollbar-thumb:hover,
+.recipe-grid::-webkit-scrollbar-thumb:hover {
+    background: #a0522d;
 }
 
 .crafting-slot {
@@ -611,96 +1097,129 @@ body {
     align-items: center;
     justify-content: center;
     padding: 8px 4px;
-    background: rgba(60, 60, 80, 0.6);
-    border: 2px solid #555;
-    border-radius: 6px;
+    background: linear-gradient(145deg, #4a3020, #2d1a10);
+    border: 2px solid #5c3317;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
-    min-width: 70px;
+    width: 80px;
+    min-height: 75px;
+    position: relative;
+    overflow: hidden;
 }
 
 .crafting-slot:hover {
-    border-color: #888;
-    background: rgba(80, 80, 100, 0.7);
+    border-color: #daa520;
+    background: linear-gradient(145deg, #5a4030, #3d2a20);
+    transform: translateY(-2px);
 }
 
 .crafting-slot.selected {
     border-color: #ffd700;
-    background: rgba(100, 100, 60, 0.5);
+    background: linear-gradient(145deg, #5a4a20, #3d3010);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
 }
 
 .crafting-slot.disabled {
-    opacity: 0.5;
+    opacity: 0.4;
+    filter: grayscale(50%);
 }
 
 .crafting-slot .item-icon {
-    font-size: 28px;
-    margin-bottom: 4px;
+    font-size: 36px;
+    margin-bottom: 6px;
+    filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
 }
 
 .crafting-slot .item-tooltip {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 9px;
+    color: #f5deb3;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
+    word-wrap: break-word;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 65px;
+    max-width: 70px;
+    max-height: 24px;
+    font-weight: bold;
+    line-height: 1.1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 #crafting-result {
-    background: rgba(40, 40, 50, 0.8);
-    border: 2px solid #555;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
+    background: linear-gradient(145deg, #3d2817, #2a1a0f);
+    border: 2px solid #8B4513;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+#crafting-result p {
+    color: #daa520;
+    text-align: center;
+    font-style: italic;
 }
 
 .crafting-ingredients {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
 .ingredient {
     display: flex;
     justify-content: space-between;
-    font-size: 13px;
-    padding: 4px 8px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
+    align-items: center;
+    font-size: 14px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 6px;
+    border: 1px solid #5c3317;
 }
 
 .ingredient .success {
-    color: #4ade80;
+    color: #7ddf64;
+    font-weight: bold;
 }
 
 .ingredient .error {
-    color: #f87171;
+    color: #ff6b6b;
+    font-weight: bold;
 }
 
 #craft-btn {
     display: block;
     width: 100%;
-    margin-top: 10px;
-    padding: 12px 30px;
-    background: linear-gradient(180deg, #51cf66, #2f9e44);
-    border: 2px solid #2f9e44;
-    border-radius: 8px;
-    color: white;
-    font-size: 16px;
+    margin-top: 14px;
+    padding: 14px 30px;
+    background: linear-gradient(180deg, #8B4513, #5c3317);
+    border: 3px solid #daa520;
+    border-radius: 10px;
+    color: #f5deb3;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 #craft-btn:hover {
-    background: linear-gradient(180deg, #69db7c, #40c057);
+    background: linear-gradient(180deg, #a0522d, #6b4423);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
 }
 
 #craft-btn:disabled {
-    background: #555;
-    border-color: #444;
+    background: linear-gradient(180deg, #444, #333);
+    border-color: #555;
+    color: #888;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Death Screen */
@@ -842,6 +1361,10 @@ body {
     z-index: 3000;
     color: #f5deb3;
     overflow: hidden;
+}
+
+.menu-screen.hidden {
+    display: none;
 }
 
 .menu-screen::before {

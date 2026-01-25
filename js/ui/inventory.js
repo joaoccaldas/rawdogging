@@ -1,4 +1,15 @@
-import { CONFIG, RECIPES, ITEMS } from '../config.js';
+import { CONFIG, RECIPES, ITEMS, AGES } from '../config.js';
+
+// Age index mapping for filtering recipes
+const AGE_INDEX = {
+    'STONE_AGE': 0,
+    'TRIBAL_AGE': 1,
+    'BRONZE_AGE': 2,
+    'IRON_AGE': 3,
+    'MEDIEVAL_AGE': 4,
+    'INDUSTRIAL_AGE': 5,
+    'MODERN_AGE': 6
+};
 
 export class InventoryUI {
     constructor(game) {
@@ -13,6 +24,7 @@ export class InventoryUI {
         this.craftBtn = document.getElementById('craft-btn');
 
         this.selectedRecipe = null;
+        this.activeCategory = 'all'; // For category filtering
 
         this.draggedSlot = null;
         this.draggedIndex = -1;
@@ -86,8 +98,44 @@ export class InventoryUI {
     renderCrafting() {
         if (!this.craftingGrid) return;
         this.craftingGrid.innerHTML = '';
+        
+        // Get player's current age from quest manager
+        const currentAge = this.game.quests?.currentAge || 'STONE_AGE';
+        const playerAgeIndex = AGE_INDEX[currentAge] ?? 0;
+        
+        // Create category filter tabs
+        const categories = ['all', 'tools', 'weapons', 'armor', 'building', 'materials', 'stations', 'ammo'];
+        const tabsDiv = document.createElement('div');
+        tabsDiv.className = 'crafting-tabs';
+        
+        categories.forEach(cat => {
+            const tab = document.createElement('button');
+            tab.className = `crafting-tab ${this.activeCategory === cat ? 'active' : ''}`;
+            tab.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+            tab.addEventListener('click', () => {
+                this.activeCategory = cat;
+                this.renderCrafting();
+            });
+            tabsDiv.appendChild(tab);
+        });
+        
+        this.craftingGrid.appendChild(tabsDiv);
+        
+        // Create recipe grid container
+        const recipeGrid = document.createElement('div');
+        recipeGrid.className = 'recipe-grid';
 
-        RECIPES.forEach(recipe => {
+        // Filter recipes by player's age and category
+        const availableRecipes = RECIPES.filter(recipe => {
+            const recipeAge = recipe.age ?? 0;
+            // Only show recipes up to player's current age
+            if (recipeAge > playerAgeIndex) return false;
+            // Category filter
+            if (this.activeCategory !== 'all' && recipe.category !== this.activeCategory) return false;
+            return true;
+        });
+
+        availableRecipes.forEach(recipe => {
             const resultItem = ITEMS[recipe.result];
             if (!resultItem) return;
 
@@ -97,9 +145,14 @@ export class InventoryUI {
 
             const canCraft = this.canCraft(recipe);
             if (!canCraft) slot.classList.add('disabled');
+            
+            // Add age indicator badge
+            const ageNames = ['🪨', '🦴', '🥉', '⚔️', '🏰', '⚙️', '💻'];
+            const ageBadge = recipe.age > 0 ? `<span class="age-badge">${ageNames[recipe.age] || ''}</span>` : '';
 
             slot.innerHTML = `
                 <div class="item-icon">${resultItem.emoji}</div>
+                ${ageBadge}
                 <div class="item-tooltip">${resultItem.name}</div>
             `;
 
@@ -109,8 +162,17 @@ export class InventoryUI {
                 this.updateCraftingPreview();
             });
 
-            this.craftingGrid.appendChild(slot);
+            recipeGrid.appendChild(slot);
         });
+        
+        this.craftingGrid.appendChild(recipeGrid);
+        
+        // Show current age info
+        const ageInfo = document.createElement('div');
+        ageInfo.className = 'age-info';
+        const ageData = AGES[currentAge];
+        ageInfo.innerHTML = `<span class="current-age">📜 ${ageData?.name || 'Stone Age'}</span>`;
+        this.craftingGrid.appendChild(ageInfo);
 
         this.updateCraftingPreview();
     }

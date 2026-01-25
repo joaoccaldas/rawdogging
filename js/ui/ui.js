@@ -1,9 +1,13 @@
 import { InventoryUI } from './inventory.js';
+import { LandingPage } from './landingpage.js';
 
 export class UIManager {
     constructor(game) {
         this.game = game;
         this.inventory = new InventoryUI(game);
+        
+        // Landing page / story intro
+        this.landingPage = new LandingPage();
 
         // References to modal overlays
         this.modals = [
@@ -25,6 +29,9 @@ export class UIManager {
         // Menus
         this.startScreen = document.getElementById('start-screen');
         this.pauseMenu = document.getElementById('pause-menu');
+        this.playerNameInput = document.getElementById('player-name');
+        
+        // Landing page is hidden by default, start screen shows first
 
         console.log('UIManager: Initializing...');
         const newGameBtn = document.getElementById('btn-new-game');
@@ -177,14 +184,21 @@ export class UIManager {
 
     startNewGame() {
         console.log('UIManager: Starting New Game...');
-        // Use Slot 1 by default for New Game or ask?
-        // Let's just default to 'save_1' and overwrite?
-        // Better: Quick Slot Selection Modal?
-        // For simplicity: New Game = Slot 1.
-        this.game.saveManager.setSlot('save_1');
+        
+        // Get player name from input
+        const playerName = this.playerNameInput?.value.trim() || 'Survivor';
+        this.game.playerName = playerName;
+        console.log(`UIManager: Player name set to "${playerName}"`);
+        
+        // Hide start screen
         this.startScreen.classList.add('hidden');
-        console.log('UIManager: Start Screen Hidden');
-        this.game.startNewGame();
+        
+        // Play story animation, then start game
+        this.landingPage.start(() => {
+            console.log('UIManager: Animation complete, starting game...');
+            this.game.saveManager.setSlot('save_1');
+            this.game.startNewGame();
+        });
     }
 
     loadGameMenu() {
@@ -279,5 +293,10 @@ export class UIManager {
     // Alias for showNotification for compatibility
     showMessage(message, duration = 3000) {
         this.showNotification(message, 'info', duration);
+    }
+    
+    // Get the player's name
+    getPlayerName() {
+        return this.game.playerName || 'Survivor';
     }
 }

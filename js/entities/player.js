@@ -319,6 +319,10 @@ export class Player extends Entity {
         if (!this.checkCollision(nextX, this.y, this.z)) {
             this.x = nextX;
         } else {
+            // Wall collision feedback
+            if (Math.abs(this.vx) > this.speed * 0.5) {
+                this.game.particles.emit(nextX + (this.vx > 0 ? this.width : 0), this.y + this.height/2, this.z + 0.5, '#888888', 3);
+            }
             this.vx = 0;
         }
 
@@ -326,6 +330,10 @@ export class Player extends Entity {
         if (!this.checkCollision(this.x, nextY, this.z)) {
             this.y = nextY;
         } else {
+            // Wall collision feedback
+            if (Math.abs(this.vy) > this.speed * 0.5) {
+                this.game.particles.emit(this.x + this.width/2, nextY + (this.vy > 0 ? this.height : 0), this.z + 0.5, '#888888', 3);
+            }
             this.vy = 0;
         }
 
@@ -526,6 +534,11 @@ export class Player extends Entity {
         this.game.world.setBlock(bx, by, bz, BLOCKS.AIR);
         this.game.audio.play('mine');
         this.game.particles.emit(bx + 0.5, by + 0.5, bz + 0.5, blockInfo.color || '#888', 8);
+        
+        // Notify side quest system about mined block
+        if (this.game.sideQuests) {
+            this.game.sideQuests.onBlockMined(block);
+        }
     }
 
     addItem(itemKey, count = 1) {
@@ -542,6 +555,11 @@ export class Player extends Entity {
         // Notify quest system
         if (this.game.questManager) {
             this.game.questManager.onItemCollected(itemKey, count);
+        }
+        
+        // Notify side quest system
+        if (this.game.sideQuests) {
+            this.game.sideQuests.onItemCollected(itemKey, count);
         }
 
         // Check for existing stack
@@ -610,31 +628,86 @@ export class Player extends Entity {
         const item = this.getSelectedItem();
         if (!item) return;
 
-        // Get target position using same logic as mining
+        // Get target position using raycast-like approach
         const playerScreen = this.game.camera.worldToScreen(this.x, this.y, this.z);
         const mouseX = this.game.input.mouse.x;
         const mouseY = this.game.input.mouse.y;
         
+        // Convert screen delta to isometric world direction
         const dx = mouseX - playerScreen.x;
         const dy = mouseY - playerScreen.y;
         
+        // Isometric to world coordinate conversion
         const isoX = (dx / (CONFIG.TILE_WIDTH / 2) + dy / (CONFIG.TILE_HEIGHT / 2)) / 2;
         const isoY = (dy / (CONFIG.TILE_HEIGHT / 2) - dx / (CONFIG.TILE_WIDTH / 2)) / 2;
         
+        // Normalize and scale direction
         const mag = Math.sqrt(isoX * isoX + isoY * isoY);
-        let targetOffsetX = 0, targetOffsetY = 0;
-        if (mag > 0.5) {
-            const scale = Math.min(3, mag) / mag;
-            targetOffsetX = isoX * scale;
-            targetOffsetY = isoY * scale;
+        
+        // Cast a ray from player to find target block
+        let targetBlock = null;
+        let placePosition = null;
+        
+        // Step along the ray direction
+        for (let dist = 1; dist <= this.interactionRange; dist += 0.5) {
+            const scale = dist / Math.max(0.1, mag);
+            const checkX = Math.floor(this.x + isoX * scale);
+            const checkY = Math.floor(this.y + isoY * scale);
+            
+            // Check at player's Z level, above, and below
+            for (let zOffset = 1; zOffset >= -1; zOffset--) {
+                const checkZ = Math.floor(this.z) + zOffset;
+                const block = this.game.world.getBlock(checkX, checkY, checkZ);
+                const blockData = BLOCK_DATA[block];
+                
+                if (block !== BLOCKS.AIR && blockData && blockData.solid) {
+                    // Found a solid block, place adjacent to it
+                    targetBlock = { x: checkX, y: checkY, z: checkZ };
+                    
+                    // Determine which face to place on (prefer top)
+                    const aboveBlock = this.game.world.getBlock(checkX, checkY, checkZ + 1);
+                    if (aboveBlock === BLOCKS.AIR) {
+                        placePosition = { x: checkX, y: checkY, z: checkZ + 1 };
+                    } else {
+                        // Try adjacent horizontal positions
+                        const adjacentOffsets = [
+                            { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+                            { dx: 0, dy: -1 }, { dx: 0, dy: 1 }
+                        ];
+                        for (const off of adjacentOffsets) {
+                            const adjBlock = this.game.world.getBlock(checkX + off.dx, checkY + off.dy, checkZ);
+                            if (adjBlock === BLOCKS.AIR) {
+                                placePosition = { x: checkX + off.dx, y: checkY + off.dy, z: checkZ };
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            if (targetBlock) break;
         }
         
-        const bx = Math.floor(this.x + targetOffsetX);
-        const by = Math.floor(this.y + targetOffsetY);
-        const playerZ = Math.floor(this.z);
+        // Fallback: place at surface near mouse position
+        if (!placePosition) {
+            const targetOffsetX = mag > 0.5 ? (isoX / mag) * Math.min(3, mag) : 0;
+            const targetOffsetY = mag > 0.5 ? (isoY / mag) * Math.min(3, mag) : 0;
+            
+            const bx = Math.floor(this.x + targetOffsetX);
+            const by = Math.floor(this.y + targetOffsetY);
+            const surfaceZ = this.game.world.getHeight(bx, by);
+            
+            if (surfaceZ > 0) {
+                placePosition = { x: bx, y: by, z: surfaceZ + 1 };
+            }
+        }
         
-        // Find surface height at target
-        let surfaceZ = this.game.world.getHeight(bx, by);
+        if (!placePosition) return;
+        
+        const bx = placePosition.x;
+        const by = placePosition.y;
+        const playerZ = Math.floor(this.z);
+        let surfaceZ = placePosition.z - 1;
         
         // Hoe Logic (Till Dirt)
         if (item.type === 'tool' && item.toolType === 'hoe') {
@@ -690,13 +763,8 @@ export class Player extends Entity {
 
         // Block placement
         if (item.type === 'block' || item.type === 'placeable') {
-            // Place on top of surface
-            let placeZ = surfaceZ + 1;
-            
-            // If target is air, place at player level
-            if (this.game.world.getBlock(bx, by, surfaceZ) === BLOCKS.AIR) {
-                placeZ = playerZ;
-            }
+            // Use the calculated placement position
+            let placeZ = placePosition.z;
             
             const dist = Math.hypot(bx + 0.5 - this.x, by + 0.5 - this.y, placeZ - this.z);
             if (dist > this.interactionRange) return;
@@ -712,9 +780,7 @@ export class Player extends Entity {
             if (!blockId && item.type === 'placeable') {
                 // Torch, seeds, etc - need special handling
                 if (item.name === 'Torch') {
-                    // Add torch as light source (simplified - just place a torch block)
-                    // For now, torches are cosmetic 
-                    blockId = BLOCKS.WOOD; // Placeholder - would need BLOCKS.TORCH
+                    blockId = BLOCKS.TORCH;
                 } else if (item.name === 'Seeds') {
                     // Can only plant on farmland
                     if (this.game.world.getBlock(bx, by, placeZ - 1) !== BLOCKS.FARMLAND) return;
@@ -731,6 +797,11 @@ export class Player extends Entity {
                 // Notify quest system about block placement
                 if (this.game.questManager) {
                     this.game.questManager.onBlockPlaced(blockId);
+                }
+                
+                // Notify side quest system about block placement
+                if (this.game.sideQuests) {
+                    this.game.sideQuests.onBlockPlaced(blockId);
                 }
                 
                 // Consume item
@@ -819,10 +890,23 @@ export class Player extends Entity {
                     enemy.takeDamage(damage, this);
                     hitCount++;
                     
+                    // Screen flash for hit feedback
+                    if (this.game.renderer) {
+                        this.game.renderer.flashHit(0.4);
+                    }
+                    
+                    // Damage number popup on enemy
+                    const dmgColor = isCrit ? '#ffd700' : '#ffffff';
+                    this.game.particles.emitText(enemy.x, enemy.y, enemy.z + 2, `${damage}`, dmgColor);
+                    
+                    // Hit particles on enemy
+                    this.game.particles.emit(enemy.x, enemy.y, enemy.z + 1, '#ff4444', 8);
+                    
                     // Critical hit visual
                     if (isCrit) {
-                        this.game.particles.emitText(enemy.x, enemy.y, enemy.z + 2, "CRIT!", '#ffd700');
-                        this.game.camera.addShake(2, 0.1);
+                        this.game.particles.emitText(enemy.x, enemy.y, enemy.z + 2.5, "CRIT!", '#ffd700');
+                        this.game.camera.addShake(3, 0.15);
+                        this.game.audio.play('hit'); // Double sound for crit
                     }
                     
                     // XP for hitting enemies
@@ -859,6 +943,11 @@ export class Player extends Entity {
         this.health -= amount;
         this.game.audio.play('hurt');
         
+        // Screen flash for damage feedback
+        if (this.game.renderer) {
+            this.game.renderer.flashDamage(Math.min(1, amount / 10));
+        }
+        
         // Different colors for damage types
         let damageColor = '#ff6b6b';
         if (damageType === 'fall') damageColor = '#ff9500';
@@ -868,8 +957,8 @@ export class Player extends Entity {
         this.game.particles.emitText(this.x, this.y, this.z + 2, `-${Math.floor(amount)}`, damageColor);
         this.invincibleTime = CONFIG.INVINCIBILITY_TIME;
 
-        // Camera shake on damage
-        this.game.camera.addShake(amount * 0.3, 0.15);
+        // Camera shake on damage - stronger shake for higher damage
+        this.game.camera.addShake(Math.min(5, amount * 0.5), 0.2);
 
         // Knockback (only from entity sources)
         if (source) {

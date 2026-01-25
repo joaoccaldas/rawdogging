@@ -10,6 +10,14 @@ export class Renderer {
         this.width = 0;
         this.height = 0;
 
+        // Damage flash overlay
+        this.damageFlash = 0;
+        this.damageFlashColor = 'rgba(255, 0, 0, 0)';
+        
+        // Hit feedback
+        this.hitFlash = 0;
+        this.hitFlashColor = 'rgba(255, 255, 0, 0)';
+
         // Lighting
         this.ambientLight = 1;
         this.lightSources = [];
@@ -127,6 +135,26 @@ export class Renderer {
                 this.game.homeBeacons.render(this.ctx, camera);
             }
             
+            // Render block breaking progress
+            if (this.game.blockBreaking?.render) {
+                this.game.blockBreaking.render(this.ctx, camera);
+            }
+            
+            // Render block placement preview
+            if (this.game.blockPreview?.render) {
+                this.game.blockPreview.render(this.ctx, camera);
+            }
+            
+            // Render grappling hook rope
+            if (this.game.grappling?.render) {
+                this.game.grappling.render(this.ctx, camera);
+            }
+            
+            // Render fishing line
+            if (this.game.fishing?.render) {
+                this.game.fishing.render(this.ctx, camera);
+            }
+            
             // Particles
             this.renderParticles();
             
@@ -148,6 +176,54 @@ export class Renderer {
             if (this.game.minimap) {
                 this.game.minimap.render(this.ctx);
             }
+            
+            // Render boss health bars
+            if (this.game.bossHealthBar?.render) {
+                this.game.bossHealthBar.render(this.ctx);
+            }
+            
+            // Render tutorial hints
+            if (this.game.tutorial?.render) {
+                this.game.tutorial.render(this.ctx);
+            }
+            
+            // Render bestiary overlay (when open)
+            if (this.game.bestiary?.render) {
+                this.game.bestiary.render(this.ctx);
+            }
+            
+            // Render fishing minigame UI
+            if (this.game.fishing?.isActive && this.game.fishing?.renderMinigame) {
+                this.game.fishing.renderMinigame(this.ctx);
+            }
+            
+            // Render potion brewing UI
+            if (this.game.potions?.isBrewingUIOpen && this.game.potions?.render) {
+                this.game.potions.render(this.ctx);
+            }
+            
+            // Render death screen
+            if (this.game.deathScreen?.render) {
+                this.game.deathScreen.render(this.ctx);
+            }
+            
+            // Render photo mode UI
+            if (this.game.photoMode?.isActive && this.game.photoMode?.render) {
+                this.game.photoMode.render(this.ctx);
+            }
+            
+            // Render seasonal event banner
+            if (this.game.seasonalEvents?.render) {
+                this.game.seasonalEvents.render(this.ctx);
+            }
+            
+            // Render dungeon portals
+            if (this.game.dungeons?.render) {
+                this.game.dungeons.render(this.ctx, this.game.camera);
+            }
+            
+            // Render damage/hit flash overlays
+            this.renderDamageOverlay();
 
             this.ctx.restore();
         } catch (e) {
@@ -209,6 +285,53 @@ export class Renderer {
 
             this.ctx.restore();
         }
+    }
+    
+    // Damage overlay - red vignette when taking damage, yellow when dealing damage
+    renderDamageOverlay() {
+        // Update flash values (decay)
+        if (this.damageFlash > 0) {
+            this.damageFlash -= 0.05;
+            if (this.damageFlash < 0) this.damageFlash = 0;
+        }
+        if (this.hitFlash > 0) {
+            this.hitFlash -= 0.08;
+            if (this.hitFlash < 0) this.hitFlash = 0;
+        }
+        
+        // Draw damage received flash (red vignette)
+        if (this.damageFlash > 0) {
+            const gradient = this.ctx.createRadialGradient(
+                this.width / 2, this.height / 2, this.width * 0.3,
+                this.width / 2, this.height / 2, this.width * 0.8
+            );
+            gradient.addColorStop(0, 'rgba(255, 0, 0, 0)');
+            gradient.addColorStop(1, `rgba(180, 0, 0, ${this.damageFlash * 0.5})`);
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, this.width, this.height);
+        }
+        
+        // Draw hit dealt flash (brief yellow/white flash on edges)
+        if (this.hitFlash > 0) {
+            const gradient = this.ctx.createRadialGradient(
+                this.width / 2, this.height / 2, this.width * 0.4,
+                this.width / 2, this.height / 2, this.width * 0.7
+            );
+            gradient.addColorStop(0, 'rgba(255, 220, 100, 0)');
+            gradient.addColorStop(1, `rgba(255, 200, 50, ${this.hitFlash * 0.25})`);
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, this.width, this.height);
+        }
+    }
+    
+    // Called when player takes damage
+    flashDamage(intensity = 0.7) {
+        this.damageFlash = Math.min(1, intensity);
+    }
+    
+    // Called when player deals damage
+    flashHit(intensity = 0.5) {
+        this.hitFlash = Math.min(1, intensity);
     }
 
     renderHighlight() {
@@ -532,12 +655,33 @@ export class Renderer {
                 this.ctx.fillText(entity.emoji || '🧍', screen.x, screen.y - size * 0.5);
             }
         } else {
-            // Draw entity emoji for non-player entities
-            this.ctx.font = `${size}px Arial`;
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText(entity.emoji || '📦', screen.x, screen.y - size * 0.5);
+            // Check if this is an enemy with a sprite
+            const enemySpriteName = entity.stats?.sprite;
+            const enemySprite = enemySpriteName ? this.game.spriteManager.getEnemySprite(enemySpriteName) : null;
+            
+            if (enemySprite && enemySprite.complete && enemySprite.naturalWidth > 0) {
+                // Use the entity's size multiplier (default 1, SABER_CAT uses 2)
+                const sizeMultiplier = entity.stats?.size || 1;
+                const spriteHeight = size * 2.5 * sizeMultiplier;
+                const aspectRatio = enemySprite.naturalWidth / enemySprite.naturalHeight;
+                const spriteWidth = spriteHeight * aspectRatio;
+                
+                // Draw the enemy sprite centered above the position
+                this.ctx.drawImage(
+                    enemySprite,
+                    screen.x - spriteWidth / 2,
+                    screen.y - spriteHeight + size * 0.3,
+                    spriteWidth,
+                    spriteHeight
+                );
+            } else {
+                // Draw entity emoji for non-player entities
+                this.ctx.font = `${size}px Arial`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillText(entity.emoji || '📦', screen.x, screen.y - size * 0.5);
+            }
         }
 
         // Health bar for entities

@@ -12,7 +12,8 @@ export const TAMEABLE = {
         health: 30,
         damage: 6,
         speed: 3,
-        abilities: ['attack', 'follow', 'guard']
+        abilities: ['attack', 'follow', 'guard'],
+        evolutions: ['DIRE_WOLF', 'SHADOW_WOLF']
     },
     BOAR: {
         type: 'BOAR',
@@ -23,7 +24,56 @@ export const TAMEABLE = {
         health: 25,
         damage: 4,
         speed: 2.5,
-        abilities: ['attack', 'follow', 'carry']
+        abilities: ['attack', 'follow', 'carry'],
+        evolutions: ['WAR_BOAR', 'IRON_BOAR']
+    }
+};
+
+// Pet evolution data
+export const PET_EVOLUTIONS = {
+    DIRE_WOLF: {
+        type: 'DIRE_WOLF',
+        name: 'Dire Wolf',
+        emoji: '🐺',
+        health: 60,
+        damage: 12,
+        speed: 4,
+        abilities: ['attack', 'follow', 'guard', 'howl'],
+        requirements: { level: 5, kills: 20 },
+        description: 'A fearsome alpha predator'
+    },
+    SHADOW_WOLF: {
+        type: 'SHADOW_WOLF',
+        name: 'Shadow Wolf',
+        emoji: '🌑',
+        health: 45,
+        damage: 10,
+        speed: 5,
+        abilities: ['attack', 'follow', 'guard', 'stealth'],
+        requirements: { level: 5, nightKills: 10 },
+        description: 'A spectral hunter of the night'
+    },
+    WAR_BOAR: {
+        type: 'WAR_BOAR',
+        name: 'War Boar',
+        emoji: '🐗',
+        health: 80,
+        damage: 8,
+        speed: 3,
+        abilities: ['attack', 'follow', 'carry', 'charge'],
+        requirements: { level: 5, carryWeight: 500 },
+        description: 'An armored battle mount'
+    },
+    IRON_BOAR: {
+        type: 'IRON_BOAR',
+        name: 'Iron Boar',
+        emoji: '⚙️',
+        health: 100,
+        damage: 6,
+        speed: 2,
+        abilities: ['attack', 'follow', 'carry', 'tank'],
+        requirements: { level: 5, damageBlocked: 200 },
+        description: 'An indestructible guardian'
     }
 };
 
@@ -44,10 +94,207 @@ export class TamingSystem {
         // Update pets
         for (const pet of this.pets) {
             this.updatePet(pet, deltaTime);
+            this.updatePetExperience(pet, deltaTime);
         }
         
         // Remove dead pets
         this.pets = this.pets.filter(p => p.health > 0);
+    }
+    
+    // Update pet experience and check for evolution
+    updatePetExperience(pet, deltaTime) {
+        // Initialize pet stats if needed
+        if (pet.level === undefined) {
+            pet.level = 1;
+            pet.xp = 0;
+            pet.xpToLevel = 100;
+            pet.kills = 0;
+            pet.nightKills = 0;
+            pet.carryWeight = 0;
+            pet.damageBlocked = 0;
+            pet.happiness = 100;
+        }
+        
+        // Check for level up
+        if (pet.xp >= pet.xpToLevel) {
+            this.levelUpPet(pet);
+        }
+        
+        // Decay happiness over time
+        pet.happiness = Math.max(0, pet.happiness - deltaTime * 0.1);
+    }
+    
+    // Level up a pet
+    levelUpPet(pet) {
+        pet.level++;
+        pet.xp -= pet.xpToLevel;
+        pet.xpToLevel = Math.floor(pet.xpToLevel * 1.5);
+        
+        // Increase stats
+        pet.maxHealth += 5;
+        pet.health = pet.maxHealth;
+        pet.damage += 1;
+        
+        this.game.ui?.showNotification?.(
+            `${pet.emoji} ${pet.name} reached level ${pet.level}!`,
+            'success'
+        );
+        
+        // Check for evolution
+        this.checkEvolution(pet);
+        
+        // Achievement
+        if (pet.level >= 10) {
+            this.game.achievements?.unlock?.('master_tamer');
+        }
+    }
+    
+    // Check if pet can evolve
+    checkEvolution(pet) {
+        const baseData = TAMEABLE[pet.type];
+        if (!baseData?.evolutions) return;
+        
+        for (const evolutionType of baseData.evolutions) {
+            const evolution = PET_EVOLUTIONS[evolutionType];
+            if (!evolution) continue;
+            
+            const reqs = evolution.requirements;
+            let canEvolve = true;
+            
+            if (reqs.level && pet.level < reqs.level) canEvolve = false;
+            if (reqs.kills && pet.kills < reqs.kills) canEvolve = false;
+            if (reqs.nightKills && pet.nightKills < reqs.nightKills) canEvolve = false;
+            if (reqs.carryWeight && pet.carryWeight < reqs.carryWeight) canEvolve = false;
+            if (reqs.damageBlocked && pet.damageBlocked < reqs.damageBlocked) canEvolve = false;
+            
+            if (canEvolve) {
+                // Offer evolution
+                pet.canEvolve = true;
+                pet.evolutionOptions = pet.evolutionOptions || [];
+                if (!pet.evolutionOptions.includes(evolutionType)) {
+                    pet.evolutionOptions.push(evolutionType);
+                    this.game.ui?.showNotification?.(
+                        `${pet.emoji} ${pet.name} can evolve into ${evolution.name}!`,
+                        'success'
+                    );
+                }
+            }
+        }
+    }
+    
+    // Evolve a pet
+    evolvePet(petId, evolutionType) {
+        const pet = this.pets.find(p => p.id === petId);
+        if (!pet) return false;
+        
+        if (!pet.evolutionOptions?.includes(evolutionType)) {
+            this.game.ui?.showNotification?.('Cannot evolve into this form!', 'warning');
+            return false;
+        }
+        
+        const evolution = PET_EVOLUTIONS[evolutionType];
+        if (!evolution) return false;
+        
+        // Apply evolution
+        const oldName = pet.name;
+        pet.type = evolution.type;
+        pet.name = evolution.name;
+        pet.emoji = evolution.emoji;
+        pet.maxHealth = evolution.health + (pet.level - 1) * 5;
+        pet.health = pet.maxHealth;
+        pet.damage = evolution.damage + Math.floor(pet.level / 2);
+        pet.speed = evolution.speed;
+        pet.abilities = [...evolution.abilities];
+        pet.evolved = true;
+        pet.canEvolve = false;
+        pet.evolutionOptions = [];
+        
+        // Visual effects
+        this.game.particles?.spawn?.(pet.x, pet.y, pet.z, {
+            type: 'magic',
+            count: 30,
+            color: '#FFD700'
+        });
+        
+        this.game.ui?.showNotification?.(
+            `✨ ${oldName} evolved into ${evolution.name}!`,
+            'success'
+        );
+        
+        // Achievement
+        this.game.achievements?.unlock?.('pet_evolution');
+        
+        return true;
+    }
+    
+    // Feed a pet to increase happiness and heal
+    feedPet(petId, foodItem) {
+        const pet = this.pets.find(p => p.id === petId);
+        if (!pet) return false;
+        
+        // Check if food is valid
+        const baseData = TAMEABLE[pet.type] || {};
+        const favoriteFood = baseData.favoriteFood || [];
+        
+        let happinessGain = 10;
+        let healAmount = 5;
+        let xpGain = 5;
+        
+        if (favoriteFood.includes(foodItem)) {
+            happinessGain = 25;
+            healAmount = 15;
+            xpGain = 15;
+        }
+        
+        pet.happiness = Math.min(100, pet.happiness + happinessGain);
+        pet.health = Math.min(pet.maxHealth, pet.health + healAmount);
+        pet.xp += xpGain;
+        
+        this.game.ui?.showNotification?.(
+            `${pet.emoji} ${pet.name} enjoyed the food! (+${happinessGain} happiness)`,
+            'info'
+        );
+        
+        return true;
+    }
+    
+    // Record a kill for the pet
+    recordPetKill(pet) {
+        if (!pet) return;
+        
+        pet.kills = (pet.kills || 0) + 1;
+        pet.xp = (pet.xp || 0) + 10;
+        
+        // Check if it was a night kill
+        if (this.game.world?.isNightTime?.()) {
+            pet.nightKills = (pet.nightKills || 0) + 1;
+        }
+        
+        this.checkEvolution(pet);
+    }
+    
+    // Get pet info for UI
+    getPetInfo(petId) {
+        const pet = this.pets.find(p => p.id === petId);
+        if (!pet) return null;
+        
+        return {
+            id: pet.id,
+            name: pet.name,
+            emoji: pet.emoji,
+            level: pet.level || 1,
+            xp: pet.xp || 0,
+            xpToLevel: pet.xpToLevel || 100,
+            health: pet.health,
+            maxHealth: pet.maxHealth,
+            damage: pet.damage,
+            happiness: pet.happiness || 100,
+            abilities: pet.abilities,
+            canEvolve: pet.canEvolve || false,
+            evolutionOptions: pet.evolutionOptions || [],
+            kills: pet.kills || 0,
+            evolved: pet.evolved || false
+        };
     }
     
     updatePet(pet, deltaTime) {
@@ -342,7 +589,18 @@ export class TamingSystem {
                 damage: p.damage,
                 speed: p.speed,
                 abilities: p.abilities,
-                state: p.state
+                state: p.state,
+                level: p.level || 1,
+                xp: p.xp || 0,
+                xpToLevel: p.xpToLevel || 100,
+                kills: p.kills || 0,
+                nightKills: p.nightKills || 0,
+                carryWeight: p.carryWeight || 0,
+                damageBlocked: p.damageBlocked || 0,
+                happiness: p.happiness || 100,
+                evolved: p.evolved || false,
+                canEvolve: p.canEvolve || false,
+                evolutionOptions: p.evolutionOptions || []
             }))
         };
     }

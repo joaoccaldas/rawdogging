@@ -16,9 +16,13 @@ export class Enemy extends Entity {
         }
 
         this.emoji = this.stats.emoji;
-        this.width = isBoss ? 1.5 : 0.8;
-        this.height = isBoss ? 1.5 : 0.8;
-        this.depth = isBoss ? 2.0 : 1.2;
+        
+        // Use size from stats if defined (for large enemies like SABER_CAT)
+        const sizeMultiplier = this.stats.size || 1;
+        this.width = (isBoss ? 1.5 : 0.8) * sizeMultiplier;
+        this.height = (isBoss ? 1.5 : 0.8) * sizeMultiplier;
+        this.depth = (isBoss ? 2.0 : 1.2) * sizeMultiplier;
+        this.size = sizeMultiplier; // Store for rendering
 
         this.health = this.stats.health;
         this.maxHealth = this.stats.health;
@@ -159,6 +163,14 @@ export class Enemy extends Entity {
                         this.lastAttackTime = now;
                         this.game.player.takeDamage(this.damage, this);
                         this.game.audio.play('hit');
+                        
+                        // Attack particles at player
+                        this.game.particles.emit(
+                            this.game.player.x, 
+                            this.game.player.y, 
+                            this.game.player.z + 1, 
+                            '#ff4444', 6
+                        );
                     }
                 }
                 break;
@@ -226,7 +238,18 @@ export class Enemy extends Entity {
         if (this.invincibleTime > 0) return;
 
         this.health -= amount;
-        this.game.particles.emitText(this.x, this.y, this.z + 1.5, `-${amount}`, '#fff');
+        
+        // Damage number with color based on health remaining
+        const healthPercent = this.health / this.maxHealth;
+        const dmgColor = healthPercent < 0.3 ? '#ff6b6b' : '#ffffff';
+        this.game.particles.emitText(this.x, this.y, this.z + 1.5, `-${amount}`, dmgColor);
+        
+        // Hit particles (blood/impact)
+        this.game.particles.emit(this.x, this.y, this.z + 1, '#cc3333', 5);
+        
+        // Play hurt sound
+        this.game.audio.play('hit');
+        
         this.invincibleTime = 200;
 
         // Knockback
@@ -268,6 +291,11 @@ export class Enemy extends Entity {
             // Notify quest system about the kill
             if (this.game.questManager) {
                 this.game.questManager.onEnemyKilled(this.typeKey);
+            }
+            
+            // Notify side quest system about the kill
+            if (this.game.sideQuests) {
+                this.game.sideQuests.onEnemyKilled(this.typeKey);
             }
             
             // Notify skills system for combat XP
