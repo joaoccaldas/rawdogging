@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rawdog 3D - Prehistoric Survival</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/minimap.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        /* 3D specific styles */
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        
+        #game-canvas-3d {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border: 1px solid black;
+        }
+        
+        .crosshair::before {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .crosshair::after {
+            width: 2px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        #pointer-lock-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px 60px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            font-family: 'Segoe UI', sans-serif;
+            display: none;
+        }
+        
+        #pointer-lock-prompt h2 {
+            margin: 0 0 20px 0;
+            font-size: 2em;
+        }
+        
+        #pointer-lock-prompt p {
+            margin: 10px 0;
+            opacity: 0.8;
+        }
+        
+        #pointer-lock-prompt .controls {
+            margin-top: 20px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        #pointer-lock-prompt .key {
+            display: inline-block;
+            background: #444;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 2px;
+        }
+        
+        #click-to-play {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        
+        #click-to-play:hover {
+            background: #45a049;
+        }
+        
+        /* Hide 2D canvas */
+        #game-canvas {
+            display: none !important;
+        }
+        
+        /* Debug info */
+        #debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            pointer-events: none;
+            font-size: 12px;
+        }
+        
+        /* Mode indicator */
+        #mode-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(45deg, #ff6b35, #ff9f1c);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: bold;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        #builder-mode-btn-3d {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #00c853, #00e676);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        #builder-mode-btn-3d:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h1>� STONE AGE 3D</h1>
+            <p>Prehistoric Survival - 300,000 BC</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p id="loading-status">Generating prehistoric world...</p>
+        </div>
+    </div>
+    
+    <!-- Start Screen -->
+    <div id="start-screen" class="menu-screen hidden">
+        <div class="menu-logo">
+            <img src="assets/sprites/player/playercave.png" alt="Caveman" class="menu-character" width="128" height="128" onerror="this.style.display='none'" />
+        </div>
+        <h1>🦣 Stone Age 3D</h1>
+        <p class="tagline">Survive the Prehistoric World - 300,000 BC</p>
+        <div class="name-input-container">
+            <label for="player-name">Enter Your Tribe Name</label>
+            <input type="text" id="player-name" class="name-input" placeholder="Cave Dweller" maxlength="20" autocomplete="off" />
+        </div>
+        <div class="menu-buttons">
+            <button id="btn-new-game" class="menu-btn">🔥 Begin Survival</button>
+            <button id="btn-builder-mode" class="menu-btn" style="background: linear-gradient(135deg, #2d5a27, #4a8a3a);">🪨 Builder Mode</button>
+            <button id="btn-load-game" class="menu-btn">📜 Load Journey</button>
+            <button id="btn-settings" class="menu-btn">⚙️ Settings</button>
+        </div>
+        <div class="controls-hint">
+            <p>🦴 WASD - Move | Space - Jump | Mouse - Look | Left Click - Gather | Right Click - Place | E - Inventory</p>
+        </div>
+        <p class="version">v1.0.0 - Stone Age 3D</p>
+    </div>
+    
+    <!-- Pointer Lock Prompt -->
+    <div id="pointer-lock-prompt">
+        <h2>🦣 STONE AGE 3D</h2>
+        <p>Click to begin your prehistoric survival!</p>
+        <div class="controls">
+            <p><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> - Move through wilderness</p>
+            <p><span class="key">SPACE</span> - Jump over obstacles</p>
+            <p><span class="key">SHIFT</span> - Sprint from predators</p>
+            <p><span class="key">Mouse</span> - Look around</p>
+            <p><span class="key">Left Click</span> - Gather resources / Attack</p>
+            <p><span class="key">Right Click</span> - Place / Build shelter</p>
+            <p><span class="key">E</span> - Open inventory</p>
+            <p><span class="key">C</span> - Craft tools</p>
+            <p><span class="key">ESC</span> - Pause / Menu</p>
+        </div>
+        <button id="click-to-play">🔥 Enter the Stone Age</button>
+    </div>
+    
+    <!-- Game Container -->
+    <div id="game-container">
+        <!-- Three.js will add canvas here -->
+    </div>
+    
+    <!-- Crosshair -->
+    <div class="crosshair"></div>
+    
+    <!-- Mode Indicator -->
+    <div id="mode-indicator">🦣 STONE AGE 3D</div>
+    
+    <!-- Debug Info -->
+    <div id="debug-info" style="display: none;">
+        <div>FPS: <span id="fps">0</span></div>
+        <div>Pos: <span id="player-pos">0, 0, 0</span></div>
+        <div>Chunks: <span id="chunk-count">0</span></div>
+    </div>
+    
+    <!-- Builder Mode Button -->
+    <button id="builder-mode-btn-3d">🔧 Builder Mode</button>
+    
+    <!-- UI Overlays (same as 2D version) -->
+    <div id="hotbar">
+        <div class="hotbar-slot selected" data-slot="0"></div>
+        <div class="hotbar-slot" data-slot="1"></div>
+        <div class="hotbar-slot" data-slot="2"></div>
+        <div class="hotbar-slot" data-slot="3"></div>
+        <div class="hotbar-slot" data-slot="4"></div>
+        <div class="hotbar-slot" data-slot="5"></div>
+        <div class="hotbar-slot" data-slot="6"></div>
+        <div class="hotbar-slot" data-slot="7"></div>
+    </div>
+    
+    <!-- Full HUD (matching 2D version) -->
+    <div id="hud">
+        <div id="health-bar">
+            <div id="health-fill"></div>
+            <span id="health-text">100/100</span>
+        </div>
+        <div id="hunger-bar">
+            <div id="hunger-fill"></div>
+            <span id="hunger-text">100/100</span>
+        </div>
+        
+        <!-- Temperature Bar -->
+        <div id="temperature-bar" title="Body Temperature">
+            <div id="temperature-fill"></div>
+            <span id="temperature-text">🌡️ 50°</span>
+        </div>
+        
+        <!-- Armor Display -->
+        <div id="armor-display" title="Defense">
+            <span id="armor-text">🛡️ 0</span>
+        </div>
+        
+        <div id="level-display">
+            <span id="level-text">Lvl 1</span>
+            <div id="xp-bar">
+                <div id="xp-fill"></div>
+            </div>
+        </div>
+        
+        <div id="day-cycle">
+            <span id="age-text">🦴 Stone Age</span>
+            <span id="day-text">Day 1</span>
+            <span id="time-text">☀️ 12:00</span>
+            <span id="weather-text">☀️ Clear</span>
+        </div>
+        
+        <!-- Active Buffs Display -->
+        <div id="buffs-display"></div>
+        
+        <!-- Quest Panel -->
+        <div id="quest-panel" class="hidden">
+            <div class="quest-header">
+                <span class="quest-icon">🔥</span>
+                <span class="quest-name">Loading...</span>
+            </div>
+            <div class="quest-description">Complete objectives to progress</div>
+            <div class="quest-objectives"></div>
+        </div>
+        
+        <!-- Side Quest Panel -->
+        <div id="side-quest-panel" class="hidden">
+            <div class="no-quests">No active side quests</div>
+        </div>
+    </div>
+    
+    <!-- Inventory UI -->
+    <div id="inventory-screen" class="hidden">
+        <div class="inventory-container">
+            <h2>📦 Inventory</h2>
+            <div id="inventory-grid"></div>
+            <div class="inventory-actions">
+                <button id="close-inventory">Close [E]</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Crafting UI -->
+    <div id="crafting-menu" class="hidden">
+        <div class="crafting-container">
+            <h2>🔨 Crafting</h2>
+            <div id="recipe-list"></div>
+            <button id="close-crafting">Close [C]</button>
+        </div>
+    </div>
+    
+    <!-- Pause Menu (with Quest Info) -->
+    <div id="pause-menu" class="modal hidden">
+        <div class="modal-content" style="text-align: center;">
+            <h2>🦴 PAUSED - Stone Age</h2>
+            <div class="menu-buttons">
+                <button id="btn-resume" class="menu-btn">Resume</button>
+                <button id="btn-save" class="menu-btn">Save Game</button>
+                <button id="btn-settings" class="menu-btn">Settings</button>
+                <button id="btn-quit" class="menu-btn">Quit to Title</button>
+            </div>
+            
+            <!-- Quest Info in Pause Menu -->
+            <div id="pause-quest-info" style="margin-top: 20px; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid #8B4513;">
+                <h3 style="color: #ffd700; border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 10px;">📜 Current Objectives</h3>
+                <div id="pause-main-quest">No active main quest</div>
+                <div id="pause-side-quests" style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Death Screen -->
+    <div id="death-screen" class="hidden">
+        <div class="death-container">
+            <h1>💀 YOU DIED</h1>
+            <p id="death-message">You were slain</p>
+            <p>Survived <span id="survival-days">0</span> days</p>
+            <button id="respawn-btn">Respawn</button>
+        </div>
+    </div>
+    
+    <!-- Furnace Screen -->
+    <div id="furnace-screen" class="modal hidden">
+        <div class="modal-content">
+            <h2>Furnace</h2>
+            <div class="furnace-container" style="display:flex; align-items:center; gap:10px; justify-content:center;">
+                <div id="furnace-input" class="inventory-slot"></div>
+                <div>➡️</div>
+                <div id="furnace-output" class="inventory-slot"></div>
+            </div>
+            <div style="text-align:center; margin-top:20px;">
+                <button id="smelt-btn" class="action-btn" style="width:auto; padding:10px 30px;">🔥 Smelt</button>
+            </div>
+            <button id="close-furnace" class="close-btn">✕</button>
+        </div>
+    </div>
+    
+    <!-- Settings Menu -->
+    <div id="settings-menu" class="modal hidden">
+        <div class="modal-content" style="text-align: left; max-width: 450px;">
+            <h2>⚙️ Settings</h2>
+            
+            <div style="margin: 15px 0;">
+                <label style="display: block; margin-bottom: 10px;">
+                    🔊 Master Volume
+                    <input type="range" id="setting-volume" min="0" max="100" value="70" style="width: 100%;">
+                </label>
+                
+                <label style="display: block; margin-bottom: 10px;">
+                    🎵 Music Volume
+                    <input type="range" id="setting-music" min="0" max="100" value="50" style="width: 100%;">
+                </label>
+                
+                <label style="display: block; margin-bottom: 10px;">
+                    🖱️ Mouse Sensitivity
+                    <input type="range" id="setting-sensitivity" min="1" max="10" value="5" style="width: 100%;">
+                </label>
+                
+                <label style="display: block; margin-bottom: 10px;">
+                    📏 Render Distance
+                    <select id="setting-render-distance" style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555;">
+                        <option value="4">Short (4 chunks)</option>
+                        <option value="8" selected>Normal (8 chunks)</option>
+                        <option value="12">Far (12 chunks)</option>
+                    </select>
+                </label>
+                
+                <label style="display: block; margin-bottom: 10px;">
+                    <input type="checkbox" id="setting-particles" checked> Show Particles
+                </label>
+                
+                <label style="display: block; margin-bottom: 10px;">
+                    <input type="checkbox" id="setting-shadows" checked> Enable Shadows
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="btn-settings-save" class="menu-btn">Save</button>
+                <button id="btn-settings-close" class="menu-btn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Minimap -->
+    <div id="minimap-container">
+        <canvas id="minimap-canvas" width="150" height="150"></canvas>
+    </div>
+    
+    <script type="module" src="js/main3d.js"></script>
+    <script>
+        // Pointer lock and mobile setup handled by main3d.js
+        document.addEventListener('DOMContentLoaded', () => {
+            const crosshair = document.querySelector('.crosshair');
+            const settingsMenu = document.getElementById('settings-menu');
+            
+            // Handle pointer lock changes for crosshair visibility
+            document.addEventListener('pointerlockchange', () => {
+                if (document.pointerLockElement) {
+                    crosshair.style.display = 'block';
+                } else {
+                    crosshair.style.display = 'none';
+                }
+            });
+            
+            // Builder mode button
+            document.getElementById('builder-mode-btn-3d').addEventListener('click', () => {
+                if (window.game) {
+                    window.game.giveBuilderItems();
+                }
+            });
+            
+            // Settings button handlers
+            document.querySelectorAll('#btn-settings').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (settingsMenu) settingsMenu.classList.remove('hidden');
+                });
+            });
+            
+            document.getElementById('btn-settings-close')?.addEventListener('click', () => {
+                if (settingsMenu) settingsMenu.classList.add('hidden');
+            });
+            
+            document.getElementById('btn-settings-save')?.addEventListener('click', () => {
+                // Apply settings
+                const volume = document.getElementById('setting-volume').value / 100;
+                const music = document.getElementById('setting-music').value / 100;
+                const sensitivity = document.getElementById('setting-sensitivity').value;
+                
+                if (window.game) {
+                    if (window.game.audio) {
+                        window.game.audio.masterVolume = volume;
+                    }
+                    if (window.game.adaptiveMusic) {
+                        window.game.adaptiveMusic.volume = music;
+                    }
+                    if (window.game.camera3d) {
+                        window.game.camera3d.sensitivity = sensitivity * 0.001;
+                    }
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('game_settings', JSON.stringify({
+                    volume, music, sensitivity
+                }));
+                
+                if (settingsMenu) settingsMenu.classList.add('hidden');
+            });
+            
+            // Load saved settings
+            try {
+                const saved = JSON.parse(localStorage.getItem('game_settings') || '{}');
+                if (saved.volume !== undefined) document.getElementById('setting-volume').value = saved.volume * 100;
+                if (saved.music !== undefined) document.getElementById('setting-music').value = saved.music * 100;
+                if (saved.sensitivity !== undefined) document.getElementById('setting-sensitivity').value = saved.sensitivity;
+            } catch (e) {}
+            
+            // Debug toggle (F3)
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'F3') {
+                    const debug = document.getElementById('debug-info');
+                    debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

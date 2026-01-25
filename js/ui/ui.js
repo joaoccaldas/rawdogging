@@ -51,6 +51,16 @@ export class UIManager {
             console.error('UIManager: New Game Button NOT FOUND');
         }
 
+        // Builder Mode button
+        const builderModeBtn = document.getElementById('btn-builder-mode');
+        if (builderModeBtn) {
+            console.log('UIManager: Found Builder Mode Button');
+            builderModeBtn.addEventListener('click', () => {
+                console.log('UIManager: Builder Mode Clicked');
+                this.startBuilderMode();
+            });
+        }
+
         document.getElementById('btn-load-game')?.addEventListener('click', () => this.loadGameMenu());
         document.getElementById('btn-resume')?.addEventListener('click', () => this.togglePauseUI(false));
         document.getElementById('btn-save')?.addEventListener('click', () => { this.game.saveManager.save(); this.togglePauseUI(false); });
@@ -261,6 +271,34 @@ export class UIManager {
             this.game.firstSteps = true;
             // The quest manager init is called inside game.startNewGame()
         });
+    }
+
+    startBuilderMode() {
+        console.log('UIManager: Starting Builder Mode...');
+
+        // Get player name from input
+        const playerName = this.playerNameInput?.value.trim() || 'Builder';
+        this.game.playerName = playerName;
+        console.log(`UIManager: Player name set to "${playerName}"`);
+
+        // Hide start screen
+        this.startScreen.classList.add('hidden');
+
+        // Start new game with builder mode flag
+        this.game.builderMode = true;
+        this.game.saveManager.setSlot('builder_save');
+        this.game.startNewGame();
+        this.game.paused = false;
+        
+        // Skip the intro cinematic for builder mode
+        this.game.introCinematic = false;
+        this.game.firstSteps = false;
+        
+        // Give the player all items after a short delay
+        setTimeout(() => {
+            this.game.giveBuilderItems();
+            this.showNotification('🔨 Builder Mode Active - All items unlocked!', 'success');
+        }, 500);
     }
 
     loadGameMenu() {

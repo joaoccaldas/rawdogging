@@ -223,11 +223,16 @@ export class SaveManager {
             dungeons: this.game.dungeons?.serialize() || null,
             seasonalEvents: this.game.seasonalEvents?.serialize() || null,
             blueprints: this.game.blueprints?.serialize() || null,
+            // ====== CIVILIZATION SYSTEM ======
+            civilization: this.game.civilization?.serialize() || null,
+            // ====== 3D CAMERA STATE ======
+            camera3d: this.game.camera3d ? {
+                yaw: this.game.camera3d.yaw,
+                pitch: this.game.camera3d.pitch
+            } : null,
         };
 
         try {
-            // Backup existing save if present - try but don't fail if backup exceeds quota
-            try {
             // Create backup before overwriting
             this.createBackup();
 
@@ -398,6 +403,32 @@ export class SaveManager {
             if (data.dungeons && this.game.dungeons) this.game.dungeons.deserialize(data.dungeons);
             if (data.seasonalEvents && this.game.seasonalEvents) this.game.seasonalEvents.deserialize(data.seasonalEvents);
             if (data.blueprints && this.game.blueprints) this.game.blueprints.deserialize(data.blueprints);
+            
+            // ====== RESTORE CIVILIZATION SYSTEM ======
+            if (data.civilization && this.game.civilization) {
+                this.game.civilization.deserialize(data.civilization);
+            }
+            
+            // ====== RESTORE 3D CAMERA STATE ======
+            if (data.camera3d && this.game.camera3d) {
+                this.game.camera3d.yaw = data.camera3d.yaw || 0;
+                this.game.camera3d.pitch = data.camera3d.pitch || 0;
+            }
+            
+            // ====== REBUILD 3D MESHES IF IN 3D MODE ======
+            if (this.game.is3D && this.game.renderer3d) {
+                console.log('Rebuilding 3D chunk meshes after load...');
+                // Clear existing meshes
+                this.game.renderer3d.clearAllChunkMeshes();
+                // Mark all loaded chunks as dirty
+                this.game.world.chunks.forEach((chunk, key) => {
+                    this.game.dirtyChunks?.add(key);
+                });
+                // Rebuild meshes
+                if (this.game.buildInitialMeshes) {
+                    this.game.buildInitialMeshes();
+                }
+            }
 
             console.log('Game Loaded');
             return true;

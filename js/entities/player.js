@@ -850,6 +850,9 @@ export class Player extends Entity {
         const bx = placePosition.x;
         const by = placePosition.y;
         const placeZ = placePosition.z;
+        
+        // Debug logging for block placement
+        console.log(`Place attempt: hit(${hit.x},${hit.y},${hit.z}) -> place(${bx},${by},${placeZ}) blockAtPlace=${this.game.world.getBlock(bx, by, placeZ)}`);
 
         // Hoe Logic (Till Dirt) - Special Case target EXISTING block
         if (item.type === 'tool' && item.toolType === 'hoe') {
@@ -963,11 +966,13 @@ export class Player extends Entity {
                     this.game.sideQuests.onBlockPlaced(blockId);
                 }
 
-                // Consume item
-                if (item.stackable && item.count > 1) {
-                    item.count--;
-                } else {
-                    this.hotbar[this.selectedSlot] = null;
+                // Consume item (skip in builder mode)
+                if (!this.game.builderMode) {
+                    if (item.stackable && item.count > 1) {
+                        item.count--;
+                    } else {
+                        this.hotbar[this.selectedSlot] = null;
+                    }
                 }
                 this.updateUI();
             }

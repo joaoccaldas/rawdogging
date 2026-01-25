@@ -119,6 +119,27 @@ export class World {
         // Generate fixed structures
         this.spawnAncientCave();
     }
+    
+    /**
+     * Generate chunks around a position before player exists
+     */
+    generateInitialChunks(worldX, worldY) {
+        const centerChunkX = Math.floor(worldX / CONFIG.CHUNK_SIZE);
+        const centerChunkY = Math.floor(worldY / CONFIG.CHUNK_SIZE);
+        const renderDist = CONFIG.RENDER_DISTANCE || 3;
+        
+        console.log(`World: Generating initial chunks around (${centerChunkX}, ${centerChunkY}), distance ${renderDist}`);
+        
+        for (let x = centerChunkX - renderDist; x <= centerChunkX + renderDist; x++) {
+            for (let y = centerChunkY - renderDist; y <= centerChunkY + renderDist; y++) {
+                if (!this.getChunk(x, y)) {
+                    this.generateChunk(x, y);
+                }
+            }
+        }
+        
+        console.log(`World: Generated ${this.chunks.size} chunks`);
+    }
 
     loadSerializedChunks(serializedChunks) {
         this.chunks.clear();

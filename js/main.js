@@ -4,7 +4,7 @@ import { InputManager } from './core/input.js';
 import { Camera } from './core/camera.js';
 import { World } from './world/world.js';
 
-import { CONFIG } from './config.js';
+import { CONFIG, ITEMS, BLOCKS } from './config.js';
 
 import { UIManager } from './ui/ui.js';
 
@@ -514,6 +514,62 @@ class Game {
 
         console.log(`Game: New Game Started. Spawn at Z=${this.player.z}`);
         this.player.updateUI();
+    }
+
+    giveBuilderItems() {
+        if (!this.player) return;
+        
+        console.log('Game: Giving builder mode items...');
+        
+        // Builder mode settings - god mode essentially
+        this.player.health = 9999;
+        this.player.maxHealth = 9999;
+        this.player.hunger = 9999;
+        this.player.maxHunger = 9999;
+        
+        // Get all placeable blocks and tools
+        const builderItems = [];
+        
+        for (const [key, item] of Object.entries(ITEMS)) {
+            // Include blocks, tools, weapons, and useful items
+            if (item.type === 'block' || 
+                item.type === 'placeable' || 
+                item.type === 'tool' || 
+                item.type === 'weapon') {
+                builderItems.push({
+                    ...item,
+                    count: item.stackable ? 999 : 1
+                });
+            }
+        }
+        
+        // Fill hotbar with most useful building items
+        const hotbarItems = [
+            { ...ITEMS.cobblestone, count: 999 },
+            { ...ITEMS.plank, count: 999 },
+            { ...ITEMS.stone, count: 999 },
+            { ...ITEMS.glass, count: 999 },
+            { ...ITEMS.thatch, count: 999 },
+            { ...ITEMS.mud_brick, count: 999 },
+            { ...ITEMS.torch, count: 999 },
+            { ...ITEMS.diamond_pickaxe, count: 1 }
+        ];
+        
+        // Set hotbar
+        for (let i = 0; i < Math.min(hotbarItems.length, 8); i++) {
+            this.player.hotbar[i] = hotbarItems[i];
+        }
+        
+        // Fill inventory with all items
+        let invIndex = 0;
+        for (const item of builderItems) {
+            if (invIndex >= this.player.inventory.length) break;
+            this.player.inventory[invIndex] = item;
+            invIndex++;
+        }
+        
+        this.player.updateUI();
+        console.log(`Game: Builder mode - gave ${invIndex} items`);
     }
 
     togglePause(paused) {

@@ -277,10 +277,18 @@ export class AgeProgressionManager {
     updateAgeUI() {
         const ageText = document.getElementById('age-text');
         if (ageText) {
+            // Show Builder Mode indicator if active
+            if (this.game.builderMode) {
+                ageText.textContent = '🔨 Builder Mode';
+                ageText.style.color = '#4ade80';
+                return;
+            }
+            
             const ageData = AGES[this.currentAge];
             const icons = ['🦴', '🦴', '🥉', '⚔️', '🏰', '⚙️', '💻'];
             const icon = icons[this.currentAgeIndex] || '🦴';
             ageText.textContent = `${icon} ${ageData?.name || 'Stone Age'}`;
+            ageText.style.color = ''; // Reset color
         }
     }
     

@@ -6,10 +6,16 @@
 export class LandingPage {
     constructor() {
         this.canvas = document.getElementById('story-canvas');
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas?.getContext('2d');
         this.textElement = document.getElementById('story-text');
         this.landingPage = document.getElementById('landing-page');
         this.skipBtn = document.getElementById('skip-intro');
+        
+        // If canvas doesn't exist, mark as completed (skip intro)
+        if (!this.canvas || !this.ctx) {
+            this.completed = true;
+            return;
+        }
 
         this.currentScene = 0;
         this.sceneProgress = 0;

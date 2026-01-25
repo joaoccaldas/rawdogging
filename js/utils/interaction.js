@@ -113,12 +113,44 @@ export const InteractionUtils = {
             }
         }
 
-        // 2. Mouse-Plane intersection (Optional improvement)
-        // If no block hit, where IS the cursor in the world if we project to z=player.z?
+        // 2. Mouse-Plane intersection - If no block hit, find ground position for placement
         if (!bestHit) {
-            // "Air" selection at varying Z?
-            // Usually we just want to highlight the block on the ground.
-            // Let's rely on the iteration above finding the ground.
+            // Calculate world position based on mouse and player position
+            const playerScreen = camera.worldToScreen(player.x, player.y, player.z);
+            const dx = mouse.x - playerScreen.x;
+            const dy = mouse.y - playerScreen.y;
+            
+            // Convert screen delta to isometric world direction
+            const isoX = (dx / (CONFIG.TILE_WIDTH / 2) + dy / (CONFIG.TILE_HEIGHT / 2)) / 2;
+            const isoY = (dy / (CONFIG.TILE_HEIGHT / 2) - dx / (CONFIG.TILE_WIDTH / 2)) / 2;
+            
+            // Calculate target position at a fixed distance
+            const mag = Math.sqrt(isoX * isoX + isoY * isoY);
+            if (mag > 0) {
+                const targetDist = Math.min(range, 3); // Default 3 blocks away
+                const targetX = Math.floor(player.x + (isoX / mag) * targetDist);
+                const targetY = Math.floor(player.y + (isoY / mag) * targetDist);
+                
+                // Find the ground level at this position
+                let groundZ = Math.floor(player.z);
+                for (let z = Math.floor(player.z) + 2; z >= 0; z--) {
+                    const block = game.world.getBlock(targetX, targetY, z);
+                    if (block !== BLOCKS.AIR && block !== BLOCKS.WATER) {
+                        groundZ = z + 1; // Place on top of this block
+                        break;
+                    }
+                }
+                
+                return {
+                    x: targetX,
+                    y: targetY,
+                    z: groundZ - 1, // The block we're "targeting" is below placement
+                    distance: targetDist,
+                    type: 'ground',
+                    blockId: game.world.getBlock(targetX, targetY, groundZ - 1),
+                    face: 'top'
+                };
+            }
         }
 
         return bestHit;
@@ -133,29 +165,40 @@ export const InteractionUtils = {
     getPlacementPosition(game, hit) {
         if (!hit) return null;
 
-        const { x, y, z } = hit;
+        const { x, y, z, face, type } = hit;
         const player = game.player;
 
-        // Simple logic: Place on top if floor, or side if wall.
-        // We need 'face' logic here.
-
-        // Let's re-calculate face based on precise intersection or relative position
-        // If player is much higher, place on top.
-        if (player.z >= z + 1) {
+        // For ground-type hits (no specific block targeted), place at the hit location's top
+        if (type === 'ground') {
             return { x, y, z: z + 1 };
         }
 
+        // Check if the position above the hit block is free - prefer stacking
+        const aboveBlock = game.world.getBlock(x, y, z + 1);
+        if (aboveBlock === BLOCKS.AIR) {
+            return { x, y, z: z + 1 };
+        }
+
+        // If above is occupied, try sides based on player position
         // Determine quadrant relative to block center
         const dx = player.x - (x + 0.5);
         const dy = player.y - (y + 0.5);
 
+        // Try the side the player is on
+        let sideX = x, sideY = y;
         if (Math.abs(dx) > Math.abs(dy)) {
-            // X-axis predominant
-            return { x: x + Math.sign(dx), y, z };
+            sideX = x + Math.sign(dx);
         } else {
-            // Y-axis predominant
-            return { x, y: y + Math.sign(dy), z };
+            sideY = y + Math.sign(dy);
         }
+        
+        // Check if side position is free
+        if (game.world.getBlock(sideX, sideY, z) === BLOCKS.AIR) {
+            return { x: sideX, y: sideY, z };
+        }
+
+        // Fallback to top even if occupied (will fail placement check later)
+        return { x, y, z: z + 1 };
     },
     
     /**
