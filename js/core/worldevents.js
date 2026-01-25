@@ -364,7 +364,7 @@ export class WorldEventSystem {
         
         // Earthquake shake
         if (mods.screenShake) {
-            this.game.camera?.shake?.(deltaTime * 2, 2);
+            this.game.camera?.addShake?.(2, deltaTime * 2);
         }
     }
     
@@ -403,7 +403,7 @@ export class WorldEventSystem {
         }
         
         // Camera shake
-        this.game.camera?.shake?.(0.3, 4);
+        this.game.camera?.addShake?.(4, 0.3);
     }
     
     // Spawn lightning
@@ -441,7 +441,7 @@ export class WorldEventSystem {
             }
         }
         
-        this.game.camera?.shake?.(0.2, 6);
+        this.game.camera?.addShake?.(6, 0.2);
     }
     
     // Spawn migration animals
