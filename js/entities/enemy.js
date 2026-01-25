@@ -156,21 +156,43 @@ export class Enemy extends Entity {
             case 'ATTACK':
                 this.vx = 0;
                 this.vy = 0;
-                // Attack Player with cooldown
+                // Attack Player with cooldown - only if still in range
                 if (this.game.player) {
-                    const now = Date.now();
-                    if (now - this.lastAttackTime >= this.attackCooldown) {
-                        this.lastAttackTime = now;
-                        this.game.player.takeDamage(this.damage, this);
-                        this.game.audio.play('hit');
-                        
-                        // Attack particles at player
-                        this.game.particles.emit(
-                            this.game.player.x, 
-                            this.game.player.y, 
-                            this.game.player.z + 1, 
-                            '#ff4444', 6
-                        );
+                    const attackRange = CONFIG.ATTACK_RANGE * (this.isBoss ? 1.5 : 1);
+                    const attackDist = Math.hypot(
+                        this.game.player.x - this.x, 
+                        this.game.player.y - this.y, 
+                        this.game.player.z - this.z
+                    );
+                    
+                    // Only attack if actually within attack range
+                    if (attackDist <= attackRange) {
+                        const now = Date.now();
+                        if (now - this.lastAttackTime >= this.attackCooldown) {
+                            this.lastAttackTime = now;
+                            this.game.player.takeDamage(this.damage, this);
+                            this.game.audio.play('hit');
+                            
+                            // Attack particles at player
+                            this.game.particles.emit(
+                                this.game.player.x, 
+                                this.game.player.y, 
+                                this.game.player.z + 1, 
+                                '#ff4444', 6
+                            );
+                            
+                            // Damage number popup
+                            this.game.particles.emitText(
+                                this.game.player.x, 
+                                this.game.player.y, 
+                                this.game.player.z + 2, 
+                                `-${this.damage}`, 
+                                '#ff4444'
+                            );
+                        }
+                    } else {
+                        // Out of range, chase instead
+                        this.state = 'CHASE';
                     }
                 }
                 break;

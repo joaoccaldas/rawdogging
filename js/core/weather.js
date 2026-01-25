@@ -365,8 +365,9 @@ export class WeatherSystem {
     }
     
     // Render weather particles
-    render(renderer) {
-        const ctx = renderer.ctx;
+    render(ctx, width, height) {
+        if (!ctx) return;
+        
         const camera = this.game.camera;
         
         for (const p of this.particles) {
@@ -382,7 +383,7 @@ export class WeatherSystem {
         // Lightning flash overlay
         if (this.lightningFlash > 0.1) {
             ctx.fillStyle = `rgba(255, 255, 255, ${this.lightningFlash * 0.3})`;
-            ctx.fillRect(0, 0, renderer.width, renderer.height);
+            ctx.fillRect(0, 0, width, height);
         }
     }
     
