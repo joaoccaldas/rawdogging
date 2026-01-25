@@ -92,36 +92,75 @@ export class InputManager {
         const btnAttack = document.getElementById('btn-attack');
         const btnJump = document.getElementById('btn-jump');
         const btnInventory = document.getElementById('btn-inventory');
+        const btnSprint = document.getElementById('btn-sprint');
+        const btnDash = document.getElementById('btn-dash');
+        const btnUse = document.getElementById('btn-use');
 
-        if (btnMine) {
-            btnMine.addEventListener('touchstart', () => this.actions.mine = true);
-            btnMine.addEventListener('touchend', () => this.actions.mine = false);
-        }
-        if (btnAttack) {
-            btnAttack.addEventListener('touchstart', () => this.actions.attack = true);
-            btnAttack.addEventListener('touchend', () => this.actions.attack = false);
-        }
-        if (btnJump) {
-            btnJump.addEventListener('touchstart', () => this.actions.jump = true);
-            btnJump.addEventListener('touchend', () => this.actions.jump = false);
-        }
+        // Helper for touch button handling with visual feedback
+        const setupButton = (btn, startAction, endAction) => {
+            if (!btn) return;
+            
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btn.classList.add('active');
+                startAction();
+            });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                btn.classList.remove('active');
+                endAction();
+            });
+            btn.addEventListener('touchcancel', (e) => {
+                btn.classList.remove('active');
+                endAction();
+            });
+        };
+
+        setupButton(btnMine, 
+            () => { this.actions.mine = true; this.actions.attack = true; },
+            () => { this.actions.mine = false; this.actions.attack = false; }
+        );
+        
+        setupButton(btnAttack, 
+            () => this.actions.attack = true,
+            () => this.actions.attack = false
+        );
+        
+        setupButton(btnJump, 
+            () => this.actions.jump = true,
+            () => this.actions.jump = false
+        );
+        
+        setupButton(btnUse, 
+            () => this.actions.use = true,
+            () => this.actions.use = false
+        );
+        
+        setupButton(btnSprint, 
+            () => this.actions.sprint = true,
+            () => this.actions.sprint = false
+        );
+        
+        setupButton(btnDash, 
+            () => { this.actions.dash = true; },
+            () => { /* dash is consumed immediately */ }
+        );
+
         if (btnInventory) {
-            btnInventory.addEventListener('touchstart', () => {
+            btnInventory.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btnInventory.classList.add('active');
                 this.actions.inventory = true;
                 this.game.ui?.toggleInventory();
             });
-            btnInventory.addEventListener('touchend', () => this.actions.inventory = false);
-        }
-        if (btnInventory) {
-            btnInventory.addEventListener('touchstart', () => {
-                this.actions.inventory = true;
-                this.game.ui?.toggleInventory();
+            btnInventory.addEventListener('touchend', () => {
+                btnInventory.classList.remove('active');
+                this.actions.inventory = false;
             });
-            btnInventory.addEventListener('touchend', () => this.actions.inventory = false);
         }
 
-        // Add Sprint button for mobile if needed (not in current UI but safe to add logic)
-        // For now, auto-sprint if joystick pushed far? OR toggle
+        // Auto-sprint when joystick pushed to edge
+        this.autoSprintThreshold = 0.9;
     }
 
     onKeyDown(e) {
@@ -350,6 +389,13 @@ export class InputManager {
     }
 
     isSprinting() {
+        // Auto-sprint when joystick pushed to edge on mobile
+        if (this.mobileEnabled && this.joystick.active) {
+            const magnitude = Math.sqrt(this.joystick.x ** 2 + this.joystick.y ** 2);
+            if (magnitude >= (this.autoSprintThreshold || 0.9)) {
+                return true;
+            }
+        }
         return this.actions.sprint;
     }
 

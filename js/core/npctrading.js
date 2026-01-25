@@ -263,15 +263,61 @@ export class NPCTradingSystem {
         this.interactionRange = 3;
         
         // Spawn settings
-        this.maxNPCs = 5;
+        this.maxNPCs = 8;
         this.spawnCooldown = 0;
-        this.spawnInterval = 120; // 2 minutes
+        this.spawnInterval = 60; // 1 minute between spawn attempts
+        
+        // NPC spawn weights by biome
+        this.biomeSpawnWeights = {
+            forest: { HUNTER: 3, HERBALIST: 2, FARMER: 1 },
+            plains: { FARMER: 3, TRADER: 2, HERBALIST: 1 },
+            desert: { TRADER: 3, SHAMAN: 2 },
+            snow: { HUNTER: 3, TRADER: 2, SHAMAN: 1 },
+            swamp: { HERBALIST: 3, SHAMAN: 2 },
+            mountains: { BLACKSMITH: 3, HUNTER: 2 },
+            default: { TRADER: 2, FARMER: 1, HUNTER: 1 }
+        };
+        
+        // Initialize with some starter NPCs
+        this.initialized = false;
+    }
+    
+    init() {
+        if (this.initialized) return;
+        this.initialized = true;
+        
+        // Spawn initial NPCs near player spawn
+        setTimeout(() => {
+            this.spawnInitialNPCs();
+        }, 5000); // Wait for world to generate
+    }
+    
+    spawnInitialNPCs() {
+        const player = this.game.player;
+        if (!player) return;
+        
+        // Spawn 2-3 initial NPCs
+        const count = 2 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < count; i++) {
+            this.trySpawnNPC();
+        }
     }
     
     update(deltaTime) {
+        // Initialize on first update
+        if (!this.initialized) {
+            this.init();
+        }
+        
         // Update all NPCs
         for (const npc of this.npcs.values()) {
             npc.update(deltaTime);
+            
+            // Remove NPCs too far from player
+            const dist = this.getDistanceToNPC(npc);
+            if (dist > 100) {
+                this.npcs.delete(npc.id);
+            }
         }
         
         // Check if active NPC is still in range
@@ -286,7 +332,9 @@ export class NPCTradingSystem {
         this.spawnCooldown -= deltaTime;
         if (this.spawnCooldown <= 0 && this.npcs.size < this.maxNPCs) {
             this.spawnCooldown = this.spawnInterval;
-            this.trySpawnNPC();
+            if (Math.random() < 0.5) { // 50% chance each interval
+                this.trySpawnNPC();
+            }
         }
     }
     
@@ -314,19 +362,48 @@ export class NPCTradingSystem {
         const player = this.game.player;
         if (!player) return null;
         
-        // Pick random type
-        const types = Object.keys(NPC_TYPES);
-        const type = types[Math.floor(Math.random() * types.length)];
+        // Get current biome
+        const biome = this.game.world?.getBiomeAt?.(player.x, player.y) || 'default';
         
-        // Spawn at random position near player
+        // Get spawn weights for this biome
+        const weights = this.biomeSpawnWeights[biome] || this.biomeSpawnWeights.default;
+        
+        // Weighted random selection
+        const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+        let random = Math.random() * totalWeight;
+        
+        let selectedType = 'TRADER';
+        for (const [type, weight] of Object.entries(weights)) {
+            random -= weight;
+            if (random <= 0) {
+                selectedType = type;
+                break;
+            }
+        }
+        
+        // Spawn at random position near player (but off-screen)
         const angle = Math.random() * Math.PI * 2;
-        const distance = 15 + Math.random() * 20;
+        const distance = 25 + Math.random() * 15; // Spawn 25-40 units away
         
         const x = player.x + Math.cos(angle) * distance;
         const y = player.y + Math.sin(angle) * distance;
-        const z = player.z;
         
-        return this.spawnNPC(type, x, y, z);
+        // Get ground level at spawn position
+        let z = player.z;
+        if (this.game.world) {
+            const groundZ = this.game.world.getGroundLevel?.(Math.floor(x), Math.floor(y));
+            if (groundZ !== undefined && groundZ > 0) {
+                z = groundZ + 1;
+            }
+        }
+        
+        // Check if valid spawn (not in water, etc.)
+        const blockAtSpawn = this.game.world?.getBlock?.(Math.floor(x), Math.floor(y), Math.floor(z - 1));
+        if (blockAtSpawn === 0 || blockAtSpawn === 5) { // 0=air, 5=water typically
+            return null; // Invalid spawn, try again next time
+        }
+        
+        return this.spawnNPC(selectedType, x, y, z);
     }
     
     // Remove NPC

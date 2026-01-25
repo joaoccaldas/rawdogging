@@ -162,6 +162,31 @@ export class ArmorSystem {
         
         return true;
     }
+
+    // Equip armor that's already been removed from inventory
+    equipArmorFromSlot(itemKey) {
+        const armorDef = ARMOR_TYPES[itemKey];
+        if (!armorDef) return false;
+        
+        const slot = armorDef.slot;
+        
+        // Unequip current armor first
+        if (this.equipped[slot]) {
+            this.unequipArmor(slot);
+        }
+        
+        // Equip new armor
+        this.equipped[slot] = itemKey;
+        this.durability[slot] = armorDef.durability;
+        
+        // Play sound
+        this.game.audio?.play('equip');
+        
+        // Update UI
+        this.updateArmorUI();
+        
+        return true;
+    }
     
     // Unequip armor to inventory
     unequipArmor(slot) {

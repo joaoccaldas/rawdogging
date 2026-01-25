@@ -29,6 +29,8 @@ import { TemperatureSystem } from './core/temperature.js';
 import { FoodBuffSystem } from './core/foodbuffs.js';
 import { HomeBeaconSystem } from './core/homebeacon.js';
 import { WildlifeSystem } from './entities/wildlife.js';
+import { AgeProgressionManager } from './core/ageprogression.js';
+import { CombatFeelSystem } from './core/combatfeel.js';
 
 // ====== NEW SYSTEMS (20 Feature Expansion) ======
 import { StaminaSystem } from './core/stamina.js';
@@ -73,6 +75,7 @@ import { DungeonSystem } from './world/dungeons.js';
 import { StructureSystem } from './world/structures.js';
 import { SeasonalEventsSystem } from './core/seasonalevents.js';
 import { BlueprintSystem } from './core/blueprints.js';
+import { PerformanceMonitor, SpatialHash } from './utils/performance.js';
 
 class Game {
     constructor() {
@@ -83,6 +86,11 @@ class Game {
         this.initialized = false;
         this.firstSteps = false; // Walking tutorial state
         this.introCinematic = false; // Blocking input during eyes opening
+        
+        // Performance monitoring
+        this.perfMonitor = new PerformanceMonitor();
+        this.spatialHash = new SpatialHash(16);
+        this.fps = 0;
 
         this.spriteManager = new SpriteManager();
 
@@ -133,6 +141,13 @@ class Game {
 
         // Armor System - Damage reduction
         this.armor = new ArmorSystem(this);
+
+        // Age Progression Manager - Age gates and bonuses
+        this.ageProgression = new AgeProgressionManager(this);
+        this.ageProgression.init();
+
+        // Combat Feel System - Enhanced combat feedback
+        this.combatFeel = new CombatFeelSystem(this);
 
         // Statistics - Track achievements
         this.statistics = new Statistics(this);
@@ -336,16 +351,42 @@ class Game {
             this.fps = this.fps ? (this.fps * 0.9 + currentFps * 0.1) : currentFps;
         }
 
-        // Update
+        // Performance: Measure update time
+        this.perfMonitor.startMeasure('update');
         this.update(deltaTime);
+        this.perfMonitor.endMeasure('update');
 
-        // Render
+        // Performance: Measure render time
+        this.perfMonitor.startMeasure('render');
         this.renderer.render();
+        this.perfMonitor.endMeasure('render');
+        
         if (this.debugMode) {
             this.renderer.renderDebug();
+            this.renderPerformanceStats();
         }
 
         requestAnimationFrame((t) => this.gameLoop(t));
+    }
+    
+    renderPerformanceStats() {
+        const ctx = this.renderer.ctx;
+        const metrics = this.perfMonitor.getAllMetrics();
+        
+        ctx.save();
+        ctx.font = '12px monospace';
+        ctx.fillStyle = '#00ff00';
+        
+        let y = 60;
+        ctx.fillText(`FPS: ${Math.round(this.fps)}`, 10, y);
+        y += 15;
+        
+        for (const [name, data] of Object.entries(metrics)) {
+            ctx.fillText(`${name}: ${data.avg}ms`, 10, y);
+            y += 15;
+        }
+        
+        ctx.restore();
     }
 
     startNewGame() {

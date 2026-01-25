@@ -156,5 +156,93 @@ export const InteractionUtils = {
             // Y-axis predominant
             return { x, y: y + Math.sign(dy), z };
         }
+    },
+    
+    /**
+     * Check if a block is a crafting station
+     * @param {number} blockId - Block ID to check
+     * @returns {string|null} - Station type or null
+     */
+    getStationType(blockId) {
+        const stationMap = {
+            [BLOCKS.CRAFTING_TABLE]: 'crafting_table',
+            [BLOCKS.FURNACE]: 'furnace',
+            [BLOCKS.ANVIL]: 'anvil',
+            [BLOCKS.CAMPFIRE]: 'campfire',
+            [BLOCKS.CHEST]: 'chest',
+            [BLOCKS.CAULDRON]: 'cauldron'
+        };
+        return stationMap[blockId] || null;
+    },
+    
+    /**
+     * Check if a block is interactable (door, lever, chest, etc.)
+     * @param {number} blockId - Block ID to check
+     * @returns {boolean}
+     */
+    isInteractable(blockId) {
+        const interactables = [
+            BLOCKS.DOOR,
+            BLOCKS.TRAPDOOR,
+            BLOCKS.CHEST,
+            BLOCKS.FURNACE,
+            BLOCKS.CRAFTING_TABLE,
+            BLOCKS.ANVIL,
+            BLOCKS.BED,
+            BLOCKS.LEVER,
+            BLOCKS.BUTTON
+        ];
+        return interactables.includes(blockId);
+    },
+    
+    /**
+     * Handle interaction with a specific block
+     * @param {Object} game - Game instance
+     * @param {number} blockId - Block being interacted with
+     * @param {number} x - Block x position
+     * @param {number} y - Block y position
+     * @param {number} z - Block z position
+     * @returns {boolean} - Whether interaction was handled
+     */
+    handleBlockInteraction(game, blockId, x, y, z) {
+        const stationType = this.getStationType(blockId);
+        
+        // Handle crafting stations
+        if (stationType && game.craftingStations) {
+            game.craftingStations.openStation(stationType, x, y, z);
+            game.audio?.play('open');
+            return true;
+        }
+        
+        // Handle chests
+        if (blockId === BLOCKS.CHEST && game.storage) {
+            game.storage.openChestAt(x, y, z);
+            game.audio?.play('open');
+            return true;
+        }
+        
+        // Handle doors
+        if (blockId === BLOCKS.DOOR) {
+            const currentState = game.world.getBlockState?.(x, y, z) || {};
+            const isOpen = currentState.open || false;
+            game.world.setBlockState?.(x, y, z, { ...currentState, open: !isOpen });
+            game.audio?.play(isOpen ? 'close' : 'open');
+            return true;
+        }
+        
+        // Handle beds
+        if (blockId === BLOCKS.BED) {
+            if (game.world.isNight?.()) {
+                game.player.spawnPoint = { x, y, z: z + 1 };
+                game.ui?.showNotification('Spawn point set!', 'success');
+                game.world.skipToMorning?.();
+                return true;
+            } else {
+                game.ui?.showNotification('You can only sleep at night', 'warning');
+                return true;
+            }
+        }
+        
+        return false;
     }
 };

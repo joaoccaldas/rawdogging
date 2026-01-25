@@ -62,6 +62,14 @@ export class Player extends Entity {
         this.hotbar = new Array(CONFIG.HOTBAR_SIZE).fill(null);
         this.selectedSlot = 0;
 
+        // Equipment Slots (for armor integration)
+        this.equipment = {
+            head: null,
+            chest: null,
+            legs: null,
+            feet: null
+        };
+
         // Initial items - Stone Age starter kit
         this.hotbar[0] = { ...ITEMS.club, count: 1 };
         this.hotbar[1] = { ...ITEMS.cobblestone, count: 5 };
@@ -748,6 +756,63 @@ export class Player extends Entity {
         return false; // Inventory full
     }
 
+    // Remove an item from inventory/hotbar
+    removeItem(itemKey, count = 1) {
+        const itemDef = ITEMS[itemKey];
+        if (!itemDef) return false;
+
+        let remaining = count;
+
+        // Helper to reduce from list
+        const reduceFromList = (list) => {
+            for (let i = 0; i < list.length; i++) {
+                if (remaining <= 0) break;
+                const item = list[i];
+                if (item && item.name === itemDef.name) {
+                    if (item.count > remaining) {
+                        item.count -= remaining;
+                        remaining = 0;
+                    } else {
+                        remaining -= item.count;
+                        list[i] = null;
+                    }
+                }
+            }
+        };
+
+        // Check hotbar first
+        reduceFromList(this.hotbar);
+        // Then inventory
+        reduceFromList(this.inventory);
+
+        this.updateUI();
+        return remaining === 0;
+    }
+
+    // Check if player has an item
+    hasItem(itemKey, count = 1) {
+        const itemDef = ITEMS[itemKey];
+        if (!itemDef) return false;
+
+        let total = 0;
+
+        // Check hotbar
+        for (const item of this.hotbar) {
+            if (item && item.name === itemDef.name) {
+                total += item.count;
+            }
+        }
+
+        // Check inventory
+        for (const item of this.inventory) {
+            if (item && item.name === itemDef.name) {
+                total += item.count;
+            }
+        }
+
+        return total >= count;
+    }
+
     showItemPickup(itemName, emoji) {
         // Create floating text notification
         const notification = document.createElement('div');
@@ -1034,7 +1099,16 @@ export class Player extends Entity {
     takeDamage(amount, source, damageType = 'attack') {
         if (this.invincibleTime > 0) return;
 
-        this.health -= amount;
+        // Apply armor damage reduction
+        let finalDamage = amount;
+        if (this.game.armor && damageType === 'attack') {
+            const reduction = this.game.armor.getDamageReduction();
+            finalDamage = amount * (1 - reduction);
+            // Damage the armor
+            this.game.armor.onDamageTaken(amount);
+        }
+
+        this.health -= finalDamage;
         this.game.audio.play('hurt');
 
         // Screen flash for damage feedback

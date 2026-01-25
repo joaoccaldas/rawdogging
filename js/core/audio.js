@@ -90,6 +90,17 @@ export class AudioManager {
             case 'boss_spawn': this.playBossSpawn(); break;
             case 'boss_death': this.playBossDeath(); break;
             case 'step': this.playStep(); break;
+            case 'equip': this.playEquip(); break;
+            case 'critical_hit': this.playCriticalHit(); break;
+            case 'combo': this.playCombo(); break;
+            case 'dodge': this.playDodge(); break;
+            case 'block': this.playBlock(); break;
+            case 'tutorial_complete': this.playTutorialComplete(); break;
+            case 'age_up': this.playAgeUp(); break;
+            case 'trade': this.playTrade(); break;
+            case 'npc_greet': this.playNPCGreet(); break;
+            case 'error': this.playError(); break;
+            case 'success': this.playSuccess(); break;
         }
     }
 
@@ -290,6 +301,83 @@ export class AudioManager {
         // Footstep sound for block gravity
         this.playTone(60 + Math.random() * 20, 'triangle', 0.05, 0.2);
         this.playNoise(0.03, 0.15);
+    }
+
+    playEquip() {
+        // Armor/equipment sound
+        this.playTone(300, 'triangle', 0.1, 0.4);
+        this.playTone(400, 'triangle', 0.08, 0.3);
+        this.playNoise(0.05, 0.2);
+    }
+
+    playCriticalHit() {
+        // Powerful critical hit sound
+        this.playTone(600, 'sine', 0.1, 0.6);
+        this.playTone(800, 'sine', 0.15, 0.5);
+        setTimeout(() => this.playTone(1000, 'sine', 0.1, 0.4), 50);
+    }
+
+    playCombo() {
+        // Combo chain sound - rising pitch
+        this.playTone(500, 'sine', 0.08, 0.4);
+        setTimeout(() => this.playTone(600, 'sine', 0.08, 0.4), 50);
+    }
+
+    playDodge() {
+        // Quick dodge/dash sound
+        this.playTone(400, 'sawtooth', 0.05, 0.3);
+        this.playNoise(0.08, 0.2);
+    }
+
+    playBlock() {
+        // Shield block sound
+        this.playTone(150, 'square', 0.1, 0.5);
+        this.playTone(200, 'square', 0.08, 0.4);
+        this.playNoise(0.05, 0.3);
+    }
+
+    playTutorialComplete() {
+        // Tutorial step complete jingle
+        this.playTone(400, 'sine', 0.1, 0.4);
+        setTimeout(() => this.playTone(500, 'sine', 0.1, 0.4), 100);
+        setTimeout(() => this.playTone(600, 'sine', 0.15, 0.5), 200);
+    }
+
+    playAgeUp() {
+        // Age progression fanfare
+        this.playTone(300, 'sine', 0.15, 0.5);
+        setTimeout(() => this.playTone(400, 'sine', 0.15, 0.5), 150);
+        setTimeout(() => this.playTone(500, 'sine', 0.15, 0.5), 300);
+        setTimeout(() => this.playTone(600, 'sine', 0.2, 0.6), 450);
+        setTimeout(() => {
+            this.playTone(700, 'sine', 0.3, 0.6);
+            this.playTone(900, 'sine', 0.3, 0.4);
+        }, 600);
+    }
+
+    playTrade() {
+        // Trading/purchase sound
+        this.playTone(350, 'sine', 0.1, 0.4);
+        setTimeout(() => this.playTone(500, 'sine', 0.1, 0.4), 80);
+        this.playNoise(0.05, 0.15);
+    }
+
+    playNPCGreet() {
+        // NPC greeting sound
+        this.playTone(300, 'triangle', 0.15, 0.3);
+        setTimeout(() => this.playTone(400, 'triangle', 0.1, 0.3), 100);
+    }
+
+    playError() {
+        // Error/invalid action sound
+        this.playTone(200, 'square', 0.1, 0.4);
+        setTimeout(() => this.playTone(150, 'square', 0.15, 0.3), 100);
+    }
+
+    playSuccess() {
+        // Success/complete sound
+        this.playTone(400, 'sine', 0.1, 0.4);
+        setTimeout(() => this.playTone(600, 'sine', 0.15, 0.5), 100);
     }
 
     setVolume(type, value) {

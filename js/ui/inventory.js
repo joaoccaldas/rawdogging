@@ -1,4 +1,5 @@
 import { CONFIG, RECIPES, ITEMS, AGES } from '../config.js';
+import { ARMOR_TYPES } from '../core/armor.js';
 
 // Age index mapping for filtering recipes
 const AGE_INDEX = {
@@ -80,6 +81,9 @@ export class InventoryUI {
         const inventory = this.game.player.inventory;
         const hotbar = this.game.player.hotbar;
 
+        // Render Equipment Slots (armor)
+        this.renderEquipmentSlots();
+
         // Render Hotbar (first row usually, or separate section)
         // Let's render hotbar first as a separate row if visuals allow, 
         // or just first 8 slots. 
@@ -97,6 +101,69 @@ export class InventoryUI {
         }
 
         this.renderCrafting();
+    }
+
+    renderEquipmentSlots() {
+        // Create equipment section if not exists
+        let equipSection = document.getElementById('equipment-section');
+        if (!equipSection) {
+            equipSection = document.createElement('div');
+            equipSection.id = 'equipment-section';
+            equipSection.className = 'equipment-section';
+            this.grid.parentNode.insertBefore(equipSection, this.grid);
+        }
+
+        equipSection.innerHTML = '<h3>⚔️ Equipment</h3>';
+
+        const slots = ['head', 'chest', 'legs', 'feet'];
+        const slotIcons = { head: '🎩', chest: '👕', legs: '👖', feet: '👢' };
+
+        const armorSystem = this.game.armor;
+
+        slots.forEach(slotName => {
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'equipment-slot';
+            slotDiv.setAttribute('data-slot', slotName);
+
+            const equippedKey = armorSystem?.equipped?.[slotName];
+            
+            if (equippedKey) {
+                const armorDef = ARMOR_TYPES[equippedKey];
+                const durPercent = armorSystem.getDurabilityPercent(slotName);
+                const durColor = durPercent > 50 ? '#4ade80' : durPercent > 25 ? '#fbbf24' : '#ef4444';
+
+                slotDiv.innerHTML = `
+                    <div class="item-icon">${armorDef.emoji}</div>
+                    <div class="slot-label">${armorDef.name}</div>
+                    <div class="armor-durability" style="width: ${durPercent}%; background: ${durColor}"></div>
+                `;
+                slotDiv.title = `${armorDef.name} - Click to unequip`;
+
+                // Click to unequip
+                slotDiv.addEventListener('click', () => {
+                    if (armorSystem) {
+                        armorSystem.unequipArmor(slotName);
+                        this.render();
+                    }
+                });
+            } else {
+                slotDiv.innerHTML = `
+                    <div class="item-icon empty">${slotIcons[slotName]}</div>
+                    <div class="slot-label">${slotName}</div>
+                `;
+                slotDiv.classList.add('empty');
+            }
+
+            equipSection.appendChild(slotDiv);
+        });
+
+        // Show defense stats
+        const defenseDiv = document.createElement('div');
+        defenseDiv.className = 'defense-stats';
+        const defense = armorSystem?.getTotalDefense() || 0;
+        const reduction = Math.round((armorSystem?.getDamageReduction() || 0) * 100);
+        defenseDiv.innerHTML = `🛡️ Defense: ${defense} (${reduction}% DR)`;
+        equipSection.appendChild(defenseDiv);
     }
 
     renderCrafting() {
@@ -377,6 +444,36 @@ export class InventoryUI {
     onClick(e, index, isHotbar) {
         if (e.shiftKey) {
             this.quickMove(index, isHotbar);
+        } else {
+            // Check if clicking an armor item - equip it
+            this.tryEquipArmor(index, isHotbar);
+        }
+    }
+
+    tryEquipArmor(index, isHotbar) {
+        const player = this.game.player;
+        const list = isHotbar ? player.hotbar : player.inventory;
+        const item = list[index];
+
+        if (!item) return;
+
+        // Check if item is armor
+        const armorDef = ARMOR_TYPES[item.type];
+        if (armorDef && item.type === 'armor') {
+            // Find the armor key by matching name
+            const armorKey = Object.keys(ARMOR_TYPES).find(key => {
+                const def = ARMOR_TYPES[key];
+                return def.name === item.name;
+            });
+
+            if (armorKey && this.game.armor) {
+                // Remove from inventory first
+                list[index] = null;
+                // Equip the armor
+                this.game.armor.equipArmorFromSlot(armorKey);
+                this.render();
+                player.updateUI();
+            }
         }
     }
 

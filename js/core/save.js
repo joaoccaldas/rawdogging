@@ -5,6 +5,135 @@ export class SaveManager {
         this.game = game;
         this.lastSaveTime = 0;
         this.currentSlot = 'save_1';
+        this.saveVersion = 4; // Increment when save format changes
+        
+        // Version migration handlers
+        this.migrations = {
+            1: this.migrateV1toV2.bind(this),
+            2: this.migrateV2toV3.bind(this),
+            3: this.migrateV3toV4.bind(this)
+        };
+    }
+    
+    // Validate save data structure
+    validateSaveData(data) {
+        const errors = [];
+        
+        // Required fields
+        if (!data.version) errors.push('Missing version');
+        if (!data.player) errors.push('Missing player data');
+        if (!data.world) errors.push('Missing world data');
+        
+        // Player validation
+        if (data.player) {
+            if (typeof data.player.x !== 'number' || isNaN(data.player.x)) {
+                errors.push('Invalid player x position');
+                data.player.x = 0;
+            }
+            if (typeof data.player.y !== 'number' || isNaN(data.player.y)) {
+                errors.push('Invalid player y position');
+                data.player.y = 0;
+            }
+            if (typeof data.player.z !== 'number' || isNaN(data.player.z)) {
+                errors.push('Invalid player z position');
+                data.player.z = 10;
+            }
+            if (typeof data.player.health !== 'number' || data.player.health <= 0) {
+                errors.push('Invalid player health');
+                data.player.health = CONFIG.PLAYER_MAX_HEALTH;
+            }
+        }
+        
+        if (errors.length > 0) {
+            console.warn('Save validation issues:', errors);
+        }
+        
+        return { valid: errors.length === 0, errors, data };
+    }
+    
+    // Migrate save data from older versions
+    migrateSave(data) {
+        let currentVersion = data.version || 1;
+        
+        while (currentVersion < this.saveVersion) {
+            const migrator = this.migrations[currentVersion];
+            if (migrator) {
+                console.log(`Migrating save from v${currentVersion} to v${currentVersion + 1}`);
+                data = migrator(data);
+                currentVersion++;
+                data.version = currentVersion;
+            } else {
+                console.warn(`No migration handler for v${currentVersion}`);
+                break;
+            }
+        }
+        
+        return data;
+    }
+    
+    // Migration: v1 -> v2 (added world seeds)
+    migrateV1toV2(data) {
+        if (!data.world) data.world = {};
+        if (!data.world.seeds) {
+            data.world.seeds = {
+                noise: Math.random() * 65536,
+                biome: Math.random() * 65536,
+                humidity: Math.random() * 65536,
+                temperature: Math.random() * 65536
+            };
+        }
+        return data;
+    }
+    
+    // Migration: v2 -> v3 (added skills and quests)
+    migrateV2toV3(data) {
+        if (!data.skills) data.skills = null;
+        if (!data.quests) data.quests = null;
+        return data;
+    }
+    
+    // Migration: v3 -> v4 (added age progression and equipment)
+    migrateV3toV4(data) {
+        if (!data.ageProgression) data.ageProgression = null;
+        if (!data.player.equipment) {
+            data.player.equipment = { head: null, chest: null, legs: null, feet: null };
+        }
+        return data;
+    }
+    
+    // Create a backup before saving
+    createBackup() {
+        try {
+            const existing = localStorage.getItem(this.currentSlot);
+            if (existing) {
+                // Keep up to 3 rotating backups
+                localStorage.setItem(this.currentSlot + '_backup_2', localStorage.getItem(this.currentSlot + '_backup_1') || '');
+                localStorage.setItem(this.currentSlot + '_backup_1', localStorage.getItem(this.currentSlot + '_backup') || '');
+                localStorage.setItem(this.currentSlot + '_backup', existing);
+                return true;
+            }
+        } catch (e) {
+            console.warn('Backup creation failed:', e);
+        }
+        return false;
+    }
+    
+    // Recover from backup
+    recoverFromBackup(backupIndex = 0) {
+        const backupKeys = ['_backup', '_backup_1', '_backup_2'];
+        const key = this.currentSlot + (backupKeys[backupIndex] || '_backup');
+        
+        const backup = localStorage.getItem(key);
+        if (backup) {
+            try {
+                const data = JSON.parse(backup);
+                console.log(`Recovering from backup: ${key}`);
+                return data;
+            } catch (e) {
+                console.error('Backup corrupted:', e);
+            }
+        }
+        return null;
     }
 
     setSlot(slotId) {
@@ -20,7 +149,8 @@ export class SaveManager {
 
     save() {
         const data = {
-            version: 3, // Increment when save format changes
+            version: this.saveVersion, // Use class property
+            timestamp: Date.now(),
             player: {
                 x: this.game.player.x,
                 y: this.game.player.y,
@@ -58,6 +188,7 @@ export class SaveManager {
             // ====== NEW SYSTEMS ======
             weather: this.game.weather ? this.game.weather.serialize() : null,
             armor: this.game.armor ? this.game.armor.serialize() : null,
+            ageProgression: this.game.ageProgression ? this.game.ageProgression.serialize() : null,
             statistics: this.game.statistics ? this.game.statistics.serialize() : null,
             temperature: this.game.temperature ? this.game.temperature.serialize() : null,
             foodBuffs: this.game.foodBuffs ? this.game.foodBuffs.serialize() : null,
@@ -97,13 +228,8 @@ export class SaveManager {
         try {
             // Backup existing save if present - try but don't fail if backup exceeds quota
             try {
-                const existing = localStorage.getItem(this.currentSlot);
-                if (existing) {
-                    localStorage.setItem(this.currentSlot + '_backup', existing);
-                }
-            } catch (backupError) {
-                console.warn('Backup failed, likely quota limit but proceeding with primary save', backupError);
-            }
+            // Create backup before overwriting
+            this.createBackup();
 
             // LocalStorage has 5MB limit. Full chunks might blow it.
             const saveString = JSON.stringify(data);
@@ -119,12 +245,36 @@ export class SaveManager {
     }
 
     load() {
-        const json = localStorage.getItem(this.currentSlot);
+        let json = localStorage.getItem(this.currentSlot);
+        
+        // Try to recover from backup if main save is missing or corrupted
+        if (!json) {
+            console.log('No save found, checking backups...');
+            for (let i = 0; i < 3; i++) {
+                const backupData = this.recoverFromBackup(i);
+                if (backupData) {
+                    json = JSON.stringify(backupData);
+                    break;
+                }
+            }
+        }
+        
         if (!json) return false;
 
         try {
-            const data = JSON.parse(json);
-
+            let data = JSON.parse(json);
+            
+            // Migrate old saves to current version
+            if (data.version < this.saveVersion) {
+                data = this.migrateSave(data);
+            }
+            
+            // Validate and fix data
+            const validation = this.validateSaveData(data);
+            if (!validation.valid) {
+                console.warn('Save data had issues, attempting to continue with fixes');
+            }
+            data = validation.data;
             // Restore Player
             this.game.player.x = data.player.x;
             this.game.player.y = data.player.y;
@@ -190,6 +340,11 @@ export class SaveManager {
             // Restore Armor
             if (data.armor && this.game.armor) {
                 this.game.armor.deserialize(data.armor);
+            }
+
+            // Restore Age Progression
+            if (data.ageProgression && this.game.ageProgression) {
+                this.game.ageProgression.deserialize(data.ageProgression);
             }
 
             // Restore Statistics
