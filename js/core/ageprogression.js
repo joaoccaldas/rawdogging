@@ -1,6 +1,6 @@
 // Age Progression Manager - Enforces age gates and applies bonuses
-import { CONFIG, ITEMS, RECIPES } from '../config.js';
-import { AGES, QUESTS } from './quests.js';
+import { CONFIG, ITEMS, RECIPES, AGES } from '../config.js';
+import { QUESTS } from './quests.js';
 
 export class AgeProgressionManager {
     constructor(game) {

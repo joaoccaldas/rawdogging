@@ -942,9 +942,14 @@ export const RECIPES = [
     { result: 'spear', count: 1, ingredients: [['stick', 2], ['flint', 2]], shape: null, age: 0, category: 'weapons' },
 
     // Stone tools
-    { result: 'wooden_pickaxe', count: 1, ingredients: [['cobblestone', 2], ['stick', 2]], shape: null, age: 0, category: 'tools' },
-    { result: 'wooden_axe', count: 1, ingredients: [['cobblestone', 2], ['stick', 2]], shape: null, age: 0, category: 'tools' },
-    { result: 'wooden_hoe', count: 1, ingredients: [['stick', 2], ['flint', 1]], shape: null, age: 0, category: 'tools' },
+    { result: 'stone_pickaxe', count: 1, ingredients: [['cobblestone', 2], ['stick', 2]], shape: null, age: 0, category: 'tools' },
+    { result: 'stone_axe', count: 1, ingredients: [['cobblestone', 2], ['stick', 2]], shape: null, age: 0, category: 'tools' },
+    { result: 'stone_hoe', count: 1, ingredients: [['stick', 2], ['flint', 1]], shape: null, age: 0, category: 'tools' },
+    // Wooden tools
+    { result: 'wooden_pickaxe', count: 1, ingredients: [['plank', 3], ['stick', 2]], shape: null, age: 0, category: 'tools' },
+    { result: 'wooden_axe', count: 1, ingredients: [['plank', 3], ['stick', 2]], shape: null, age: 0, category: 'tools' },
+    { result: 'wooden_hoe', count: 1, ingredients: [['plank', 2], ['stick', 2]], shape: null, age: 0, category: 'tools' },
+    { result: 'wooden_sword', count: 1, ingredients: [['plank', 2], ['stick', 1]], shape: null, age: 0, category: 'weapons' },
 
     // Building blocks - Stone Age
     { result: 'sandstone', count: 4, ingredients: [['sand', 4]], shape: null, age: 0, category: 'building' },
@@ -2009,7 +2014,7 @@ export const AGES = {
             level: 30,
             items: { 'steel_ingot': 30, 'silver_coin': 100 },
         },
-        unlocksRecipes: ['steel_sword', 'crossbow', 'longbow', 'chainmail_armor', 'plate_armor', 'loom', 'stable', 'market_stall'],
+        unlocksRecipes: ['steel_sword', 'crossbow', 'longbow', 'chainmail_chestplate', 'plate_armor', 'loom', 'stable', 'market_stall'],
         bonuses: {
             tradingBonus: 0.2,
             combatDamage: 0.35,
