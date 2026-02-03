@@ -1617,6 +1617,21 @@ body {
     display: none;
 }
 
+/* 
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/* 
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
 .menu-screen::before {
     content: '';
     position: absolute;

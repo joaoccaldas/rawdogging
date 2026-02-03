@@ -147,6 +147,8 @@ class Game {
         this.ageProgression.init();
 
         // Combat Feel System - Enhanced combat feedback
+        // IMPROVEMENT: Ensure this system is fully integrated with visual (e.g., screen shake, hit animations)
+        // and auditory (e.g., hit sounds, enemy grunts) feedback for player and enemies.
         this.combatFeel = new CombatFeelSystem(this);
 
         // Statistics - Track achievements
@@ -227,6 +229,7 @@ class Game {
         this.torchLighting = new TorchLightingSystem(this);
 
         // Damage Numbers - Combat feedback
+        // IMPROVEMENT: Ensure this system provides clear, customizable visual feedback on damage dealt/taken (e.g., floating numbers, critical hit visuals).
         this.damageNumbers = new DamageNumberSystem(this);
 
         // Side Quests - Random location-based quests
@@ -236,6 +239,8 @@ class Game {
         // ====== NEW SYSTEMS (20 Additional Features) ======
 
         // Block Breaking - Mining animations and progress
+        // IMPROVEMENT: Ensure this system includes visual progression of block damage (e.g., cracks appearing),
+        // particle effects on hit, and satisfying audio feedback for different block types.
         this.blockBreaking = new BlockBreakingSystem(this);
 
         // Death Screen - Death UI and respawn system
@@ -513,7 +518,7 @@ class Game {
         this.saveManager.save();
 
         console.log(`Game: New Game Started. Spawn at Z=${this.player.z}`);
-        this.player.updateUI();
+        this.player.updateUI(); // IMPROVEMENT: Ensure this triggers relevant HUD updates with animations/transitions for a fresh game start.
     }
 
     giveBuilderItems() {
@@ -591,6 +596,14 @@ class Game {
     update(deltaTime) {
         this.saveManager.update(Date.now());
         this.world.update(deltaTime);
+
+        // IMPROVEMENT: Implement dynamic feedback triggers here.
+        // For example, when player takes damage:
+        // this.player.onDamageTaken(() => {
+        //     this.combatFeel.screenShake(0.1, 100); // Small shake
+        //     this.ui.flashRedOverlay(0.2); // Brief red overlay
+        //     this.soundManager.play('player_hit'); // Play hit sound
+        // });
 
         // Update quest system
         if (this.questManager) {
@@ -864,7 +877,7 @@ class Game {
         this.entities = [];
 
         this.ui.closeAllModals();
-        this.player.updateUI();
+        this.player.updateUI(); // IMPROVEMENT: Ensure this triggers visual/auditory feedback (e.g., respawn animation, sound) and HUD reset.
     }
 
     // ====== HELPER METHODS FOR SYSTEMS ======
