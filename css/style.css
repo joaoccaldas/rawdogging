@@ -1596,6 +1596,21 @@ body {
     margin-top: 4px;
 }
 
+/*
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/*
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
 /* Menus - Prehistoric Cave Theme */
 .menu-screen {
     position: absolute;
@@ -1603,7 +1618,11 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #2d1810 0%, #4a2c17 50%, #5c3d2e 100%);
+    /* Enhanced background for immersion */
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 140, 0, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 69, 0, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #3d2517 0%, #2a1a0f 50%, #1a0f08 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1639,10 +1658,8 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background:
-        radial-gradient(circle at 20% 80%, rgba(255, 140, 0, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 69, 0, 0.1) 0%, transparent 50%),
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    /* Removed previous noise filter, using a subtle dark vignette */
+    background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, transparent 70%); 
     pointer-events: none;
 }
 
@@ -1680,16 +1697,18 @@ body {
 }
 
 .menu-screen h1 {
-    font-size: 56px;
-    margin-bottom: 10px;
-    color: #d4a017;
+    /* Enhanced styling for the main title for better branding */
+    font-family: 'Arial Black', sans-serif; /* More impactful font */
+    font-size: 68px; /* Larger font size */
+    margin-bottom: 15px;
+    color: #ffd700; /* Gold-like color */
     text-shadow:
-        4px 4px 0 #2d1810,
-        -1px -1px 0 #2d1810,
-        1px -1px 0 #2d1810,
-        -1px 1px 0 #2d1810,
-        0 0 20px rgba(255, 140, 0, 0.5);
-    letter-spacing: 2px;
+        6px 6px 0 #2d1810, /* Deeper shadow */
+        -2px -2px 0 #2d1810,
+        2px -2px 0 #2d1810,
+        -2px 2px 0 #2d1810,
+        0 0 30px rgba(255, 140, 0, 0.8); /* Stronger glow */
+    letter-spacing: 5px; /* Wider letter spacing */
     text-transform: uppercase;
     position: relative;
 }
@@ -1844,4 +1863,100 @@ body {
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    /* Adjust HUD elements */
+    #hud {
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        font-size: 0.8em; /* Slightly smaller font for mobile */
+    }
+
+    #health-bar,
+    #hunger-bar {
+        width: 120px;
+        height: 20px;
+    }
+    
+    #temperature-bar {
+        width: 100px;
+        height: 18px;
+    }
+
+    #armor-display {
+        padding: 2px 8px;
+        font-size: 0.9em;
+    }
+
+    #level-display {
+        width: 200px;
+        bottom: 120px; /* Adjust position for mobile hotbar */
+    }
+
+    #day-cycle {
+        top: 5px; /* Move to top right */
+        right: 5px;
+        font-size: 0.7em;
+        min-width: 90px;
+    }
+    
+    #quest-panel {
+        width: 200px;
+        top: 150px; /* Adjust position */
+        right: 5px;
+        font-size: 0.8em;
+    }
+
+    #side-quest-panel {
+        width: 200px;
+        top: 150px; /* Adjust position */
+        left: 5px;
+        font-size: 0.8em;
+    }
+
+    #hotbar {
+        bottom: 100px; /* Adjust position to avoid mobile controls */
+        padding: 5px;
+        gap: 2px;
+    }
+
+    .hotbar-slot {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+    
+    /* Mobile Controls Specifics */
+    #mobile-controls {
+        padding: 10px;
+    }
+
+    #joystick-base {
+        width: 100px;
+        height: 100px;
+    }
+
+    #joystick-stick {
+        width: 40px;
+        height: 40px;
+    }
+
+    #action-buttons {
+        gap: 8px;
+    }
+
+    .action-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .action-btn.btn-primary {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
 }
