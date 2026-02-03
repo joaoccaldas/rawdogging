@@ -416,6 +416,11 @@ body {
     width: 18px;
 }
 
+#quest-panel .objective-check {
+    font-size: 14px;
+    width: 18px;
+}
+
 #quest-panel .quest-objective.complete .objective-check {
     color: #4ade80;
 }
@@ -1611,6 +1616,21 @@ body {
   - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
   - This enhances immersion and game branding.
 */
+/*
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/*
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
 /* Menus - Prehistoric Cave Theme */
 .menu-screen {
     position: absolute;
@@ -1867,96 +1887,698 @@ body {
 
 /* Responsive */
 @media (max-width: 600px) {
-    /* Adjust HUD elements */
-    #hud {
-        top: 5px;
-        left: 5px;
-        right: 5px;
-        font-size: 0.8em; /* Slightly smaller font for mobile */
-    }
 
     #health-bar,
     #hunger-bar {
-        width: 120px;
+        width: 150px;
         height: 20px;
-    }
-    
-    #temperature-bar {
-        width: 100px;
-        height: 18px;
-    }
-
-    #armor-display {
-        padding: 2px 8px;
-        font-size: 0.9em;
-    }
-
-    #level-display {
-        width: 200px;
-        bottom: 120px; /* Adjust position for mobile hotbar */
-    }
-
-    #day-cycle {
-        top: 5px; /* Move to top right */
-        right: 5px;
-        font-size: 0.7em;
-        min-width: 90px;
-    }
-    
-    #quest-panel {
-        width: 200px;
-        top: 150px; /* Adjust position */
-        right: 5px;
-        font-size: 0.8em;
-    }
-
-    #side-quest-panel {
-        width: 200px;
-        top: 150px; /* Adjust position */
-        left: 5px;
-        font-size: 0.8em;
-    }
-
-    #hotbar {
-        bottom: 100px; /* Adjust position to avoid mobile controls */
-        padding: 5px;
-        gap: 2px;
     }
 
     .hotbar-slot {
-        width: 45px;
-        height: 45px;
-        font-size: 20px;
-    }
-    
-    /* Mobile Controls Specifics */
-    #mobile-controls {
-        padding: 10px;
-    }
-
-    #joystick-base {
-        width: 100px;
-        height: 100px;
-    }
-
-    #joystick-stick {
         width: 40px;
         height: 40px;
+        font-size: 18px;
     }
 
-    #action-buttons {
-        gap: 8px;
+    #inventory-grid {
+        grid-template-columns: repeat(5, 1fr);
     }
 
-    .action-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
+    .inventory-slot {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+/* Damage Flash */
+@keyframes damage-flash {
+
+    0%,
+    100% {
+        filter: none;
     }
 
-    .action-btn.btn-primary {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
+    50% {
+        filter: brightness(2) saturate(2);
     }
+}
+
+.damage-flash {
+    animation: damage-flash 0.2s ease;
+}
+
+/* Tooltip */
+.tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1001;
+    white-space: nowrap;
+}
+
+.tooltip .item-name {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.tooltip .item-desc {
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+/*
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/*
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
+/*
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/*
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
+/* Menus - Prehistoric Cave Theme */
+.menu-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Enhanced background for immersion */
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 140, 0, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 69, 0, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #3d2517 0%, #2a1a0f 50%, #1a0f08 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    color: #f5deb3;
+    overflow: hidden;
+}
+
+.menu-screen.hidden {
+    display: none;
+}
+
+/* 
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/* 
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
+.menu-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Removed previous noise filter, using a subtle dark vignette */
+    background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, transparent 70%); 
+    pointer-events: none;
+}
+
+.menu-logo {
+    margin-bottom: 20px;
+    position: relative;
+    width: 128px;
+    height: 128px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.menu-character {
+    width: 128px !important;
+    height: 128px !important;
+    object-fit: contain;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    animation: character-bounce 2s ease-in-out infinite;
+}
+
+@keyframes character-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+.menu-screen h1 {
+    /* Enhanced styling for the main title for better branding */
+    font-family: 'Arial Black', sans-serif; /* More impactful font */
+    font-size: 68px; /* Larger font size */
+    margin-bottom: 15px;
+    color: #ffd700; /* Gold-like color */
+    text-shadow:
+        6px 6px 0 #2d1810, /* Deeper shadow */
+        -2px -2px 0 #2d1810,
+        2px -2px 0 #2d1810,
+        -2px 2px 0 #2d1810,
+        0 0 30px rgba(255, 140, 0, 0.8); /* Stronger glow */
+    letter-spacing: 5px; /* Wider letter spacing */
+    text-transform: uppercase;
+    position: relative;
+}
+
+.tagline {
+    font-size: 18px;
+    color: rgba(245, 222, 179, 0.8);
+    margin-bottom: 30px;
+    font-style: italic;
+    letter-spacing: 1px;
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 220px;
+    position: relative;
+}
+
+.menu-btn {
+    padding: 16px 24px;
+    background: linear-gradient(180deg, #5c3d2e 0%, #3d2517 100%);
+    border: 3px solid #8B4513;
+    color: #f5deb3;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.menu-btn:hover {
+    background: linear-gradient(180deg, #d4a017 0%, #8B6914 100%);
+    color: #2d1810;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 12px rgba(212, 160, 23, 0.4);
+    border-color: #d4a017;
+}
+
+.menu-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.version {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    opacity: 0.5;
+    font-size: 12px;
+    color: #888;
+}
+
+.controls-hint {
+    margin-top: 30px;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    max-width: 500px;
+}
+
+.controls-hint p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    line-height: 1.5;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.hidden-hud #hud,
+.hidden-hud #mobile-controls {
+    display: none;
+}
+
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+/* Item Pickup Notification */
+.item-pickup-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #4ade80;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 9999;
+    pointer-events: none;
+    animation: pickup-fade 2s ease-out forwards;
+    border: 2px solid #4ade80;
+    text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+@keyframes pickup-fade {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+
+    20% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -100%);
+    }
+}
+
+/* Minimap UI */
+#minimap-container {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 150px;
+    height: 150px;
+    background: rgba(45, 24, 16, 0.9);
+    border: 3px solid #8B4513;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    z-index: 200;
+    pointer-events: auto;
+}
+
+#minimap-container canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+
+    #health-bar,
+    #hunger-bar {
+        width: 150px;
+        height: 20px;
+    }
+
+    .hotbar-slot {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    #inventory-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .inventory-slot {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+/* Damage Flash */
+@keyframes damage-flash {
+
+    0%,
+    100% {
+        filter: none;
+    }
+
+    50% {
+        filter: brightness(2) saturate(2);
+    }
+}
+
+.damage-flash {
+    animation: damage-flash 0.2s ease;
+}
+
+/* Tooltip */
+.tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1001;
+    white-space: nowrap;
+}
+
+.tooltip .item-name {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.tooltip .item-desc {
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+/*
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/*
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
+/*
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/*
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
+/* Menus - Prehistoric Cave Theme */
+.menu-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Enhanced background for immersion */
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 140, 0, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 69, 0, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #3d2517 0%, #2a1a0f 50%, #1a0f08 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    color: #f5deb3;
+    overflow: hidden;
+}
+
+.menu-screen.hidden {
+    display: none;
+}
+
+/* 
+  UI/UX Design System Guidelines:
+  - Establish a consistent color palette and font scheme for all UI elements.
+  - Design unified button styles (states: normal, hover, active, disabled).
+  - Define clear visual hierarchy for headings, labels, and content.
+  - Use thematic icons and graphics where appropriate instead of plain text.
+  - Ensure responsive design for various screen sizes (e.g., mobile controls).
+*/
+
+/* 
+  Landing Page Background (Improvement 1):
+  - Consider replacing the static background with a dynamic element.
+  - Examples: subtle looping video, animated SVG,WebGL scene, or parallax effect.
+  - This enhances immersion and game branding.
+*/
+.menu-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Removed previous noise filter, using a subtle dark vignette */
+    background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, transparent 70%); 
+    pointer-events: none;
+}
+
+.menu-logo {
+    margin-bottom: 20px;
+    position: relative;
+    width: 128px;
+    height: 128px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.menu-character {
+    width: 128px !important;
+    height: 128px !important;
+    object-fit: contain;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    animation: character-bounce 2s ease-in-out infinite;
+}
+
+@keyframes character-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+.menu-screen h1 {
+    /* Enhanced styling for the main title for better branding */
+    font-family: 'Arial Black', sans-serif; /* More impactful font */
+    font-size: 68px; /* Larger font size */
+    margin-bottom: 15px;
+    color: #ffd700; /* Gold-like color */
+    text-shadow:
+        6px 6px 0 #2d1810, /* Deeper shadow */
+        -2px -2px 0 #2d1810,
+        2px -2px 0 #2d1810,
+        -2px 2px 0 #2d1810,
+        0 0 30px rgba(255, 140, 0, 0.8); /* Stronger glow */
+    letter-spacing: 5px; /* Wider letter spacing */
+    text-transform: uppercase;
+    position: relative;
+}
+
+.tagline {
+    font-size: 18px;
+    color: rgba(245, 222, 179, 0.8);
+    margin-bottom: 30px;
+    font-style: italic;
+    letter-spacing: 1px;
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 220px;
+    position: relative;
+}
+
+.menu-btn {
+    padding: 16px 24px;
+    background: linear-gradient(180deg, #5c3d2e 0%, #3d2517 100%);
+    border: 3px solid #8B4513;
+    color: #f5deb3;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.menu-btn:hover {
+    background: linear-gradient(180deg, #d4a017 0%, #8B6914 100%);
+    color: #2d1810;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 12px rgba(212, 160, 23, 0.4);
+    border-color: #d4a017;
+}
+
+.menu-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.version {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    opacity: 0.5;
+    font-size: 12px;
+    color: #888;
+}
+
+.controls-hint {
+    margin-top: 30px;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    max-width: 500px;
+}
+
+.controls-hint p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    line-height: 1.5;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.hidden-hud #hud,
+.hidden-hud #mobile-controls {
+    display: none;
+}
+
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+/* Item Pickup Notification */
+.item-pickup-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #4ade80;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 9999;
+    pointer-events: none;
+    animation: pickup-fade 2s ease-out forwards;
+    border: 2px solid #4ade80;
+    text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+@keyframes pickup-fade {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+
+    20% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -100%);
+    }
+}
+
+/* Minimap UI */
+#minimap-container {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 150px;
+    height: 150px;
+    background: rgba(45, 24, 16, 0.9);
+    border: 3px solid #8B4513;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    z-index: 200;
+    pointer-events: auto;
+}
+
+#minimap-container canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
 }

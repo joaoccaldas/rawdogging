@@ -59,7 +59,7 @@ import { SideQuestSystem } from './core/sidequests.js';
 import { BlockBreakingSystem } from './core/blockbreaking.js';
 import { DeathSystem } from './core/deathscreen.js';
 import { BossHealthBarSystem } from './ui/bosshealthbar.js';
-import { BlockPlacementPreview } from './core/blockpreview.js';
+// import { BlockPlacementPreview } from './core/blockpreview.js';
 import { InventorySortingSystem } from './ui/inventorysorting.js';
 import { ConsumptionEffects } from './core/consumptioneffects.js';
 import { ToolDurabilitySystem } from './core/tooldurability.js';
@@ -250,7 +250,7 @@ class Game {
         this.bossHealthBar = new BossHealthBarSystem(this);
 
         // Block Preview - Ghost preview for placement
-        this.blockPreview = new BlockPlacementPreview(this);
+        // this.blockPreview = new BlockPlacementPreview(this); // Disabled as per user feedback (yellow box)
 
         // Inventory Sorting - Sort, quick-stack features
         this.inventorySorting = new InventorySortingSystem(this);
@@ -757,9 +757,9 @@ class Game {
         }
 
         // Block placement preview
-        if (this.blockPreview) {
-            this.blockPreview.update(deltaTime);
-        }
+        // if (this.blockPreview) {
+        //     this.blockPreview.update(deltaTime); // Disabled as per user feedback (yellow box)
+        // }
 
         // Tool durability
         if (this.toolDurability) {
