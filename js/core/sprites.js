@@ -1132,7 +1132,24 @@ export class SpriteManager {
         this.textures.set('wheat', canvas);
     }
 
+    async loadCavemanSprite() {
+        return new Promise((resolve) => {
+            const sprite = new Image();
+            sprite.src = 'npc.png';
+            sprite.onload = () => {
+                this.playerSprites.set('caveman', sprite);
+                console.log('Caveman sprite loaded successfully');
+                resolve();
+            };
+            sprite.onerror = () => {
+                console.warn('Caveman sprite failed to load');
+                resolve();
+            };
+        });
+    }
+
     async loadPlayerSprites() {
+        await this.loadCavemanSprite();
         // Load the main player sprite (PNG)
         const mainSprite = new Image();
         mainSprite.src = 'assets/sprites/player/playercave.png';
@@ -1153,7 +1170,7 @@ export class SpriteManager {
     }
 
     getPlayerSprite(state = 'idle', frame = 0) {
-        return this.playerSprites.get('main') || this.playerSprites.get('idle');
+        return this.playerSprites.get('caveman') || this.playerSprites.get('main') || this.playerSprites.get('idle');
     }
     
     async loadEnemySprites() {
