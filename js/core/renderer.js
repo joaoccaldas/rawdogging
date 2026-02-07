@@ -640,7 +640,7 @@ export class Renderer {
 
         // Check if this is the player and we have a sprite
         if (entity === this.game.player) {
-            const playerSprite = this.game.spriteManager.getPlayerSprite('caveman');
+            const playerSprite = this.game.spriteManager.getPlayerSprite('idle');
             if (playerSprite && playerSprite.complete && playerSprite.naturalWidth > 0) {
                 // Calculate sprite dimensions maintaining aspect ratio
                 const spriteHeight = size * 2.5;

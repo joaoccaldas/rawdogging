@@ -1170,7 +1170,7 @@ export class SpriteManager {
     }
 
     getPlayerSprite(state = 'idle', frame = 0) {
-        return this.playerSprites.get('caveman') || this.playerSprites.get('main') || this.playerSprites.get('idle');
+        return this.playerSprites.get('main') || this.playerSprites.get('idle');
     }
     
     async loadEnemySprites() {
