@@ -149,86 +149,84 @@ export class UIManager {
         }
     }
 
-    trySmelt() {
-        // Check for fuel (coal, wood, etc.)
-        const fuelItems = ['coal', 'wood'];
-        let fuelIdx = -1;
-        let fuelType = null;
-        
-        for (const fuelItem of fuelItems) {
-            fuelIdx = this.findItem(fuelItem);
-            if (fuelIdx !== -1) {
-                fuelType = fuelItem;
-                break;
-            }
-        }
-        
-        if (fuelIdx === -1) {
+    async trySmelt() {
+        const player = this.game.player;
+        if (!player) return;
+
+        // Check for fuel (coal or wood)
+        const fuel = player.inventory.find(item =>
+            item && (item.id === 'coal' || item.id === 'wood')
+        );
+        if (!fuel) {
             this.showMessage('Need fuel (coal or wood)!', 2000);
+            this.game.audio?.play('error');
             return;
         }
 
-        // Check for smeltable items using the SMELTING table from config
-        // Access SMELTING from the imported CONFIG
-        import('../config.js').then(({ SMELTING }) => {
-            const smeltingRecipes = SMELTING;
+        // Load smelting config
+        const { SMELTING, SMELTING_TIMES, DEFAULT_SMELT_TIME } = await import('../config.js');
 
-            let worked = false;
-
-            // Look for any smeltable item in inventory
-            for (let i = 0; i < this.game.player.inventory.length; i++) {
-                const item = this.game.player.inventory[i];
-                if (!item) continue;
-                
-                const inputItemKey = item.id || item.name;
-                if (!inputItemKey) continue;
-                
-                // Check if this item can be smelted
-                if (smeltingRecipes[inputItemKey]) {
-                    const outputItemKey = smeltingRecipes[inputItemKey];
-                    
-                    // Consume fuel
-                    this.game.player.inventory[fuelIdx].count--;
-                    if (this.game.player.inventory[fuelIdx].count <= 0) {
-                        this.game.player.inventory[fuelIdx] = null;
-                    }
-
-                    // Consume input item
-                    this.game.player.inventory[i].count--;
-                    if (this.game.player.inventory[i].count <= 0) {
-                        this.game.player.inventory[i] = null;
-                    }
-
-                    // Add output item
-                    this.game.player.addItem(outputItemKey, 1);
-                    
-                    // Play sound
-                    this.game.audio?.play('smelt') || this.game.audio?.play('place');
-
-                    // Update quest progress if applicable
-                    if (this.game.questManager) {
-                        this.game.questManager.onSmeltComplete(outputItemKey);
-                    }
-
-                    // Update UI
-                    this.game.player.updateUI();
-                    
-                    this.showMessage(`🔥 Smelted ${inputItemKey} → ${outputItemKey}`, 2000);
-                    
-                    worked = true;
-                    break;
-                }
+        // Find first smeltable item in inventory
+        let inputItem = null;
+        let inputSlot = -1;
+        for (let i = 0; i < player.inventory.length; i++) {
+            const item = player.inventory[i];
+            if (item && SMELTING[item.id]) {
+                inputItem = item;
+                inputSlot = i;
+                break;
             }
+        }
 
-            if (!worked) {
-                this.showMessage('Nothing to smelt! Add smeltable items.', 2000);
+        if (!inputItem) {
+            this.showMessage('Nothing to smelt! Add smeltable items.', 2000);
+            this.game.audio?.play('error');
+            return;
+        }
+
+        // Get smelting time and output
+        const smeltTime = (SMELTING_TIMES[inputItem.id] || DEFAULT_SMELT_TIME) * 1000; // Convert to ms
+        const outputId = SMELTING[inputItem.id];
+
+        // Consume fuel
+        player.consumeItem(fuel.id, 1);
+
+        // Disable smelt button during smelting
+        if (this.smeltBtn) this.smeltBtn.disabled = true;
+
+        // Show progress bar animation
+        const progressBar = document.getElementById('furnace-progress');
+        const startTime = Date.now();
+
+        const updateProgress = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(100, (elapsed / smeltTime) * 100);
+            if (progressBar) progressBar.style.width = `${progress}%`;
+
+            if (elapsed < smeltTime) {
+                requestAnimationFrame(updateProgress);
             } else {
-                // Close furnace UI after successful smelt to allow another action
-                setTimeout(() => {
-                    this.toggleFurnace(false);
-                }, 500);
+                // Smelting complete!
+                player.consumeItem(inputItem.id, 1);
+                player.addItem(outputId, 1);
+                this.game.audio?.play('smelt') || this.game.audio?.play('place');
+
+                // Reset progress
+                if (progressBar) progressBar.style.width = '0%';
+                if (this.smeltBtn) this.smeltBtn.disabled = false;
+
+                // Notify quest system
+                if (this.game.questManager) {
+                    this.game.questManager.onSmeltComplete?.(outputId);
+                }
+
+                // Update UI
+                player.updateUI();
+                this.showMessage(`🔥 Smelted ${inputItem.id} → ${outputId}`, 2000);
             }
-        });
+        };
+
+        requestAnimationFrame(updateProgress);
     }
 
     showDeathScreen(daysSurvived) {

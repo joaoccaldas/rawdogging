@@ -111,9 +111,10 @@ export class Player extends Entity {
     }
 
     updateSurvival(deltaTime) {
-        // Hunger drain over time
+        // Hunger drain over time (reduced by age progression)
         if (this.hunger > 0) {
-            this.hunger -= CONFIG.HUNGER_DRAIN_RATE * deltaTime;
+            const hungerDrainMultiplier = this.game.ageProgression?.getBonus('hungerDrain') || 1.0;
+            this.hunger -= CONFIG.HUNGER_DRAIN_RATE * hungerDrainMultiplier * deltaTime;
             this.hunger = Math.max(0, this.hunger);
         }
 
@@ -604,7 +605,11 @@ export class Player extends Entity {
         // Mining cooldown check
         const now = Date.now();
         if (!this.lastMineTime) this.lastMineTime = 0;
-        if (now - this.lastMineTime < 250) return; // 250ms cooldown between mines
+
+        // Apply age progression mining speed bonus
+        const miningSpeedBonus = this.game.ageProgression?.getBonus('miningSpeed') || 1.0;
+        const cooldown = 250 / miningSpeedBonus;
+        if (now - this.lastMineTime < cooldown) return; // Mining cooldown scales with age
 
         // Use unified selection to find target
         const hit = InteractionUtils.getSelection(this.game, this.interactionRange);
@@ -1017,6 +1022,10 @@ export class Player extends Entity {
         let baseDamage = 1; // Fist damage
         if (tool && tool.type === 'weapon') baseDamage = tool.damage;
         else if (tool && tool.type === 'tool') baseDamage = tool.damage || 2;
+
+        // Apply age progression damage bonus
+        const damageBonus = this.game.ageProgression?.getBonus('damageBonus') || 1.0;
+        baseDamage *= damageBonus;
 
         // Critical hit chance (10% base, higher with swords)
         const critChance = tool?.type === 'weapon' ? 0.15 : 0.10;

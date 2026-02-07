@@ -219,7 +219,10 @@ export class ArmorSystem {
                 }
             }
         }
-        return defense;
+
+        // Apply age progression defense bonus
+        const defenseBonus = this.game.ageProgression?.getBonus('defenseBonus') || 1.0;
+        return defense * defenseBonus;
     }
     
     // Calculate damage reduction (percentage)

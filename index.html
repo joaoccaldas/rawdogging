@@ -168,10 +168,15 @@
                 <div class="furnace-container"
                     style="display:flex; align-items:center; gap:10px; justify-content:center;">
                     <div id="furnace-input" class="inventory-slot"></div>
-                    <div>➡️</div>
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div>➡️</div>
+                        <!-- Furnace Progress Bar -->
+                        <div style="width:60px; height:8px; background:#333; border-radius:4px; margin-top:5px;">
+                            <div id="furnace-progress" style="width:0%; height:100%; background:#ff6600; border-radius:4px; transition:width 0.1s;"></div>
+                        </div>
+                    </div>
                     <div id="furnace-output" class="inventory-slot"></div>
-                </div>
-                <div style="text-align:center; margin-top:20px;">
+                </div>                <div style="text-align:center; margin-top:20px;">
                     <button id="smelt-btn" class="action-btn"
                         style="width:auto; padding:10px 30px; border-radius:8px;">🔥 Smelt</button>
                     <p style="font-size:12px; opacity:0.7; margin-top:10px;">Requires Coal</p>

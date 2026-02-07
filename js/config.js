@@ -1232,6 +1232,25 @@ export const ALLOY_RECIPES = {
     steel_ingot: { ingredients: { iron_ingot: 2, coal: 4 }, count: 2 }
 };
 
+// Smelting durations in seconds
+export const SMELTING_TIMES = {
+    raw_iron: 8,
+    raw_gold: 10,
+    raw_copper: 6,
+    raw_tin: 6,
+    raw_meat: 4,
+    fish: 4,
+    sand: 5,
+    clay: 5,
+    cobblestone: 3,
+    wheat: 3,
+    wood: 6,
+    iron_ingot: 12,  // Steel requires longer
+    crude_oil: 8,
+};
+
+export const DEFAULT_SMELT_TIME = 5;
+
 
 // Enemy Types
 export const ENEMIES = {

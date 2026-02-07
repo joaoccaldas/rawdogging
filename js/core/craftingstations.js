@@ -295,6 +295,32 @@ export class CraftingStationSystem {
         }
     }
     
+    // Open a crafting station UI
+    openStation(stationType, x, y, z) {
+        const station = STATION_TYPES[stationType];
+        if (!station) return false;
+
+        const player = this.game.player;
+        if (!player) return false;
+
+        // Check distance to station
+        const distance = Math.sqrt(
+            Math.pow(player.x - x, 2) +
+            Math.pow(player.y - y, 2) +
+            Math.pow(player.z - z, 2)
+        );
+
+        if (distance > (station.range || 3)) return false;
+
+        // Open appropriate UI based on station type
+        if (stationType === 'FORGE' || station.blockId === 'furnace') {
+            this.game.ui?.toggleFurnace?.(true);
+            return true;
+        }
+
+        return false;
+    }
+
     reset() {
         this.nearbyStations.clear();
         this.nearbyStations.add('hand');
