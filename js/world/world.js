@@ -640,22 +640,47 @@ export class World {
                     height = Math.floor(height * 1.1); // Slightly hillier
                 }
 
-                // Desert sand depth
-                if (z < height && z >= height - 3 && biome === BIOMES.DESERT) {
-                    block = BLOCKS.SAND;
+                // Generate vertical terrain (z-axis)
+                for (let z = 0; z <= CONFIG.CHUNK_HEIGHT; z++) {
+                    let block = BLOCKS.AIR;
+
+                    if (z === 0) {
+                        block = BLOCKS.BEDROCK; // Bedrock at bottom
+                    } else if (z < height - 4) {
+                        block = BLOCKS.STONE; // Stone underground
+                    } else if (z < height) {
+                        // Biome-specific subsurface blocks
+                        if (biome === BIOMES.DESERT) {
+                            block = BLOCKS.SAND;
+                        } else if (biome === BIOMES.SWAMP) {
+                            block = BLOCKS.MUD || BLOCKS.DIRT;
+                        } else {
+                            block = BLOCKS.DIRT;
+                        }
+                    } else if (z === height) {
+                        // Surface blocks
+                        if (height <= CONFIG.SEA_LEVEL) {
+                            block = BLOCKS.SAND;
+                        } else if (biome === BIOMES.DESERT) {
+                            block = BLOCKS.SAND;
+                        } else if (biome === BIOMES.SNOW) {
+                            block = BLOCKS.SNOW || BLOCKS.STONE;
+                        } else {
+                            block = BLOCKS.GRASS;
+                        }
+                    } else if (z <= CONFIG.SEA_LEVEL && z > height) {
+                        block = BLOCKS.WATER; // Water above ground level
+                    }
+
+                    chunk.setBlock(x, y, z, block);
                 }
 
-                chunk.setBlock(x, y, z, block);
-            }
+                // Tribal Age Influence: Procedural Biome Evolution (Color Shift)
+                const ageShift = this.game.ageProgression?.currentAgeIndex || 0;
+                const ageProgress = ageShift / 6; // Normalize (0-6 ages = 0-1 progress)
 
-            // Tribal Age Influence: Procedural Biome Evolution (Color Shift)
-            const ageShift = this.game.ageProgression?.currentAgeIndex || 0;
-            const ageProgress = ageShift / 6; // Normalize (0-6 ages = 0-1 progress)
-            
-            // Apply age-based biome evolution (Applied AFTER base generation to avoid overwrite)
-            this.applyBiomeEvolution(chunk, x, y, wx, wy, height, biome, ageProgress);
-
-            // Tree generation based on biome
+                // Apply age-based biome evolution (Applied AFTER base generation to avoid overwrite)
+                this.applyBiomeEvolution(chunk, x, y, wx, wy, height, biome, ageProgress);
 
                 // Tree generation based on biome
                 const treeChance = biome ? (biome.treeChance || 0.005) : 0.005;
