@@ -177,13 +177,13 @@ export class Renderer {
             }
 
             // Highlight Block
-            // this.renderHighlight();
+            this.renderHighlight();
 
             // Attack Swipe
             this.renderAttackSwipe();
 
             // Cursor
-            // this.renderCursor();
+            this.renderCursor();
 
             // Render minimap (UI overlay)
             if (this.game.minimap) {
@@ -243,6 +243,7 @@ export class Renderer {
     }
 
     renderCursor() {
+        if (!this.game.input?.mouse) return;
         const mouseX = this.game.input.mouse.x;
         const mouseY = this.game.input.mouse.y;
 
@@ -344,7 +345,7 @@ export class Renderer {
     }
 
     renderHighlight() {
-        if (!this.game.player) return;
+        if (!this.game.player || !this.game.input?.mouse) return;
 
         const player = this.game.player;
         const mouseX = this.game.input.mouse.x;
@@ -559,12 +560,11 @@ export class Renderer {
         const drawX = screen.x - (w / 2);
         const drawY = screen.y - (32 * zoom); 
 
+        ctx.save();
         if (alpha < 1) ctx.globalAlpha = alpha;
         
         // Procedural Evolution Color Shift
         if (ageIndex > 0 && this.biomeColors[block]) {
-            // Create a temp canvas for the tinted block if not cached
-            // For now, let's use globalCompositeOperation to tint
             ctx.drawImage(sprite, drawX, drawY, w, h);
             
             // Apply Age-Based Tint (Shift towards more vibrant/saturated colors as civilization grows)
@@ -577,8 +577,6 @@ export class Renderer {
         } else {
             ctx.drawImage(sprite, drawX, drawY, w, h);
         }
-        
-        if (alpha < 1) ctx.globalAlpha = 1;
 
         // Apply Lighting (darkness mask)
         if (light < 1) {
@@ -586,9 +584,9 @@ export class Renderer {
             if (shadow) {
                 ctx.globalAlpha = 1 - light;
                 ctx.drawImage(shadow, drawX, drawY, w, h);
-                ctx.globalAlpha = 1;
             }
         }
+        ctx.restore();
     }
 
     calculateLightLevel(x, y, z) {
@@ -724,23 +722,58 @@ export class Renderer {
             this.ctx.fillRect(screen.x - barWidth / 2, screen.y - size - 10, barWidth * healthPercent, barHeight);
         }
 
-        // Draw Interaction Indicator (Range check)
-        const mouseX = this.game.input.mouse.x;
-        const mouseY = this.game.input.mouse.y;
-
-        let inRange = false;
-        // Check distance to targeted block or enemy using InteractionUtils
-        const hit = InteractionUtils.getSelection(this.game, CONFIG.MINING_RANGE);
-        if (hit) {
-            inRange = true;
+        // Pet Inventory Indicator - show pack icon for tamed animals with storage
+        if (entity.tamed && this.game.petInventory) {
+            // Check if this pet has inventory initialized (simpler check)
+            const hasStorage = this.game.petInventory.petInventories.has(entity.id);
+            
+            if (hasStorage) {
+                // Draw pack indicator
+                const indicatorSize = size * 0.4;
+                const indicatorX = screen.x + size * 0.3;
+                const indicatorY = screen.y - size * 0.8;
+                
+                // Pack background
+                this.ctx.fillStyle = 'rgba(101, 67, 33, 0.9)'; // Brown pack color
+                this.ctx.beginPath();
+                this.ctx.roundRect(indicatorX - indicatorSize/2, indicatorY - indicatorSize/2, 
+                                 indicatorSize, indicatorSize, indicatorSize * 0.2);
+                this.ctx.fill();
+                
+                // Pack icon
+                this.ctx.font = `${indicatorSize * 0.7}px Arial`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillStyle = '#F4D03F';
+                this.ctx.fillText('🎒', indicatorX, indicatorY);
+                
+                // Distance check for interaction hint
+                const player = this.game.player;
+                if (player) {
+                    const dx = entity.x - player.x;
+                    const dy = entity.y - player.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance <= 5) { // Within interaction range
+                        // Add pulsing effect
+                        const pulse = Math.sin(Date.now() * 0.008) * 0.3 + 0.7;
+                        this.ctx.shadowColor = '#FFD700';
+                        this.ctx.shadowBlur = 10 * pulse;
+                        
+                        // Show "P" key hint
+                        this.ctx.font = `${size * 0.3}px Arial`;
+                        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                        this.ctx.lineWidth = 2;
+                        this.ctx.strokeText('[P]', indicatorX, indicatorY + indicatorSize * 0.8);
+                        this.ctx.fillText('[P]', indicatorX, indicatorY + indicatorSize * 0.8);
+                        
+                        // Reset shadow
+                        this.ctx.shadowBlur = 0;
+                    }
+                }
+            }
         }
-
-        // Crosshair circle
-        this.ctx.beginPath();
-        this.ctx.arc(mouseX, mouseY, 15, 0, Math.PI * 2);
-        this.ctx.strokeStyle = inRange ? 'rgba(74, 222, 128, 0.8)' : 'rgba(255, 255, 255, 0.3)';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
 
         this.ctx.restore();
     }

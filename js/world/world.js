@@ -640,99 +640,22 @@ export class World {
                     height = Math.floor(height * 1.1); // Slightly hillier
                 }
 
-                // Tribal Age Influence: Procedural Biome Evolution (Color Shift)
-                const ageShift = this.game.ageProgression?.currentAgeIndex || 0;
-                const ageProgress = ageShift / 6; // Normalize (0-6 ages = 0-1 progress)
-                
-                // Apply age-based biome evolution
-                this.applyBiomeEvolution(chunk, x, y, wx, wy, height, biome, ageProgress);
-                
-                // Floor limit
-                height = Math.max(1, Math.min(height, CONFIG.WORLD_HEIGHT - 5));
-
-                for (let z = 0; z < CONFIG.WORLD_HEIGHT; z++) {
-                    let block = BLOCKS.AIR;
-
-                    if (z === 0) {
-                        block = BLOCKS.BEDROCK;
-                    } else if (z < height) {
-                        block = BLOCKS.STONE;
-
-                        // Sub-surface layers based on biome
-                        if (z >= height - 3) {
-                            block = biome === BIOMES.SWAMP ? BLOCKS.CLAY : BLOCKS.DIRT;
-                        }
-
-                        // Ore generation
-                        if (z >= height - 8 && z < height - 2) {
-                            const oreNoise = this.noise.perlin3(wx * 0.15, wy * 0.15, z * 0.15);
-                            if (oreNoise > 0.6) block = BLOCKS.COAL_ORE;
-                        }
-                        if (z >= 5 && z < height - 6) {
-                            const oreNoise = this.noise.perlin3(wx * 0.12, wy * 0.12, z * 0.12);
-                            if (oreNoise > 0.7) block = BLOCKS.IRON_ORE;
-                        }
-                        // Copper ore - common, similar to iron depth
-                        if (z >= 4 && z < height - 5) {
-                            const oreNoise = this.noise.perlin3(wx * 0.13, wy * 0.13, z * 0.13);
-                            if (oreNoise > 0.68 && oreNoise < 0.73) block = BLOCKS.COPPER_ORE;
-                        }
-                        // Tin ore - slightly rarer than copper
-                        if (z >= 3 && z < height - 8) {
-                            const oreNoise = this.noise.perlin3(wx * 0.11, wy * 0.11, z * 0.11);
-                            if (oreNoise > 0.72 && oreNoise < 0.76) block = BLOCKS.TIN_ORE;
-                        }
-                        // Gold deeper
-                        if (z >= 3 && z < height - 10) {
-                            const oreNoise = this.noise.perlin3(wx * 0.1, wy * 0.1, z * 0.1);
-                            if (oreNoise > 0.75) block = BLOCKS.GOLD_ORE;
-                        }
-                        // Diamonds very deep
-                        if (z >= 1 && z < 12) {
-                            const oreNoise = this.noise.perlin3(wx * 0.08, wy * 0.08, z * 0.08);
-                            if (oreNoise > 0.82) block = BLOCKS.DIAMOND_ORE;
-                        }
-
-                        // Gravel pockets
-                        if (z >= height - 6 && z < height - 2) {
-                            const gravelNoise = this.noise.perlin3(wx * 0.2, wy * 0.2, z * 0.2);
-                            if (gravelNoise > 0.65) block = BLOCKS.GRAVEL;
-                        }
-
-                        // Cave generation (Tweaked for better connectivity)
-                        // Lower frequency = larger, smoother caves
-                        const caveNoise = this.noise.perlin3(wx * 0.05, wy * 0.05, z * 0.1);
-                        // Threshold 0.5 -> 0.6 makes caves slightly less common but larger due to freq
-                        if (caveNoise > 0.5 && z > 3 && z < height - 2) {
-                            block = BLOCKS.AIR;
-                        }
-
-                    } else if (z === height) {
-                        // Surface block based on biome
-                        if (biome === BIOMES.DESERT) {
-                            block = BLOCKS.SAND;
-                        } else if (biome === BIOMES.SNOW) {
-                            block = BLOCKS.SNOW;
-                        } else if (biome === BIOMES.SWAMP) {
-                            block = Math.random() < 0.3 ? BLOCKS.CLAY : BLOCKS.GRASS;
-                        } else {
-                            block = BLOCKS.GRASS;
-                        }
-                    } else if (z > height && z <= CONFIG.SEA_LEVEL) {
-                        // Water
-                        block = BLOCKS.WATER;
-                        if (biome === BIOMES.SNOW && z === CONFIG.SEA_LEVEL) {
-                            block = BLOCKS.ICE;
-                        }
-                    }
-
-                    // Desert sand depth
-                    if (z < height && z >= height - 3 && biome === BIOMES.DESERT) {
-                        block = BLOCKS.SAND;
-                    }
-
-                    chunk.setBlock(x, y, z, block);
+                // Desert sand depth
+                if (z < height && z >= height - 3 && biome === BIOMES.DESERT) {
+                    block = BLOCKS.SAND;
                 }
+
+                chunk.setBlock(x, y, z, block);
+            }
+
+            // Tribal Age Influence: Procedural Biome Evolution (Color Shift)
+            const ageShift = this.game.ageProgression?.currentAgeIndex || 0;
+            const ageProgress = ageShift / 6; // Normalize (0-6 ages = 0-1 progress)
+            
+            // Apply age-based biome evolution (Applied AFTER base generation to avoid overwrite)
+            this.applyBiomeEvolution(chunk, x, y, wx, wy, height, biome, ageProgress);
+
+            // Tree generation based on biome
 
                 // Tree generation based on biome
                 const treeChance = biome ? (biome.treeChance || 0.005) : 0.005;
