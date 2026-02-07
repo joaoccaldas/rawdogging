@@ -152,16 +152,26 @@ export const BLOCKS = {
     RAIL: 69,
     OIL_DEPOSIT: 70,
     ASPHALT: 71,
+    
+    // Tribal Age Multi-Part Crafting Stations
+    KILN_BASE: 72,
+    KILN_CHAMBER: 73,
+    KILN_CHIMNEY: 74,
+    SMELTERY_BASIN: 75,
+    SMELTERY_CONTROLLER: 76,
+    SMELTERY_DRAIN: 77,
+    FIRING_CHAMBER: 78,
+    
     // Modern Age blocks
-    CONCRETE: 72,
-    GLASS_PANEL: 73,
-    STEEL_FRAME: 74,
-    SOLAR_PANEL: 75,
-    WIND_TURBINE: 76,
-    BATTERY: 77,
-    COMPUTER: 78,
-    WIRE: 79,
-    CIRCUIT_BOARD: 80,
+    CONCRETE: 79,
+    GLASS_PANEL: 80,
+    STEEL_FRAME: 81,
+    SOLAR_PANEL: 82,
+    WIND_TURBINE: 83,
+    BATTERY: 84,
+    COMPUTER: 85,
+    WIRE: 86,
+    CIRCUIT_BOARD: 87,
 };
 
 // Block Properties - Each block has unique characteristics
@@ -552,6 +562,43 @@ export const BLOCK_DATA = {
         toolRequired: 'pickaxe', speedBoost: 1.3
     },
 
+    // Tribal Age Multi-Part Crafting Stations
+    [BLOCKS.KILN_BASE]: {
+        name: 'Kiln Base', solid: true, transparent: false, hardness: 4,
+        drops: 'kiln_base', color: '#8B4513', emoji: '🔥',
+        toolRequired: 'pickaxe', multiPartStation: 'kiln'
+    },
+    [BLOCKS.KILN_CHAMBER]: {
+        name: 'Kiln Chamber', solid: true, transparent: false, hardness: 3,
+        drops: 'kiln_chamber', color: '#A0522D', emoji: '🏺',
+        toolRequired: 'pickaxe', multiPartStation: 'kiln'
+    },
+    [BLOCKS.KILN_CHIMNEY]: {
+        name: 'Kiln Chimney', solid: true, transparent: false, hardness: 3,
+        drops: 'kiln_chimney', color: '#654321', emoji: '🏭',
+        toolRequired: 'pickaxe', multiPartStation: 'kiln'
+    },
+    [BLOCKS.SMELTERY_BASIN]: {
+        name: 'Smeltery Basin', solid: true, transparent: false, hardness: 5,
+        drops: 'smeltery_basin', color: '#696969', emoji: '🍯',
+        toolRequired: 'pickaxe', multiPartStation: 'smeltery'
+    },
+    [BLOCKS.SMELTERY_CONTROLLER]: {
+        name: 'Smeltery Controller', solid: true, transparent: false, hardness: 4,
+        drops: 'smeltery_controller', color: '#8B4513', emoji: '🎛️',
+        toolRequired: 'pickaxe', multiPartStation: 'smeltery', interactive: true
+    },
+    [BLOCKS.SMELTERY_DRAIN]: {
+        name: 'Smeltery Drain', solid: true, transparent: false, hardness: 3,
+        drops: 'smeltery_drain', color: '#708090', emoji: '🚰',
+        toolRequired: 'pickaxe', multiPartStation: 'smeltery'
+    },
+    [BLOCKS.FIRING_CHAMBER]: {
+        name: 'Firing Chamber', solid: true, transparent: false, hardness: 4,
+        drops: 'firing_chamber', color: '#B22222', emoji: '🔥',
+        toolRequired: 'pickaxe', multiPartStation: 'both'
+    },
+
     // Modern Age Blocks
     [BLOCKS.CONCRETE]: {
         name: 'Concrete', solid: true, transparent: false, hardness: 6,
@@ -666,6 +713,10 @@ export const ITEMS = {
     feather: { name: 'Feather', emoji: '🪶', stackable: true, type: 'material' },
     clay_ball: { name: 'Clay Ball', emoji: '🔘', stackable: true, type: 'material' },
     brick: { name: 'Brick', emoji: '🧱', stackable: true, type: 'material' },
+    clay_pot: { name: 'Clay Pot', emoji: '🏺', stackable: true, type: 'tool' },
+    wet_clay_pot: { name: 'Wet Clay Pot', emoji: '🫙', stackable: true, type: 'material' },
+    bone_meal: { name: 'Bone Meal', emoji: '🦴', stackable: true, type: 'material' },
+    charcoal: { name: 'Charcoal', emoji: '⚫', stackable: true, type: 'material' },
     vines: { name: 'Vines', emoji: '🌿', stackable: true, type: 'block', blockId: BLOCKS.VINES },
     stone_bricks: { name: 'Stone Bricks', emoji: '🧱', stackable: true, type: 'block', blockId: BLOCKS.STONE_BRICKS },
     rope: { name: 'Rope', emoji: '🪢', stackable: true, type: 'material' },
@@ -822,6 +873,15 @@ export const ITEMS = {
     rifle: { name: 'Rifle', emoji: '🔫', stackable: false, type: 'weapon', damage: 25, durability: 300, ranged: true, ammo: 'bullet', reloadTime: 1.5 },
     bullet: { name: 'Bullet', emoji: '🔘', stackable: true, type: 'ammo', damage: 15 },
     dynamite: { name: 'Dynamite', emoji: '🧨', stackable: true, type: 'throwable', damage: 30, explosionRadius: 3 },
+
+    // Tribal Age Multi-Part Station Items
+    kiln_base: { name: 'Kiln Base', emoji: '🔥', stackable: true, type: 'block', blockId: BLOCKS.KILN_BASE },
+    kiln_chamber: { name: 'Kiln Chamber', emoji: '🏺', stackable: true, type: 'block', blockId: BLOCKS.KILN_CHAMBER },
+    kiln_chimney: { name: 'Kiln Chimney', emoji: '🏭', stackable: true, type: 'block', blockId: BLOCKS.KILN_CHIMNEY },
+    smeltery_basin: { name: 'Smeltery Basin', emoji: '🍯', stackable: true, type: 'block', blockId: BLOCKS.SMELTERY_BASIN },
+    smeltery_controller: { name: 'Smeltery Controller', emoji: '🎛️', stackable: true, type: 'block', blockId: BLOCKS.SMELTERY_CONTROLLER },
+    smeltery_drain: { name: 'Smeltery Drain', emoji: '🚰', stackable: true, type: 'block', blockId: BLOCKS.SMELTERY_DRAIN },
+    firing_chamber: { name: 'Firing Chamber', emoji: '🔥', stackable: true, type: 'block', blockId: BLOCKS.FIRING_CHAMBER },
 
     // Modern Age Items - Blocks
     concrete: { name: 'Concrete', emoji: '🧱', stackable: true, type: 'block', blockId: BLOCKS.CONCRETE },
@@ -981,11 +1041,22 @@ export const RECIPES = [
     // Crafting stations
     { result: 'tanning_rack', count: 1, ingredients: [['wood', 4], ['leather', 2], ['stick', 4]], shape: null, age: 1, category: 'stations' },
 
+    // Multi-Part Crafting Stations (Tribal Age)
+    { result: 'kiln_base', count: 1, ingredients: [['stone', 12], ['clay', 6]], shape: null, age: 1, category: 'stations' },
+    { result: 'kiln_chamber', count: 1, ingredients: [['clay', 8], ['sand', 4]], shape: null, age: 1, category: 'stations' },
+    { result: 'kiln_chimney', count: 1, ingredients: [['brick', 6], ['clay', 2]], shape: null, age: 1, category: 'stations' },
+    { result: 'smeltery_basin', count: 1, ingredients: [['stone', 16], ['clay', 8]], shape: null, age: 1, category: 'stations' },
+    { result: 'firing_chamber', count: 1, ingredients: [['brick', 8], ['clay', 6], ['coal', 4]], shape: null, age: 1, category: 'stations' },
+
     // Armor - Prehistoric
     { result: 'leather_armor', count: 1, ingredients: [['leather', 8]], shape: null, age: 1, category: 'armor' },
     { result: 'leather_boots', count: 1, ingredients: [['leather', 4]], shape: null, age: 1, category: 'armor' },
     { result: 'leather_helmet', count: 1, ingredients: [['leather', 5]], shape: null, age: 1, category: 'armor' },
     { result: 'fur_coat', count: 1, ingredients: [['leather', 6], ['string', 2]], shape: null, age: 1, category: 'armor' },
+
+    // Pottery and kiln materials (for multi-part stations)
+    { result: 'wet_clay_pot', count: 1, ingredients: [['clay_ball', 4]], shape: null, age: 1, category: 'tools' },
+    { result: 'charcoal', count: 2, ingredients: [['wood', 1]], shape: null, station: 'kiln', age: 1, category: 'materials' },
 
     // Survival items
     { result: 'bed', count: 1, ingredients: [['plank', 3], ['leather', 3]], shape: null, age: 1, category: 'building' },
@@ -993,6 +1064,10 @@ export const RECIPES = [
 
     // ========== BRONZE AGE (age: 2) - Metallurgy ==========
     { result: 'forge', count: 1, ingredients: [['cobblestone', 8], ['iron_ingot', 4], ['coal', 8]], shape: null, age: 2, category: 'stations' },
+    
+    // Advanced Multi-Part Stations (Bronze Age)
+    { result: 'smeltery_controller', count: 1, ingredients: [['bronze_ingot', 4], ['stone', 8]], shape: null, age: 2, category: 'stations' },
+    { result: 'smeltery_drain', count: 1, ingredients: [['bronze_ingot', 2], ['clay', 4]], shape: null, age: 2, category: 'stations' },
     { result: 'brick_block', count: 1, ingredients: [['brick', 4]], shape: null, age: 2, category: 'building' },
     { result: 'stone_bricks', count: 4, ingredients: [['stone', 4]], shape: null, age: 2, category: 'building' },
 

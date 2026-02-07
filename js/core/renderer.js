@@ -31,6 +31,14 @@ export class Renderer {
             dawn: '#DDA0DD'    // Misty purple dawn
         };
 
+        // Evolution Color Multipliers
+        this.biomeColors = {
+            [BLOCKS.GRASS]: '#228B22',
+            [BLOCKS.DIRT]: '#8B4513',
+            [BLOCKS.SAND]: '#F4D03F',
+            [BLOCKS.WATER]: '#4169E1'
+        };
+
         this.resize();
         window.addEventListener('resize', () => this.resize());
         // Cache block faces? simpler to just draw texture
@@ -60,30 +68,34 @@ export class Renderer {
 
     getSkyColor() {
         const timeOfDay = this.game.world?.timeOfDay || 0.5;
+        const ageIndex = this.game.ageProgression?.currentAgeIndex || 0;
 
+        let baseColor;
         if (timeOfDay < CONFIG.DAWN_START) {
-            // Night
-            return this.skyColors.night;
+            baseColor = this.skyColors.night;
         } else if (timeOfDay < 0.3) {
-            // Dawn
             const t = (timeOfDay - CONFIG.DAWN_START) / 0.1;
-            return this.lerpColor(this.skyColors.night, this.skyColors.dawn, t);
+            baseColor = this.lerpColor(this.skyColors.night, this.skyColors.dawn, t);
         } else if (timeOfDay < 0.35) {
             const t = (timeOfDay - 0.3) / 0.05;
-            return this.lerpColor(this.skyColors.dawn, this.skyColors.day, t);
+            baseColor = this.lerpColor(this.skyColors.dawn, this.skyColors.day, t);
         } else if (timeOfDay < CONFIG.DUSK_START) {
-            // Day
-            return this.skyColors.day;
+            baseColor = this.skyColors.day;
         } else if (timeOfDay < 0.8) {
-            // Sunset
             const t = (timeOfDay - CONFIG.DUSK_START) / 0.1;
-            return this.lerpColor(this.skyColors.day, this.skyColors.sunset, t);
+            baseColor = this.lerpColor(this.skyColors.day, this.skyColors.sunset, t);
         } else if (timeOfDay < 0.9) {
             const t = (timeOfDay - 0.8) / 0.1;
-            return this.lerpColor(this.skyColors.sunset, this.skyColors.night, t);
+            baseColor = this.lerpColor(this.skyColors.sunset, this.skyColors.night, t);
         } else {
-            return this.skyColors.night;
+            baseColor = this.skyColors.night;
         }
+
+        // Apply Age-Based Atmospheric Shift
+        if (ageIndex === 1) { // Tribal Age - Warmer, golden hour atmosphere
+            return this.lerpColor(baseColor, '#FFD700', 0.1);
+        }
+        return baseColor;
     }
 
     lerpColor(color1, color2, t) {
@@ -532,12 +544,8 @@ export class Renderer {
 
     drawBlock(x, y, z, block, light = 1, alpha = 1) {
         const ctx = this.ctx;
-        // World to Screen
-        // We need to align the sprite correctly.
-        // The sprite includes the top face and side faces.
-        // Screen coord from worldToScreen gives the CENTER of the top face.
-        // BUT `worldToScreen` gives coords based on iso projection where Y includes -Z.
-
+        const ageIndex = this.game.ageProgression?.currentAgeIndex || 0;
+        
         const screen = this.game.camera.worldToScreen(x, y, z);
 
         // Sprite Dimensions
@@ -545,21 +553,31 @@ export class Renderer {
         if (!sprite) return;
 
         const zoom = this.game.camera.zoom;
-        const w = 64 * zoom; // Base Width from SpriteManager
-        const h = 96 * zoom; // Height (including depth)
-
-        // Offset: 
-        // Our sprite top center is at (32, 32) in 64x96 canvas?
-        // renderIsoBlock uses cx = w/2, cy = h/3 approx.
-        // Let's refine based on `renderIsoBlock`: width 64. top at (32, 32-16) to (32,32+16).
-        // Center of top face is at (32, 32).
-        // So we draw image centered at (screen.x, screen.y).
+        const w = 64 * zoom; 
+        const h = 96 * zoom; 
 
         const drawX = screen.x - (w / 2);
-        const drawY = screen.y - (32 * zoom); // Shift up so top-face center aligns with screen.y
+        const drawY = screen.y - (32 * zoom); 
 
         if (alpha < 1) ctx.globalAlpha = alpha;
-        ctx.drawImage(sprite, drawX, drawY, w, h);
+        
+        // Procedural Evolution Color Shift
+        if (ageIndex > 0 && this.biomeColors[block]) {
+            // Create a temp canvas for the tinted block if not cached
+            // For now, let's use globalCompositeOperation to tint
+            ctx.drawImage(sprite, drawX, drawY, w, h);
+            
+            // Apply Age-Based Tint (Shift towards more vibrant/saturated colors as civilization grows)
+            ctx.save();
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.globalAlpha = 0.2 * Math.min(ageIndex, 2); // Cap effect
+            ctx.fillStyle = ageIndex === 1 ? '#ffaa00' : '#00ffaa'; // Tribal = Warm/Golden, Bronze = Lush
+            ctx.fillRect(drawX, drawY, w, h);
+            ctx.restore();
+        } else {
+            ctx.drawImage(sprite, drawX, drawY, w, h);
+        }
+        
         if (alpha < 1) ctx.globalAlpha = 1;
 
         // Apply Lighting (darkness mask)

@@ -489,4 +489,53 @@ export class UIManager {
     getPlayerName() {
         return this.game.playerName || 'Survivor';
     }
+
+    // Multi-part station UI
+    showStationPrompt(station) {
+        if (!this.stationPrompt) {
+            this.stationPrompt = document.createElement('div');
+            this.stationPrompt.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 20px;
+                border-radius: 8px;
+                border: 2px solid #8B4513;
+                font-family: monospace;
+                text-align: center;
+                z-index: 1000;
+            `;
+            document.body.appendChild(this.stationPrompt);
+        }
+        
+        this.stationPrompt.innerHTML = `
+            <h3>🔥 ${station.station.name}</h3>
+            <p>${station.station.description}</p>
+            <p><strong>Status:</strong> ${station.isActive ? 'Operating...' : 'Ready'}</p>
+            <p><strong>Fuel:</strong> ${station.fuel || 0}</p>
+            <p style="color: #888; font-size: 12px;">Press 'E' to operate • Press 'Esc' to close</p>
+        `;
+        this.stationPrompt.style.display = 'block';
+    }
+
+    hideStationPrompt() {
+        if (this.stationPrompt) {
+            this.stationPrompt.style.display = 'none';
+        }
+    }
+
+    update(deltaTime) {
+        // Check for nearby multi-part stations
+        if (this.game?.multiPartCrafting) {
+            const nearestStation = this.game.multiPartCrafting.getNearestStation();
+            if (nearestStation && this.game.input?.keys['KeyE']) {
+                this.showStationPrompt(nearestStation);
+            } else if (!nearestStation || this.game.input?.keys['Escape']) {
+                this.hideStationPrompt();
+            }
+        }
+    }
 }

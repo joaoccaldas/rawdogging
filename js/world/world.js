@@ -640,6 +640,13 @@ export class World {
                     height = Math.floor(height * 1.1); // Slightly hillier
                 }
 
+                // Tribal Age Influence: Procedural Biome Evolution (Color Shift)
+                const ageShift = this.game.ageProgression?.currentAgeIndex || 0;
+                const ageProgress = ageShift / 6; // Normalize (0-6 ages = 0-1 progress)
+                
+                // Apply age-based biome evolution
+                this.applyBiomeEvolution(chunk, x, y, wx, wy, height, biome, ageProgress);
+                
                 // Floor limit
                 height = Math.max(1, Math.min(height, CONFIG.WORLD_HEIGHT - 5));
 
@@ -913,6 +920,173 @@ export class World {
             }
         }
         return 0;
+    }
+
+    // Procedural Biome Evolution - Color shifts and block changes based on age progression
+    applyBiomeEvolution(chunk, x, y, wx, wy, height, biome, ageProgress) {
+        // Skip if no age progression yet
+        if (ageProgress <= 0) return;
+        
+        // Evolution intensity increases with age progression
+        const evolutionChance = ageProgress * 0.15; // Max 15% chance at modern age
+        
+        // Apply biome-specific evolutionary changes
+        if (Math.random() < evolutionChance) {
+            const currentSurfaceBlock = chunk.getBlock(x, y, height);
+            let evolvedBlock = currentSurfaceBlock;
+            
+            switch (biome) {
+                case BIOMES.PLAINS:
+                    // Plains evolve: grass → farmland → developed
+                    if (currentSurfaceBlock === BLOCKS.GRASS) {
+                        if (ageProgress > 0.3 && Math.random() < 0.4) {
+                            evolvedBlock = BLOCKS.FARMLAND; // Agricultural development
+                        }
+                        if (ageProgress > 0.6 && Math.random() < 0.2) {
+                            evolvedBlock = BLOCKS.COBBLESTONE; // Settlement paths
+                        }
+                    }
+                    break;
+                    
+                case BIOMES.DESERT:
+                    // Desert evolves: sand dunes reshape, oases appear
+                    if (currentSurfaceBlock === BLOCKS.SAND && ageProgress > 0.4) {
+                        if (Math.random() < 0.05) {
+                            evolvedBlock = BLOCKS.GLASS; // Sand fusion from heat/civilization
+                        }
+                    }
+                    break;
+                    
+                case BIOMES.JUNGLE:
+                    // Jungle evolves: managed clearings, cultivation
+                    if (currentSurfaceBlock === BLOCKS.GRASS && ageProgress > 0.35) {
+                        if (Math.random() < 0.3) {
+                            evolvedBlock = BLOCKS.PLANKS; // Wooden platforms/structures
+                        }
+                    }
+                    break;
+                    
+                case BIOMES.SWAMP:
+                    // Swamp evolves: drainage, land reclamation
+                    if (currentSurfaceBlock === BLOCKS.CLAY && ageProgress > 0.45) {
+                        if (Math.random() < 0.25) {
+                            evolvedBlock = BLOCKS.MUD_BRICK; // Constructed surfaces
+                        }
+                    }
+                    break;
+                    
+                case BIOMES.SNOW:
+                    // Snow biome evolves: settlements, warming
+                    if (currentSurfaceBlock === BLOCKS.SNOW && ageProgress > 0.5) {
+                        if (Math.random() < 0.15) {
+                            evolvedBlock = BLOCKS.STONE_BRICKS; // Heated/cleared areas
+                        }
+                    }
+                    break;
+                    
+                case BIOMES.SAVANNA:
+                    // Savanna evolves: managed grasslands, animal paths
+                    if (currentSurfaceBlock === BLOCKS.GRASS && ageProgress > 0.25) {
+                        if (Math.random() < 0.2) {
+                            evolvedBlock = BLOCKS.DIRT; // Worn paths from activity
+                        }
+                    }
+                    break;
+            }
+            
+            // Apply the evolved block if it changed
+            if (evolvedBlock !== currentSurfaceBlock) {
+                chunk.setBlock(x, y, height, evolvedBlock);
+                
+                // Add age-appropriate structures on evolved ground
+                this.tryAddEvolutionStructure(chunk, x, y, height, biome, ageProgress);
+            }
+        }
+        
+        // Add age-specific vegetation and features
+        this.addAgeSpecificFeatures(chunk, x, y, wx, wy, height, biome, ageProgress);
+    }
+    
+    // Add structures that represent technological/civilization progress
+    tryAddEvolutionStructure(chunk, x, y, height, biome, ageProgress) {
+        if (Math.random() > 0.02) return; // 2% chance
+        
+        // Tribal Age structures (ageProgress 0.17-0.33)
+        if (ageProgress >= 0.17 && ageProgress < 0.33) {
+            if (Math.random() < 0.6) {
+                // Tribal markers: standing stones, totems
+                chunk.setBlock(x, y, height + 1, BLOCKS.COBBLESTONE);
+                if (Math.random() < 0.3) {
+                    chunk.setBlock(x, y, height + 2, BLOCKS.TORCH); // Totem torch
+                }
+            } else {
+                // Primitive structures
+                chunk.setBlock(x, y, height + 1, BLOCKS.THATCH);
+            }
+        }
+        // Bronze Age structures (ageProgress 0.33-0.50)
+        else if (ageProgress >= 0.33 && ageProgress < 0.50) {
+            if (biome === BIOMES.PLAINS || biome === BIOMES.SAVANNA) {
+                // Agricultural markers
+                chunk.setBlock(x, y, height + 1, BLOCKS.HAY_BLOCK);
+            }
+        }
+        // Iron Age and beyond - more complex structures
+        else if (ageProgress >= 0.50) {
+            if (Math.random() < 0.4) {
+                chunk.setBlock(x, y, height + 1, BLOCKS.STONE_BRICKS);
+                if (ageProgress > 0.75) {
+                    chunk.setBlock(x, y, height + 2, BLOCKS.IRON_BLOCK || BLOCKS.STONE_BRICKS);
+                }
+            }
+        }
+    }
+    
+    // Add age-specific environmental features
+    addAgeSpecificFeatures(chunk, x, y, wx, wy, height, biome, ageProgress) {
+        // Tribal Age: Better resource distribution, signs of habitation
+        if (ageProgress >= 0.17) {
+            // Enhanced resource nodes near settlements
+            if (Math.random() < ageProgress * 0.005) {
+                const resourceDepth = Math.floor(Math.random() * 3) + 2;
+                const resourceBlock = this.selectAgeApropriateResource(ageProgress);
+                if (resourceBlock) {
+                    chunk.setBlock(x, y, Math.max(1, height - resourceDepth), resourceBlock);
+                }
+            }
+            
+            // Agricultural development in suitable biomes
+            if ((biome === BIOMES.PLAINS || biome === BIOMES.SAVANNA) && 
+                ageProgress >= 0.25 && Math.random() < 0.008) {
+                chunk.setBlock(x, y, height + 1, BLOCKS.WHEAT_CROP);
+            }
+            
+            // Road/path networks connecting areas
+            if (ageProgress >= 0.4 && Math.random() < ageProgress * 0.003) {
+                // Create paths using noise to ensure connectivity
+                const pathNoise = this.noise.perlin2(wx * 0.1, wy * 0.1);
+                if (pathNoise > 0.7) {
+                    chunk.setBlock(x, y, height, BLOCKS.COBBLESTONE);
+                }
+            }
+        }
+    }
+    
+    // Select resources appropriate for the current age
+    selectAgeApropriateResource(ageProgress) {
+        if (ageProgress < 0.33) {
+            // Stone/Tribal Age: Basic resources
+            return Math.random() < 0.5 ? BLOCKS.COAL_ORE : BLOCKS.COPPER_ORE;
+        } else if (ageProgress < 0.5) {
+            // Bronze Age: Copper and tin
+            return Math.random() < 0.6 ? BLOCKS.COPPER_ORE : BLOCKS.TIN_ORE;
+        } else if (ageProgress < 0.75) {
+            // Iron Age: Iron and coal
+            return Math.random() < 0.7 ? BLOCKS.IRON_ORE : BLOCKS.COAL_ORE;
+        } else {
+            // Advanced ages: Rare resources
+            return Math.random() < 0.3 ? BLOCKS.GOLD_ORE : BLOCKS.IRON_ORE;
+        }
     }
 
     // Safe Spawn Logic: Ensures player doesn't spawn on water or mid-air

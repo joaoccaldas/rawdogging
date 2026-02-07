@@ -73,6 +73,27 @@ export const STATION_TYPES = {
         range: 3,
         requiresFuel: true,
         recipe: { stick: 5, stone: 3 }
+    },
+    
+    // Multi-part stations
+    KILN: {
+        id: 'kiln',
+        name: 'Tribal Kiln',
+        icon: '🔥',
+        description: 'Multi-block structure for pottery and high-temperature cooking',
+        range: 4,
+        requiresFuel: true,
+        multiBlock: true
+    },
+    
+    SMELTERY: {
+        id: 'smeltery',
+        name: 'Bronze Age Smeltery',
+        icon: '🏭',
+        description: 'Advanced multi-block furnace for alloy production',
+        range: 5,
+        requiresFuel: true,
+        multiBlock: true
     }
 };
 
@@ -127,6 +148,15 @@ export const STATION_RECIPES = {
     campfire: [
         'cooked_meat', 'cooked_fish', 'meat_stew', 'fish_soup',
         'roasted_vegetables', 'berry_jam'
+    ],
+
+    // Multi-part station recipes
+    kiln: [
+        'clay_pot', 'brick', 'cooked_meat', 'bone_meal', 'charcoal'
+    ],
+    
+    smeltery: [
+        'bronze_ingot', 'steel_ingot', 'iron_ingot', 'copper_ingot', 'gold_ingot'
     ]
 };
 

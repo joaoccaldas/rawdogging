@@ -48,6 +48,7 @@ import { EnchantmentSystem } from './core/enchantments.js';
 import { SwimmingSystem } from './core/swimming.js';
 import { SoundManager } from './core/soundmanager.js';
 import { NPCTradingSystem } from './core/npctrading.js';
+import { MultiPartCraftingSystem } from './core/multipartcrafting.js';
 import { BossSummoningSystem } from './core/bosssummoning.js';
 import { DayNightVisualSystem } from './core/daynightvisuals.js';
 import { BuildingSnapGridSystem } from './core/buildingsnapgrid.js';
@@ -215,6 +216,9 @@ class Game {
 
         // NPC Trading - Villagers
         this.npcTrading = new NPCTradingSystem(this);
+
+        // Multi-Part Crafting - Kilns and Smelters
+        this.multiPartCrafting = new MultiPartCraftingSystem(this);
 
         // Boss Summoning - Epic battles
         this.bossSummoning = new BossSummoningSystem(this);
@@ -420,6 +424,20 @@ class Game {
         this.player.addItem('cobblestone', 5);
         this.player.addItem('stick', 8);
         this.player.addItem('raw_meat', 3);
+
+        // Multi-part crafting test items (Tribal Age)
+        if (this.builderMode) {
+            this.player.addItem('kiln_base', 4);
+            this.player.addItem('kiln_chamber', 4);
+            this.player.addItem('kiln_chimney', 4);
+            this.player.addItem('firing_chamber', 4);
+            this.player.addItem('smeltery_basin', 2);
+            this.player.addItem('smeltery_controller', 2);
+            this.player.addItem('smeltery_drain', 2);
+            this.player.addItem('brick', 32);
+            this.player.addItem('clay_ball', 32);
+            console.log('Game: Added multi-part crafting test items');
+        }
 
         // 3. Find Safe Spawn
         this.world.generateChunk(0, 0); // Ensure origin chunk is generated first!
@@ -707,6 +725,11 @@ class Game {
         // NPC Trading
         if (this.npcTrading) {
             this.npcTrading.update(deltaTime);
+        }
+
+        // Multi-Part Crafting Stations
+        if (this.multiPartCrafting) {
+            this.multiPartCrafting.update(deltaTime);
         }
 
         // Boss summoning
