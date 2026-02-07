@@ -165,13 +165,13 @@ export class Renderer {
             }
 
             // Highlight Block
-            this.renderHighlight();
+            // this.renderHighlight();
 
             // Attack Swipe
             this.renderAttackSwipe();
 
             // Cursor
-            this.renderCursor();
+            // this.renderCursor();
 
             // Render minimap (UI overlay)
             if (this.game.minimap) {
