@@ -641,7 +641,7 @@ export class World {
                 }
 
                 // Generate vertical terrain (z-axis)
-                for (let z = 0; z <= CONFIG.CHUNK_HEIGHT; z++) {
+                for (let z = 0; z <= CONFIG.WORLD_HEIGHT; z++) {
                     let block = BLOCKS.AIR;
 
                     if (z === 0) {
