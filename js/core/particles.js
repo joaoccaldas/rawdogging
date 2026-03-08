@@ -179,6 +179,45 @@ export class ParticleSystem {
                 this.particles.push(p);
                 break;
 
+            case 'death_explosion':
+                // Enemy death: big radial burst of bone/blood/smoke
+                for (let i = 0; i < 20; i++) {
+                    const angle = (i / 20) * Math.PI * 2;
+                    const speed = 3 + Math.random() * 4;
+                    const deathColors = ['#aa0000', '#cc3333', '#888888', '#f5deb3'];
+                    const dp = new Particle(x, y, z + 0.5, deathColors[Math.floor(Math.random() * deathColors.length)]);
+                    dp.vx = Math.cos(angle) * speed;
+                    dp.vy = Math.sin(angle) * speed;
+                    dp.vz = 2 + Math.random() * 4;
+                    dp.size = 2 + Math.random() * 4;
+                    dp.decay = 1.2;
+                    this.particles.push(dp);
+                }
+                // Skull emoji floater
+                const skull = new Particle(x, y, z + 1, '#ffffff');
+                skull.emoji = '💀';
+                skull.size = 22;
+                skull.vz = 2;
+                skull.vx = 0;
+                skull.vy = 0;
+                skull.decay = 0.8;
+                this.particles.push(skull);
+                break;
+
+            case 'ore_sparkle':
+                // Sparkle effect when mining ore blocks
+                for (let i = 0; i < 8; i++) {
+                    const sparkColors = ['#ffd700', '#ffffff', '#00ffff', '#ff69b4'];
+                    const sp = new Particle(x + 0.5, y + 0.5, z + 0.5, sparkColors[Math.floor(Math.random() * sparkColors.length)]);
+                    sp.size = 1 + Math.random() * 2;
+                    sp.vz = 1 + Math.random() * 2;
+                    sp.vx = (Math.random() - 0.5) * 2;
+                    sp.vy = (Math.random() - 0.5) * 2;
+                    sp.decay = 1.5;
+                    this.particles.push(sp);
+                }
+                break;
+
             default:
                 this.emit(x, y, z, '#ffffff', count);
         }

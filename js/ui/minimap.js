@@ -161,6 +161,55 @@ export class Minimap {
             }
         }
 
+        // Draw enemy markers (red pulsing dots)
+        const entities = this.game.entities || [];
+        const enemyPulse = 0.6 + Math.sin(Date.now() * 0.005) * 0.4;
+        for (const entity of entities) {
+            if (!entity || entity.tamed) continue;
+            // Only show enemies (have health and stats)
+            if (entity.health === undefined || entity.health <= 0) continue;
+
+            const edx = entity.x - cx;
+            const edy = entity.y - cy;
+            const esx = (this.size / 2) + (edx * this.zoom);
+            const esy = (this.size / 2) + (edy * this.zoom);
+
+            if (esx >= 0 && esx <= this.size && esy >= 0 && esy <= this.size) {
+                ctx.globalAlpha = enemyPulse;
+                ctx.fillStyle = entity.stats?.isBoss ? '#ff00ff' : '#ff3333';
+                ctx.beginPath();
+                ctx.arc(esx, esy, entity.stats?.isBoss ? 3.5 : 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // Draw ore resource highlights (small colored dots for nearby ores)
+        const oreRange = Math.min(range, 12);
+        for (let dy = -oreRange; dy <= oreRange; dy++) {
+            for (let dx = -oreRange; dx <= oreRange; dx++) {
+                const wx = cx + dx;
+                const wy = cy + dy;
+                const h = world.getHeight(wx, wy);
+                for (let z = Math.max(0, h - 3); z <= h; z++) {
+                    const blockId = world.getBlock(wx, wy, z);
+                    let oreColor = null;
+                    if (blockId === BLOCKS.COAL_ORE) oreColor = '#333';
+                    else if (blockId === BLOCKS.IRON_ORE) oreColor = '#d4a574';
+                    else if (blockId === BLOCKS.GOLD_ORE) oreColor = '#ffd700';
+                    else if (blockId === BLOCKS.DIAMOND_ORE) oreColor = '#00ffff';
+
+                    if (oreColor) {
+                        const osx = (this.size / 2) + (dx * this.zoom);
+                        const osy = (this.size / 2) + (dy * this.zoom);
+                        ctx.fillStyle = oreColor;
+                        ctx.fillRect(Math.floor(osx), Math.floor(osy), this.zoom, this.zoom);
+                        break; // Only show topmost ore per column
+                    }
+                }
+            }
+        }
+
         // Draw Player Marker
         ctx.fillStyle = '#ff0000';
         ctx.beginPath();

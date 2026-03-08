@@ -186,40 +186,54 @@ class DamageNumber {
     
     render(ctx, camera) {
         if (this.finished || this.alpha <= 0) return;
-        
+
         // Convert world position to screen
         const screenPos = camera.worldToScreen(this.worldX, this.worldY, this.worldZ);
         this.screenX = screenPos.x + this.offsetX + this.shakeOffset.x;
         this.screenY = screenPos.y + this.offsetY + this.shakeOffset.y;
-        
+
         ctx.save();
-        
+
         // Apply transformations
         ctx.globalAlpha = this.alpha;
         ctx.translate(this.screenX, this.screenY);
         ctx.scale(this.scale, this.scale);
-        
-        // Draw text
-        ctx.font = `bold ${this.fontSize}px Arial`;
+
+        // Glow effect for crits
+        if (this.isCritical) {
+            ctx.shadowColor = '#FF0000';
+            ctx.shadowBlur = 12 * this.alpha;
+        }
+
+        // Draw text with scaled font size based on damage value for crits
+        let effectiveFontSize = this.fontSize;
+        if (this.isCritical) {
+            effectiveFontSize = this.fontSize + Math.min(8, this.value * 0.15);
+        }
+
+        ctx.font = `bold ${effectiveFontSize}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        
+
         // Shadow/outline for visibility
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = this.isCritical ? 4 : 3;
         ctx.strokeText(this.text, 0, 0);
-        
+
         // Main text
         ctx.fillStyle = this.color;
         ctx.fillText(this.text, 0, 0);
-        
+
+        // Reset shadow
+        ctx.shadowBlur = 0;
+
         // Combo multiplier
         if (this.showCombo && this.comboMultiplier > 1) {
             ctx.font = `bold ${this.fontSize * 0.6}px Arial`;
             ctx.fillStyle = '#FFAA00';
             ctx.fillText(`x${this.comboMultiplier.toFixed(1)}`, 0, -this.fontSize);
         }
-        
+
         ctx.restore();
     }
     
