@@ -282,21 +282,42 @@ export class SkillsManager {
     onSkillLevelUp(skillId, newLevel) {
         const skillDef = Object.values(SKILLS).find(s => s.id === skillId);
         if (!skillDef) return;
-        
+
         // Play sound
         if (this.game.audio) {
             this.game.audio.play('level_up');
         }
-        
+
         // Show notification
         if (this.game.ui) {
             this.game.ui.showNotification(
-                `${skillDef.emoji} ${skillDef.name} leveled up to ${newLevel}!`, 
-                'success', 
+                `${skillDef.emoji} ${skillDef.name} leveled up to ${newLevel}!`,
+                'success',
                 3000
             );
         }
-        
+
+        // Level-up celebration: animate level display + screen flash
+        const levelDisplay = document.getElementById('level-display');
+        if (levelDisplay) {
+            levelDisplay.classList.remove('level-up');
+            void levelDisplay.offsetWidth; // Force reflow for re-trigger
+            levelDisplay.classList.add('level-up');
+            setTimeout(() => levelDisplay.classList.remove('level-up'), 1200);
+        }
+
+        // Full-screen gold flash
+        const flash = document.createElement('div');
+        flash.id = 'level-up-flash';
+        document.getElementById('game-container')?.appendChild(flash);
+        setTimeout(() => flash.remove(), 1000);
+
+        // Star particles around player
+        if (this.game.particles && this.game.player) {
+            this.game.particles.spawn('star',
+                this.game.player.x, this.game.player.y, this.game.player.z + 1.5, 12);
+        }
+
         // Check for new perks
         this.checkPerkUnlocks(skillId, newLevel);
     }

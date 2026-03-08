@@ -123,6 +123,7 @@ export class Renderer {
     render() {
         try {
             this.clear();
+            this.updateHUDTint();
 
             const camera = this.game.camera;
             if (!camera) return;
@@ -229,6 +230,16 @@ export class Renderer {
             // Render dungeon portals
             if (this.game.dungeons?.render) {
                 this.game.dungeons.render(this.ctx, this.game.camera);
+            }
+
+            // Render damage numbers
+            if (this.game.damageNumbers?.render) {
+                this.game.damageNumbers.render(this.ctx, this.game.camera);
+            }
+
+            // Render combo HUD
+            if (this.game.combatFeel?.renderComboHUD) {
+                this.game.combatFeel.renderComboHUD(this.ctx);
             }
 
             // Render damage/hit flash overlays
@@ -876,6 +887,28 @@ export class Renderer {
 
         // Update ambient light
         this.setAmbientLight(1 - darkness);
+    }
+
+    // Update HUD colors based on time of day
+    updateHUDTint() {
+        const timeOfDay = this.game.world?.timeOfDay || 0.5;
+        const hud = document.getElementById('hud');
+        const hotbar = document.getElementById('hotbar');
+        if (!hud) return;
+
+        // Night: cooler/darker tint. Dawn/Dusk: warm. Day: neutral.
+        let brightness = 1;
+        if (timeOfDay < CONFIG.DAWN_START || timeOfDay > 0.9) {
+            brightness = 0.6; // Night
+        } else if (timeOfDay < 0.35) {
+            brightness = 0.6 + ((timeOfDay - CONFIG.DAWN_START) / 0.15) * 0.4;
+        } else if (timeOfDay > CONFIG.DUSK_START) {
+            brightness = 1 - ((timeOfDay - CONFIG.DUSK_START) / 0.2) * 0.4;
+        }
+
+        const filter = `brightness(${brightness.toFixed(2)})`;
+        hud.style.filter = filter;
+        if (hotbar) hotbar.style.filter = filter;
     }
 
     // Debug rendering

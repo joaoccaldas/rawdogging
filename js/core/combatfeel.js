@@ -24,7 +24,10 @@ export class CombatFeelSystem {
         this.screenShakeIntensity = 0;
         this.screenFlashColor = null;
         this.screenFlashAlpha = 0;
-        
+
+        // Directional hit flash (flash from the direction damage came from)
+        this.directionalFlash = { angle: 0, alpha: 0 };
+
         // Hit feedback queue
         this.hitFeedbackQueue = [];
     }
@@ -61,6 +64,9 @@ export class CombatFeelSystem {
         // Decay screen effects
         if (this.screenFlashAlpha > 0) {
             this.screenFlashAlpha -= deltaTime * 5;
+        }
+        if (this.directionalFlash.alpha > 0) {
+            this.directionalFlash.alpha -= deltaTime * 4;
         }
         
         // Process hit feedback queue
@@ -132,11 +138,23 @@ export class CombatFeelSystem {
         // Screen flash
         this.screenFlashColor = '#ff0000';
         this.screenFlashAlpha = Math.min(0.6, 0.2 + damage * 0.05);
-        
-        // Camera shake
+
+        // Directional flash - flash from direction of the damage source
+        if (source && this.game.player) {
+            const dx = (source.x || 0) - this.game.player.x;
+            const dy = (source.y || 0) - this.game.player.y;
+            this.directionalFlash.angle = Math.atan2(dy, dx);
+            this.directionalFlash.alpha = Math.min(0.8, 0.3 + damage * 0.06);
+        }
+
+        // Camera shake with aftershock for heavy hits
         const shakeIntensity = Math.min(10, 3 + damage * 0.4);
         this.game.camera?.addShake(shakeIntensity, 0.25);
-        
+        if (damage >= 15) {
+            // Aftershock for heavy hits
+            setTimeout(() => this.game.camera?.addShake(shakeIntensity * 0.4, 0.15), 200);
+        }
+
         // Reset combo on taking damage
         this.comboCount = 0;
         this.comboTimer = 0;
@@ -165,10 +183,10 @@ export class CombatFeelSystem {
     showComboNumber() {
         const player = this.game.player;
         if (!player) return;
-        
+
         let comboText = `${this.comboCount}x COMBO!`;
         let color = '#ffffff';
-        
+
         if (this.comboCount >= 10) {
             comboText = `🔥 ${this.comboCount}x COMBO!`;
             color = '#ff4444';
@@ -176,15 +194,54 @@ export class CombatFeelSystem {
             comboText = `⚡ ${this.comboCount}x COMBO!`;
             color = '#ffd700';
         }
-        
+
         this.game.particles?.emitText(
-            player.x, 
-            player.y, 
-            player.z + 2.5, 
-            comboText, 
-            color, 
+            player.x,
+            player.y,
+            player.z + 2.5,
+            comboText,
+            color,
             18
         );
+    }
+
+    // Render persistent combo counter HUD (call from renderer after other overlays)
+    renderComboHUD(ctx) {
+        if (this.comboCount < 2) return;
+
+        const x = ctx.canvas.width - 120;
+        const y = 80;
+        const radius = 32;
+
+        // Timeout ring
+        const timeLeft = this.comboTimer / this.maxComboTime;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * timeLeft);
+        ctx.strokeStyle = this.comboCount >= 10 ? '#ff4444' : this.comboCount >= 5 ? '#ffd700' : '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Background circle
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fill();
+
+        // Combo count number
+        const scale = 1 + Math.sin(Date.now() * 0.01) * 0.05 * Math.min(this.comboCount, 10);
+        ctx.font = `bold ${Math.floor(28 * scale)}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = this.comboCount >= 10 ? '#ff4444' : this.comboCount >= 5 ? '#ffd700' : '#ffffff';
+        ctx.fillText(`${this.comboCount}x`, x, y - 2);
+
+        // Label
+        ctx.font = '10px monospace';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillText('COMBO', x, y + 18);
+
+        ctx.restore();
     }
     
     processHitFeedback(deltaTime) {
@@ -282,12 +339,28 @@ export class CombatFeelSystem {
     
     // Render combat effects
     render(ctx) {
+        const w = ctx.canvas.width;
+        const h = ctx.canvas.height;
+
         // Screen flash overlay
         if (this.screenFlashAlpha > 0 && this.screenFlashColor) {
             ctx.save();
             ctx.globalAlpha = this.screenFlashAlpha;
             ctx.fillStyle = this.screenFlashColor;
-            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.fillRect(0, 0, w, h);
+            ctx.restore();
+        }
+
+        // Directional damage indicator - red arc from direction of damage
+        if (this.directionalFlash.alpha > 0) {
+            ctx.save();
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(this.directionalFlash.angle);
+            const grad = ctx.createLinearGradient(w * 0.3, 0, w * 0.5, 0);
+            grad.addColorStop(0, 'rgba(255, 0, 0, 0)');
+            grad.addColorStop(1, `rgba(200, 0, 0, ${this.directionalFlash.alpha})`);
+            ctx.fillStyle = grad;
+            ctx.fillRect(w * 0.3, -h * 0.3, w * 0.25, h * 0.6);
             ctx.restore();
         }
     }

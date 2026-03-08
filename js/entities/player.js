@@ -1259,6 +1259,11 @@ export class Player extends Entity {
             this.hotbar.forEach((item, index) => {
                 const slot = document.createElement('div');
                 slot.className = `hotbar-slot ${index === this.selectedSlot ? 'selected' : ''}`;
+                // Slot number label
+                const numLabel = document.createElement('span');
+                numLabel.className = 'slot-number';
+                numLabel.textContent = index + 1 <= 9 ? index + 1 : 0;
+                slot.appendChild(numLabel);
                 if (item) {
                     slot.innerText = item.emoji;
                     const count = document.createElement('span');
