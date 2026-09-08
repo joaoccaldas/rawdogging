@@ -22,3 +22,11 @@ Joao Caldas
 ## License
 
 MIT
+
+## Related repositories
+- [`rawdog`](https://github.com/joaoccaldas/rawdog) — the **2D** survival game.
+  A separate title (different dimension/positioning), not a duplicate of this one.
+- [`rawdog3d`](https://github.com/joaoccaldas/rawdog3d) — **archived** earlier 3D
+  build; superseded by this repo.
+
+This repo is the definitive 3D version of the Rawdog series.
