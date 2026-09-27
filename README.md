@@ -1,10 +1,11 @@
 # Rawdogging
 
-3D survival game built with JavaScript and Three.js. The definitive version of the Rawdog game series.
+Browser survival game built with modular JavaScript and a Canvas 2D isometric renderer. The repository also contains experimental Three.js/3D modules that are not currently wired into the canonical `js/main.js` entry path.
 
 ## Features
 
-- Full 3D world with Three.js
+- Isometric Canvas 2D world and modular game systems
+- Experimental Three.js renderer/camera/input modules retained for evaluation
 - Armor and equipment system
 - Quest and side-quest system
 - Home beacon and save system
@@ -38,4 +39,4 @@ AI tools are used extensively during research, design, coding, debugging, testin
 
 ## Portfolio role
 
-**FLAGSHIP CANDIDATE / 3D GAME LAB.** The project has enough subsystem depth to be useful as a source of reusable game-engine patterns, but shared infrastructure should be extracted only after comparing repeated implementations across other games.
+**FLAGSHIP CANDIDATE / SURVIVAL GAME LAB.** The project has enough subsystem depth to be useful as a source of reusable game-engine patterns, but shared infrastructure should be extracted only after comparing repeated implementations across other games.
